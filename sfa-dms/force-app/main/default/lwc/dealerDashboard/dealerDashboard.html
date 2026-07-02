@@ -1,0 +1,232 @@
+<template>
+    <div class="dashboard">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>Distributor Dashboard</h1>
+                <p>Distributor performance and dealer insights</p>
+            </div>
+            <div class="date-pill">
+                <span class="emoji">📅</span>
+                <span>{todayDate}</span>
+            </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <template for:each={kpiCards} for:item="card">
+                <div key={card.id} class="card" data-id={card.id}>
+                    <p class="card-label">{card.label}</p>
+                    <h2 class="card-value">{card.value}</h2>
+                    <!-- <span class={card.trendClassFull}>{card.trend}</span> -->
+                </div>
+            </template>
+        </div>
+        <!-- CREDIT LIMIT SECTION -->
+        <div class="credit-section">
+            <h3 class="credit-section-title">💳 Credit Limit Overview</h3>
+            <div class="credit-cards-row">
+
+                <!-- Sanctioned -->
+                <div class="cr-card cr-card--sanctioned">
+                    <div class="cr-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <span class="cr-label">Sanctioned Limit</span>
+                    <span class="cr-value">{sanctionedLimitDisplay}</span>
+                </div>
+
+                <!-- Utilized -->
+                <div class="cr-card cr-card--utilized">
+                    <div class="cr-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <span class="cr-label">Utilized</span>
+                    <span class="cr-value">{utilizedLimitDisplay}</span>
+                </div>
+
+                <!-- Available -->
+                <div class="cr-card cr-card--available">
+                    <div class="cr-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 10h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Z" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <span class="cr-label">Available</span>
+                    <span class="cr-value">{availableLimitDisplay}</span>
+                </div>
+
+                <!-- Credit Status -->
+                <div class="cr-card cr-card--status">
+                    <div class="cr-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                            <polyline points="9 12 11 14 15 10" stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <span class="cr-label">Credit Status</span>
+                    <span class={creditStatusClass}>{creditStatus}</span>
+                </div>
+
+                <!-- Utilization Bar -->
+                <div class="cr-card cr-card--bar">
+                    <span class="cr-label">Utilization</span>
+                    <span class="cr-pct">{utilizationPct}%</span>
+                    <!-- <div class="cr-bar-track">
+                        <div class="cr-bar-fill" style={utilizationBarStyle}></div>
+                    </div>
+                    <div class="cr-bar-labels">
+                        <span>0%</span>
+                        <span>100%</span>
+                    </div> -->
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ROW 1: Revenue + Region -->
+        <div class="grid-2">
+            <div class="card-large">
+                <h3>Revenue Growth</h3>
+                <div class="chart-container">
+                    <canvas class="salesChart"></canvas>
+                </div>
+            </div>
+            <div class="card-large">
+                <h3>Dealers by Region</h3>
+                <div class="chart-container">
+                    <canvas class="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 2: Products + Low Inventory -->
+        <div class="grid-2">
+            <div class="card-large">
+                <h3>Top Selling Products</h3>
+                <div class="chart-container">
+                    <canvas class="productsChart"></canvas>
+                </div>
+            </div>
+            <div class="card-large">
+                <h3>Low Inventory Products</h3>
+                <table class="inventory">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={lowStockProducts} for:item="product">
+                            <tr key={product.id}>
+                                <td>{product.name}</td>
+                                <td class={product.stockClass}>{product.stock}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ROW 3: Recent Orders + Top Dealers -->
+        <div class="grid-2">
+            <div class="card-large recent-orders-card">
+                <h3>Recent Orders</h3>
+                <ul class="orders">
+                    <template for:each={recentOrders} for:item="order">
+                        <li key={order.id}>
+                            <a href="javascript:void(0)" class="order-link" data-id={order.id}
+                                onclick={handleOrderClick}>
+                                {order.orderNumber}
+                            </a>
+                            <span class={order.statusClassFull}>{order.status}</span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+            <div class="card-large">
+                <h3>Top Performing Dealers</h3>
+                <table class="inventory">
+                    <thead>
+                        <tr>
+                            <th>Dealer</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={topDealers} for:item="dealer">
+                            <tr key={dealer.id}>
+                                <td>{dealer.name}</td>
+                                <td>{dealer.revenue}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ✅ ROW 4: Orders by Status (Pie) + Upcoming Deliveries -->
+        <div class="grid-2">
+
+            <!-- PIE CHART: Orders by Status -->
+            <div class="card-large">
+                <h3>Orders by Status</h3>
+                <div class="status-pie-wrap">
+                    <div class="pie-canvas-area">
+                        <canvas class="statusChart"></canvas>
+                    </div>
+                    <div class="pie-legend">
+                        <template for:each={statusLegend} for:item="item">
+                            <div key={item.label} class="legend-row">
+                                <span class="legend-dot" style={item.dotStyle}></span>
+                                <span class="legend-label">{item.label}</span>
+                                <span class="legend-count">{item.count}</span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPCOMING DELIVERIES -->
+            <div class="card-large delivery-card">
+                <h3>Upcoming Deliveries <span class="next-days-badge">Next 30 days</span></h3>
+                <div class="delivery-list">
+                    <template for:each={upcomingDeliveries} for:item="delivery">
+                        <div key={delivery.id} class="delivery-row">
+                            <div class="delivery-left">
+                                <div class="delivery-order">{delivery.orderNumber}</div>
+                                <div class="delivery-dealer">{delivery.dealerName}</div>
+                            </div>
+                            <div class="delivery-right">
+                                <div class="delivery-date">{delivery.deliveryDate}</div>
+                                <span class={delivery.urgencyClass}>{delivery.daysLabel}</span>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={noDeliveries}>
+                        <div class="no-deliveries">No upcoming deliveries in next 30 days</div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</template>

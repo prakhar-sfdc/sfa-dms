@@ -1,0 +1,75 @@
+<template>
+    <lightning-card title="Upload Documents">
+
+        <template if:true={availableOptions.length}>
+            <div class="slds-p-around_medium">
+
+                <!-- 🔹 Document Type -->
+                <lightning-combobox name="docType" label="Select Document Type" value={selectedDoc}
+                    placeholder="Select document" options={availableOptions} onchange={handleDocChange}>
+                </lightning-combobox>
+
+                <!-- 🔹 File Upload -->
+                <template if:true={selectedDoc}>
+                    <div class="slds-m-top_medium">
+
+                        <div class="file-upload-wrapper" onclick={openFileDialog}>
+                            <div class="upload-icon">📤</div>
+                            <div class="upload-text">
+                                Click to upload or drag & drop<br/>
+                                <small>(JPG, PNG, PDF)</small>
+                            </div>
+
+                            <input
+        type="file"
+        accept=".jpg,.jpeg,.png,.pdf"
+        onchange={handleFileChange}
+    />
+                        </div>
+
+                        <template if:true={selectedFileName}>
+                            <div class="file-name">
+                                ✅ {selectedFileName}
+                            </div>
+                        </template>
+
+                    </div>
+                </template>
+
+                <!-- 🔹 Action Buttons -->
+                <template if:true={selectedFile}>
+                    <div class="slds-m-top_medium slds-grid slds-gutters" style="display:flex;justify-content:space-between;align-items:center;">
+
+                        <lightning-button label="Process Document" variant="brand" onclick={handleSubmit}
+                            disabled={uploadDisabled}>
+                        </lightning-button>
+
+                        <lightning-button label="Clear" variant="neutral" onclick={clearFile}>
+                        </lightning-button>
+
+                    </div>
+                </template>
+
+                <!-- 🔹 Loader -->
+                <template if:true={isProcessing}>
+                    <div class="slds-m-top_medium">
+                        <lightning-spinner alternative-text="Processing OCR..." size="medium">
+                        </lightning-spinner>
+                        <p class="slds-m-top_small">
+                            Processing OCR, please wait...
+                        </p>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+        <!-- 🔹 All uploaded -->
+        <template if:false={availableOptions.length}>
+            <p class="slds-p-around_medium">
+                ✅ All required documents have been uploaded.
+            </p>
+        </template>
+
+    </lightning-card>
+</template>

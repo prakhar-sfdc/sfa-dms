@@ -1,0 +1,324 @@
+<template>
+    <div class="d360-shell">
+
+        <!-- ── Page Title ── -->
+        <div class="d360-header">
+            <div class="d360-header-left">
+                <div class="d360-avatar">D</div>
+                <div>
+                    <p class="d360-title">Dealer 360</p>
+                    <p class="d360-sub">Financial Overview</p>
+                </div>
+            </div>
+            <div class="d360-header-right">
+                <div class="header-badge">Active</div>
+            </div>
+        </div>
+
+        <!-- ── All Cards Row ── -->
+        <template if:true={hasData}>
+            <div class="cards-row">
+
+                <!-- ── Credit Limit Cards ── -->
+
+                <!-- Sanctioned Limit -->
+                <div class="d360-card d360-card--sanctioned" role="button" tabindex="0">
+                    <div class="card-icon sanctioned-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Sanctioned</p>
+                        <p class="card-value">₹ {sanctionedLimitDisplay}</p>
+                    </div>
+                </div>
+
+                <!-- Utilized Limit -->
+                <div class="d360-card d360-card--utilized" role="button" tabindex="0">
+                    <div class="card-icon utilized-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Utilized</p>
+                        <p class="card-value">₹ {utilizedLimitDisplay}</p>
+                    </div>
+                </div>
+
+                <!-- Available Limit -->
+                <div class="d360-card d360-card--available" role="button" tabindex="0">
+                    <div class="card-icon available-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 10h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Available</p>
+                        <p class="card-value">₹ {availableLimitDisplay}</p>
+                    </div>
+                </div>
+
+                <!-- Credit Status -->
+                <div class="d360-card d360-card--status" role="button" tabindex="0">
+                    <div class="card-icon status-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="9 12 11 14 15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Credit Status</p>
+                        <p class="card-value status-value">{creditStatus}</p>
+                    </div>
+                </div>
+
+                <!-- ── Dealer Transaction Cards ── -->
+
+                <!-- Orders -->
+                <div class="d360-card d360-card--orders" onclick={openOrders} role="button" tabindex="0">
+                    <div class="card-icon orders-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 7L12 12L4 7M20 7V17L12 22L4 17V7M20 7L12 2L4 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 12V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Total Orders</p>
+                        <p class="card-value">₹ {summary.totalOrdersAmount}</p>
+                    </div>
+                    <!-- <div class="card-arrow">→</div> -->
+                </div>
+
+                <!-- Payments -->
+                <div class="d360-card d360-card--payments" onclick={openPayments} role="button" tabindex="0">
+                    <div class="card-icon payments-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="6" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M2 10H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M16 15H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Total Payments</p>
+                        <p class="card-value">₹ {summary.totalPayments}</p>
+                    </div>
+                    <!-- <div class="card-arrow">→</div> -->
+                </div>
+
+                <!-- Credit Notes -->
+                <div class="d360-card d360-card--creditnotes" onclick={openCredit} role="button" tabindex="0">
+                    <div class="card-icon creditnotes-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Credit Notes</p>
+                        <p class="card-value">₹ {summary.totalCreditNotes}</p>
+                    </div>
+                    <!-- <div class="card-arrow">→</div> -->
+                </div>
+
+                <!-- Debit Notes -->
+                <div class="d360-card d360-card--debitnotes" onclick={openDebit} role="button" tabindex="0">
+                    <div class="card-icon debitnotes-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-label">Debit Notes</p>
+                        <p class="card-value">₹ {summary.totalDebitNotes}</p>
+                    </div>
+                    <!-- <div class="card-arrow">→</div> -->
+                </div>
+
+            </div>
+        </template>
+
+        <!-- ── No Data ── -->
+        <template if:false={hasData}>
+            <div class="d360-empty">
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <p>Loading dealer data...</p>
+                </div>
+            </div>
+        </template>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODAL: ORDERS
+    ══════════════════════════════════════ -->
+    <template if:true={showOrdersModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div>
+                        <p class="modal-title">Orders</p>
+                        <p class="modal-sub">All orders placed by this dealer</p>
+                    </div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={ordersLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading orders...</span></div>
+                </template>
+                <template if:true={orders}>
+                    <div class="modal-body">
+                        <template for:each={orders} for:item="ord">
+                            <div key={ord.orderId} class="order-block">
+                                <div class="order-row" data-id={ord.orderId} onclick={toggleOrder}>
+                                    <div class="order-row-left">
+                                        <span class="order-num">{ord.orderNumber}</span>
+                                        <span class={ord.statusClass}>{ord.status}</span>
+                                    </div>
+                                    <div class="order-row-right">
+                                        <span class="order-amount">₹ {ord.netAmount}</span>
+                                        <span class="order-date">{ord.orderDate}</span>
+                                        <span class="expand-icon">{ord.expandIcon}</span>
+                                    </div>
+                                </div>
+                                <template if:true={ord.expanded}>
+                                    <div class="line-items">
+                                        <table class="items-table">
+                                            <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                                            <tbody>
+                                                <template for:each={ord.items} for:item="item">
+                                                    <tr key={item.productName}>
+                                                        <td>{item.productName}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>₹ {item.unitPrice}</td>
+                                                        <td>₹ {item.totalPrice}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: PAYMENTS
+    ══════════════════════════════════════ -->
+    <template if:true={showPaymentsModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Payments</p><p class="modal-sub">All cleared payments from this dealer</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={paymentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading payments...</span></div>
+                </template>
+                <template if:true={payments}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Mode</th><th>Status</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={payments} for:item="pay">
+                                    <tr key={pay.paymentName}>
+                                        <td>{pay.paymentName}</td><td>{pay.paymentDate}</td>
+                                        <td><span class="mode-chip">{pay.mode}</span></td>
+                                        <td><span class={pay.statusClass}>{pay.status}</span></td>
+                                        <td class="amt-cell">₹ {pay.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: CREDIT NOTES
+    ══════════════════════════════════════ -->
+    <template if:true={showCreditModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Credit Notes</p><p class="modal-sub">Adjustments in dealer's favour</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={adjustmentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading credit notes...</span></div>
+                </template>
+                <template if:true={creditNotes}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Reason</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={creditNotes} for:item="cn">
+                                    <tr key={cn.name}>
+                                        <td>{cn.name}</td><td>{cn.adjustmentDate}</td>
+                                        <td class="reason-cell">{cn.reason}</td>
+                                        <td class="amt-cell credit-amt">₹ {cn.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: DEBIT NOTES
+    ══════════════════════════════════════ -->
+    <template if:true={showDebitModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Debit Notes</p><p class="modal-sub">Adjustments charged to dealer</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={adjustmentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading debit notes...</span></div>
+                </template>
+                <template if:true={debitNotes}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Reason</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={debitNotes} for:item="dn">
+                                    <tr key={dn.name}>
+                                        <td>{dn.name}</td><td>{dn.adjustmentDate}</td>
+                                        <td class="reason-cell">{dn.reason}</td>
+                                        <td class="amt-cell debit-amt">₹ {dn.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</template>

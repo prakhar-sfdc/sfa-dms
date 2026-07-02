@@ -1,0 +1,6 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction,forceCommunity:availableForAllPageTypes" access="global">
+    <aura:attribute name="recordId" type="Id"/>
+
+    <!-- Pass recordId to LWC -->
+    <c:dealerDocChecklist recordId="{!v.recordId}" />
+</aura:component>

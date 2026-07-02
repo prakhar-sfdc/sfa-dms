@@ -1,0 +1,30 @@
+<apex:page controller="AttendancePdfController"
+           renderAs="pdf"
+           showHeader="false"
+           sidebar="false"
+           applyBodyTag="false">
+
+    <h2 style="text-align:center;">Attendance Report</h2>
+
+    <p><b>Date:</b> {!att.Attendance_Date__c}</p>
+    <p><b>Status:</b> {!att.Status__c}</p>
+
+    <hr/>
+
+    <h3>Check-In Details</h3>
+    <p><b>Check In Time:</b> {!att.Check_In_Time__c}</p>
+    <p><b>Check In Address:</b> {!att.Check_In_Address__c}</p>
+    <p><b>Check In Coordinates:</b> {!att.Check_In_Latitude__c}, {!att.Check_In_Longitude__c}</p>
+
+    <hr/>
+
+    <h3>Check-Out Details</h3>
+    <p><b>Check Out Time:</b> {!att.Check_Out_Time__c}</p>
+    <p><b>Check Out Address:</b> {!att.Check_Out_Address__c}</p>
+    <p><b>Check Out Coordinates:</b> {!att.Check_Out_Latitude__c}, {!att.Check_Out_Longitude__c}</p>
+
+    <hr/>
+
+    <p><b>Work Duration (mins):</b> {!att.Work_Duration__c}</p>
+
+</apex:page>

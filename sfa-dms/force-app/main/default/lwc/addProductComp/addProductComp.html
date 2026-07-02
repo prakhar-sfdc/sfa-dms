@@ -1,0 +1,80 @@
+<!-- inventoryOrderManager.html -->
+<template>
+    <div class="full-width-container">
+        <lightning-card title="Add Products from Inventory" icon-name="standard:product" class="inventory-card">
+            <div class="wrapper">
+                <!-- Loading State -->
+                <template if:true={isLoading}>
+                    <div class="state-box loading-box">
+                        <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+                        <p class="state-text">Loading inventory...</p>
+                    </div>
+                </template>
+
+                <!-- Error State -->
+                <template if:true={hasError}>
+                    <div class="state-box error-box">
+                        <p>⚠️ {errorMessage}</p>
+                    </div>
+                </template>
+
+                <!-- Products Table -->
+                <template if:true={hasProducts}>
+                    <div class="table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Available Stock</th>
+                                    <th class="quantity-header">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={products} for:item="p">
+                                    <tr key={p.inventoryId}>
+                                        <td data-label="Product">
+                                            <span class="product-name">{p.productName}</span>
+                                        </td>
+                                        <td data-label="Available Stock">
+                                            <span class="stock-badge">{p.availableStock}</span>
+                                        </td>
+                                        <td data-label="Quantity">
+                                            <lightning-input
+                                                type="number"
+                                                value={p.quantity}
+                                                min="0"
+                                                max={p.availableStock}
+                                                data-id={p.inventoryId}
+                                                onchange={handleQtyChange}
+                                                class="qty-input"
+                                                variant="label-hidden"
+                                                step="1">
+                                            </lightning-input>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="btn-row">
+                        <lightning-button
+                            label="Add to Order"
+                            variant="brand"
+                            onclick={handleSave}
+                            disabled={isSaving}
+                            class="add-button">
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <!-- Empty State -->
+                <template if:true={isEmpty}>
+                    <div class="state-box empty-state">
+                        <p>✨ No inventory available</p>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+    </div>
+</template>

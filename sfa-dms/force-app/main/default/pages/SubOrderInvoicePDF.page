@@ -1,0 +1,66 @@
+<apex:page renderAs="pdf" controller="SubOrderInvoicePDFController" applyBodyTag="false">
+
+<div style="font-family:Arial; font-size:12px;">
+
+    <!-- Header -->
+    <div style="background:#1f3a7a;color:white;padding:20px;">
+        <div style="float:left;width:50%;font-size:30px;font-weight:bold;">
+            Sub Order Invoice
+        </div>
+
+        <div style="float:right;text-align:right;font-size:12px;">
+            <b>Your Company Name</b><br/>
+            Address Line 1<br/>
+            City, State<br/>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+
+    <!-- Details -->
+    <table style="width:100%;margin-top:20px;">
+        <tr>
+            <td>
+                <b>Sub Order #:</b> {!subOrder.Name}<br/>
+                <b>Date:</b> {!TODAY()}<br/>
+                <b>Parent Order:</b> {!subOrder.Order__r.OrderNumber}
+            </td>
+
+            <td style="text-align:right;">
+                <b>Bill To</b><br/>
+                {!subOrder.Account__r.Name}<br/>
+                {!subOrder.Account__r.BillingStreet}<br/>
+                {!subOrder.Account__r.BillingCity}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Products -->
+    <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <tr style="background:#f2f2f2;font-weight:bold;">
+            <td style="padding:8px;">Product</td>
+            <td style="padding:8px;">Qty</td>
+            <td style="padding:8px;">Rate</td>
+            <td style="padding:8px;">Amount</td>
+        </tr>
+
+        <apex:repeat value="{!products}" var="p">
+            <tr>
+                <td style="padding:8px;">{!p.Product__r.Name}</td>
+                <td style="padding:8px;">{!p.Product_Quantity__c}</td>
+                <td style="padding:8px;">{!p.Unit_Price__c}</td>
+                <td style="padding:8px;">{!p.Total_Amount__c}</td>
+            </tr>
+        </apex:repeat>
+    </table>
+
+    <!-- Total -->
+    <table style="width:35%;float:right;margin-top:20px;">
+        <tr>
+            <td>Total</td>
+            <td style="text-align:right;">{!subOrder.Cost__c}</td>
+        </tr>
+    </table>
+
+</div>
+
+</apex:page>

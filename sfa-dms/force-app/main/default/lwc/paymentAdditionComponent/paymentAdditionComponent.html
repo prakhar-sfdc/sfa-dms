@@ -1,0 +1,155 @@
+<template>
+    <div class="modal-body">
+
+        <!-- HEADER -->
+        <div class="pqa-header">
+            <div class="pqa-header-icon">💳</div>
+            <div>
+                <h2 class="pqa-title">Record Payment</h2>
+                <p class="pqa-subtitle">Order: {orderNumber} &nbsp;|&nbsp; Account: {accountName}</p>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="pqa-loader">
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+
+            <!-- STEP 1: MODE + UPLOAD -->
+            <template if:true={showStep1}>
+
+                <!-- Payment Mode -->
+                <div class="pqa-section-label">Select Payment Mode <span class="req">*</span></div>
+                <div class="pqa-picklist-wrap">
+                    <template for:each={paymentModes} for:item="mode">
+                        <button
+                            key={mode.value}
+                            class={mode.btnClass}
+                            data-value={mode.value}
+                            onclick={handleModeSelect}>
+                            <span class="mode-icon">{mode.icon}</span>
+                            <span>{mode.label}</span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Upload Receipt -->
+                <div class="pqa-section-label" style="margin-top:1.4rem;">
+                    Upload Receipt <span class="req">*</span>
+                    <span class="ocr-note">— details will be auto-extracted</span>
+                </div>
+
+                <div class="pqa-upload-area" onclick={openFileDialog}>
+                    <template if:false={selectedFile}>
+                        <div class="upload-icon">📤</div>
+                        <p class="upload-text">Click to upload receipt<br/>
+                            <small>JPG, PNG, PDF supported</small>
+                        </p>
+                    </template>
+                    <template if:true={selectedFile}>
+                        <div class="upload-icon">✅</div>
+                        <p class="upload-text file-name">{selectedFileName}</p>
+                        <button class="clear-file-btn" onclick={clearFile}>✕ Remove</button>
+                    </template>
+                    <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onchange={handleFileChange}
+                        style="display:none;" />
+                </div>
+
+                <!-- OCR status -->
+                <template if:true={isOCRProcessing}>
+                    <div class="pqa-ocr-status">
+                        <lightning-spinner alternative-text="Scanning..." size="small"></lightning-spinner>
+                        <span>Scanning receipt, please wait…</span>
+                    </div>
+                </template>
+
+                <template if:true={ocrDone}>
+                    <div class="pqa-ocr-success">✅ Details extracted successfully</div>
+                </template>
+
+                <template if:true={ocrError}>
+                    <div class="pqa-ocr-error">⚠️ Could not extract some fields. Try a clearer image.</div>
+                </template>
+
+                <div class="pqa-actions">
+                    <button class="pqa-btn-secondary" onclick={handleCancel}>Cancel</button>
+                    <button class="pqa-btn-primary" onclick={goToStep2} disabled={step1Invalid}>
+                        Review →
+                    </button>
+                </div>
+
+            </template>
+
+            <!-- STEP 2: REVIEW -->
+            <template if:true={showStep2}>
+                <div class="pqa-section-label">Review &amp; Confirm</div>
+
+                <div class="pqa-review-card">
+                    <div class="review-row">
+                        <span class="review-key">Order</span>
+                        <span class="review-val">{orderNumber}</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Account</span>
+                        <span class="review-val">{accountName}</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Payment Mode</span>
+                        <span class="review-val">{selectedMode}</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Amount</span>
+                        <span class="review-val amount-highlight">
+                            <template if:true={paymentAmount}>₹{paymentAmount}</template>
+                            <template if:false={paymentAmount}><em class="not-found">Not found in receipt</em></template>
+                        </span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Reference #</span>
+                        <span class="review-val">
+                            <template if:true={referenceNumber}>{referenceNumber}</template>
+                            <template if:false={referenceNumber}><em class="not-found">Not found in receipt</em></template>
+                        </span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Bank Name</span>
+                        <span class="review-val">
+                            <template if:true={bankName}>{bankName}</template>
+                            <template if:false={bankName}><em class="not-found">Not found in receipt</em></template>
+                        </span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Payment Date</span>
+                        <span class="review-val">
+                            <template if:true={paymentDate}>{paymentDate}</template>
+                            <template if:false={paymentDate}><em class="not-found">Not found in receipt</em></template>
+                        </span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Status</span>
+                        <span class="pqa-status-pill">Draft</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-key">Receipt</span>
+                        <span class="review-val">📎 {selectedFileName}</span>
+                    </div>
+                </div>
+
+                <div class="pqa-actions">
+                    <button class="pqa-btn-secondary" onclick={goBack}>← Back</button>
+                    <button class="pqa-btn-primary" onclick={handleSubmit} disabled={isSaving}>
+                        <template if:true={isSaving}>Saving…</template>
+                        <template if:false={isSaving}>✓ Save Payment</template>
+                    </button>
+                </div>
+            </template>
+
+        </template>
+    </div>
+</template>

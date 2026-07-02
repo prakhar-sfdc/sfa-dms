@@ -1,0 +1,666 @@
+/* ═══════════════════════════════════════════════════════════════
+   DISTRIBUTOR DASHBOARD — Unified "Refined Enterprise" Design
+   All cards: white · Background: #F0F4F8 slate
+   Primary accent: #4F46E5 indigo
+   LWC-safe: :host variables · no @import · no :root
+   ═══════════════════════════════════════════════════════════════ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:host {
+    /* ── Core palette ── */
+    --bg:              #EFF2F7;
+    --surface:         #FFFFFF;
+    --border:          #E4E9F2;
+    --border-hover:    #C7D2E8;
+
+    /* ── Indigo accent (primary) ── */
+    --indigo:          #4F46E5;
+    --indigo-light:    #EEF2FF;
+    --indigo-muted:    #C7D2FE;
+
+    /* ── Text ── */
+    --text-dark:       #0F172A;
+    --text-mid:        #334155;
+    --text-soft:       #64748B;
+    --text-muted:      #94A3B8;
+
+    /* ── Semantic ── */
+    --green:           #059669;
+    --green-bg:        #ECFDF5;
+    --amber:           #D97706;
+    --amber-bg:        #FFFBEB;
+    --red:             #DC2626;
+    --red-bg:          #FFF1F2;
+
+    /* ── KPI / Credit stripe accent hues ── */
+    --stripe-1:        #4F46E5;   /* indigo */
+    --stripe-2:        #10B981;   /* emerald */
+    --stripe-3:        #7C3AED;   /* violet */
+    --stripe-4:        #0EA5E9;   /* sky */
+    --stripe-5:        #F59E0B;   /* amber */
+
+    /* ── Shadows ── */
+    --shadow-card:     0 1px 4px rgba(15,23,42,0.06), 0 2px 8px rgba(15,23,42,0.04);
+    --shadow-hover:    0 8px 24px rgba(15,23,42,0.10), 0 2px 8px rgba(15,23,42,0.06);
+    --shadow-lift:     0 16px 40px rgba(15,23,42,0.13), 0 4px 12px rgba(15,23,42,0.07);
+
+    /* ── Shape & motion ── */
+    --radius:          16px;
+    --radius-sm:       10px;
+    --ease:            0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHELL
+   ══════════════════════════════════════════════════════════════ */
+.dashboard {
+    min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    padding: 2rem 2.25rem;
+    animation: pageFade 0.35s ease both;
+}
+
+@keyframes pageFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════════════════════════ */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -0.04em;
+    margin-bottom: 0.15rem;
+}
+
+.header p {
+    font-size: 0.825rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.date-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.45rem 1rem;
+    border-radius: 60px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    box-shadow: var(--shadow-card);
+    white-space: nowrap;
+}
+
+.emoji { font-size: 0.95rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   SHARED CARD BASE — every card on this page uses this
+   ══════════════════════════════════════════════════════════════ */
+.card,
+.cr-card,
+.card-large {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition:
+        transform      var(--ease),
+        box-shadow     var(--ease),
+        border-color   var(--ease);
+}
+
+.card:hover,
+.cr-card:hover,
+.card-large:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    /* border-color: var(--border-hover); */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KPI CARDS
+   ══════════════════════════════════════════════════════════════ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card {
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    cursor: default;
+}
+
+/* Colored top accent bar — the ONLY visual differentiation */
+/* .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--stripe-1);
+    transition: height var(--ease);
+} */
+
+.card:hover::before { height: 4px; }
+
+.card[data-id="1"]{ border:2px solid  var(--stripe-1); }
+.card[data-id="2"]{ border:2px solid  var(--stripe-2); }
+.card[data-id="3"]{ border:2px solid  var(--stripe-3); }
+.card[data-id="4"]{ border:2px solid  var(--stripe-4); }
+.card[data-id="5"]{ border:2px solid var(--stripe-5); }
+
+/* Tinted icon area top-right — decorative circle */
+.card::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--indigo-light);
+    opacity: 0.5;
+    transition: opacity var(--ease), transform var(--ease);
+}
+
+.card[data-id="1"]::after { background: rgba(79,70,229,0.06); }
+.card[data-id="2"]::after { background: rgba(16,185,129,0.06); }
+.card[data-id="3"]::after { background: rgba(124,58,237,0.06); }
+.card[data-id="4"]::after { background: rgba(14,165,233,0.06); }
+.card[data-id="5"]::after { background: rgba(245,158,11,0.06); }
+
+.card:hover::after { opacity: 1; transform: scale(1.2); }
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-label {
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: var(--text-muted);
+    margin-bottom: 0.55rem;
+}
+
+.card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 0.7rem;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+}
+
+/* Trend pill — tinted to match card stripe */
+.trend {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.22rem 0.65rem;
+    border-radius: 20px;
+    display: inline-block;
+    letter-spacing: 0.01em;
+}
+
+.card[data-id="1"] .trend { background: rgba(79,70,229,0.08);  color: var(--stripe-1); }
+.card[data-id="2"] .trend { background: rgba(16,185,129,0.08); color: var(--stripe-2); }
+.card[data-id="3"] .trend { background: rgba(124,58,237,0.08); color: var(--stripe-3); }
+.card[data-id="4"] .trend { background: rgba(14,165,233,0.08); color: var(--stripe-4); }
+.card[data-id="5"] .trend { background: rgba(245,158,11,0.08); color: var(--stripe-5); }
+
+/* ══════════════════════════════════════════════════════════════
+   CREDIT LIMIT SECTION
+   ══════════════════════════════════════════════════════════════ */
+.credit-section { margin-bottom: 1.5rem; }
+
+.credit-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.9rem;
+    padding-left: 0.2rem;
+}
+
+.credit-cards-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    gap: 1rem;
+}
+
+/* Credit cards — same white base, top stripe only */
+.cr-card {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+}
+
+/* .cr-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    transition: height var(--ease);
+} */
+
+/* .cr-card:hover::before { height: 4px; } */
+
+.cr-card--sanctioned{ border:2px solid var(--stripe-2); }
+.cr-card--utilized{ border:2px solid var(--stripe-5); }
+.cr-card--available{ border:2px solid var(--stripe-4); }
+.cr-card--status{ border:2px solid var(--stripe-1); }
+.cr-card--bar{ border:2px solid var(--stripe-3); }
+
+/* Override old coloured backgrounds */
+.cr-card--sanctioned,
+.cr-card--utilized,
+.cr-card--available,
+.cr-card--status,
+.cr-card--bar {
+    background: var(--surface);
+    /* border-color: var(--border); */
+}
+
+/* Hide icons */
+.cr-icon { display: none; }
+
+.cr-label {
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+.cr-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+}
+
+/* Credit status pill */
+.cr-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.8rem;
+    border-radius: 20px;
+    margin-top: 0.2rem;
+}
+
+.cr-status--healthy  { background: var(--green-bg);  color: var(--green); }
+.cr-status--critical { background: var(--amber-bg);  color: var(--amber); }
+.cr-status--over     { background: var(--red-bg);    color: var(--red); }
+
+/* Utilization bar */
+.cr-pct {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    letter-spacing: -0.03em;
+}
+
+.cr-bar-track {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.cr-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cr-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 0.2rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRID
+   ══════════════════════════════════════════════════════════════ */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LARGE CARDS (charts · tables · orders · deliveries)
+   Same white card base — top accent on hover only
+   ══════════════════════════════════════════════════════════════ */
+.card-large {
+    padding: 1.4rem;
+    height: 310px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Accent top line — revealed on hover */
+.card-large::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--indigo);
+    opacity: 0;
+    transition: opacity var(--ease);
+}
+
+.card-large:hover::before { opacity: 1; }
+
+.card-large h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Indigo dot before every chart/table heading */
+.card-large h3::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--indigo);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+.chart-container {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLES
+   ══════════════════════════════════════════════════════════════ */
+.inventory {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.1rem;
+}
+
+.inventory th {
+    text-align: left;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.inventory td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.855rem;
+    font-weight: 500;
+    color: var(--text-mid);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--ease);
+}
+
+.inventory tbody tr:last-child td { border-bottom: none; }
+
+.inventory tbody tr:hover td {
+    background: var(--indigo-light);
+    color: var(--text-dark);
+}
+
+.low      { color: var(--amber); font-weight: 700; font-size: 0.8rem; }
+.very-low { color: var(--red);   font-weight: 700; font-size: 0.8rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   RECENT ORDERS
+   ══════════════════════════════════════════════════════════════ */
+.recent-orders-card {
+    height: auto;
+    min-height: 240px;
+}
+
+.orders { list-style: none; }
+
+.orders li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: background var(--ease), padding-left var(--ease);
+}
+
+.orders li:last-child { border-bottom: none; }
+
+.orders li:hover {
+    background: var(--indigo-light);
+    padding-left: 0.9rem;
+}
+
+.order-link {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--indigo);
+    text-decoration: none;
+    transition: color var(--ease);
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: -0.01em;
+}
+
+.order-link:hover { color: #3730A3; }
+
+.order-status {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.24rem 0.75rem;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+}
+
+.status-delivered  { color: var(--green); background: var(--green-bg); }
+.status-pending    { color: var(--amber); background: var(--amber-bg); }
+.status-processing { color: var(--indigo); background: var(--indigo-light); }
+
+/* ══════════════════════════════════════════════════════════════
+   STATUS PIE / LEGEND
+   ══════════════════════════════════════════════════════════════ */
+.status-pie-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.pie-canvas-area {
+    flex: 0 0 195px;
+    height: 195px;
+    position: relative;
+}
+
+.pie-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    overflow-y: auto;
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background var(--ease);
+}
+
+.legend-row:hover { background: var(--bg); }
+
+.legend-dot   { flex-shrink: 0; }
+.legend-label { flex: 1; font-size: 0.78rem; font-weight: 600; color: var(--text-mid); }
+
+.legend-count {
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: var(--indigo);
+    background: var(--indigo-light);
+    padding: 0.12rem 0.5rem;
+    border-radius: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UPCOMING DELIVERIES
+   ══════════════════════════════════════════════════════════════ */
+.delivery-card {
+    height: auto;
+    min-height: 320px;
+}
+
+.next-days-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.18rem 0.6rem;
+    border-radius: 20px;
+    background: var(--indigo-light);
+    color: var(--indigo);
+    margin-left: 0.45rem;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+}
+
+.delivery-list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.delivery-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 0.5rem;
+    border-radius: var(--radius-sm);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--ease), padding-left var(--ease);
+}
+
+.delivery-row:last-child { border-bottom: none; }
+
+.delivery-row:hover {
+    background: var(--indigo-light);
+    padding-left: 0.9rem;
+}
+
+.delivery-order  { font-size: 0.82rem; font-weight: 700; color: var(--indigo); font-family: 'Courier New', Courier, monospace; }
+.delivery-dealer { font-size: 0.73rem; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
+.delivery-right  { text-align: right; }
+
+.delivery-date {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    margin-bottom: 4px;
+}
+
+.delivery-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.18rem 0.6rem;
+    border-radius: 20px;
+    display: inline-block;
+    letter-spacing: 0.02em;
+}
+
+.badge-urgent { background: var(--red-bg);   color: var(--red); }
+.badge-soon   { background: var(--amber-bg); color: var(--amber); }
+.badge-normal { background: var(--green-bg); color: var(--green); }
+
+.no-deliveries {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 2rem 0;
+    font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--indigo-muted); }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .dashboard        { padding: 1rem; }
+    .kpi-grid         { grid-template-columns: repeat(2, 1fr); }
+    .credit-cards-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2           { grid-template-columns: 1fr; }
+    .card-value       { font-size: 1.55rem; }
+    .header h1        { font-size: 1.3rem; }
+}

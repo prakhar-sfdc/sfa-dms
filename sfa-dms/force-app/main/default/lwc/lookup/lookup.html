@@ -1,0 +1,53 @@
+<template>
+    <div class="lookup-container">
+
+        <!-- Label -->
+        <label class="label">{label}</label>
+
+        <!-- Input -->
+        <div class="lookup-box">
+
+            <lightning-input
+                type="text"
+                value={searchKey}
+                placeholder="Search..."
+                onchange={handleChange}
+                onclick={handleFocus}>
+            </lightning-input>
+
+            <!-- Selected Pill -->
+            <template if:true={selectedName}>
+                <div class="pill">
+                    <span>{selectedName}</span>
+                    <lightning-button-icon icon-name="utility:close"
+                                            size="x-small"
+                                            onclick={clearSelection}>
+                    </lightning-button-icon>
+                </div>
+            </template>
+
+            <!-- Dropdown -->
+            <template if:true={showDropdown}>
+                <div class="dropdown">
+
+                    <template for:each={records} for:item="rec">
+                        <div key={rec.Id}
+                             class="dropdown-item"
+                             data-id={rec.Id}
+                             data-name={rec.Name}
+                             onclick={handleSelect}>
+                            {rec.Name}
+                        </div>
+                    </template>
+
+                    <template if:false={records.length}>
+                        <div class="no-data">No results</div>
+                    </template>
+
+                </div>
+            </template>
+
+        </div>
+
+    </div>
+</template>

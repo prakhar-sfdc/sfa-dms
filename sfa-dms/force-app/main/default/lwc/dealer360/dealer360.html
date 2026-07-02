@@ -1,0 +1,299 @@
+<template>
+    <div class="d360-shell">
+
+        <!-- ── Page Title ── -->
+        <div class="d360-header">
+            <div class="d360-header-left">
+                <div class="d360-avatar">A</div>
+                <div>
+                    <p class="d360-title">Account 360</p>
+                    <p class="d360-sub">Financial Overview</p>
+                </div>
+            </div>
+            <div class="d360-header-right">
+                <div class="header-badge">Active</div>
+            </div>
+        </div>
+
+        <!-- ── Carousel ── -->
+        <template if:true={hasData}>
+            <div class="carousel-shell">
+
+                <!-- Prev Button -->
+                <button class="carousel-nav carousel-nav--prev" onclick={prevCard} disabled={isFirst} aria-label="Previous">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+
+                <!-- Card Viewport -->
+                <div class="carousel-viewport">
+
+                    <!-- Card 0: Orders -->
+                    <template if:true={isCard0}>
+                        <div class="d360-card orders" onclick={openOrders}>
+                            <div class="card-icon orders-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 7L12 12L4 7M20 7V17L12 22L4 17V7M20 7L12 2L4 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 12V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-label">Total Orders</p>
+                                <p class="card-value">₹ {summary.totalOrdersAmount}</p>
+                            </div>
+                            <div class="card-arrow">→</div>
+                        </div>
+                    </template>
+
+                    <!-- Card 1: Payments -->
+                    <template if:true={isCard1}>
+                        <div class="d360-card payments" onclick={openPayments}>
+                            <div class="card-icon payments-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="6" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M2 10H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <path d="M16 15H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-label">Total Payments</p>
+                                <p class="card-value">₹ {summary.totalPayments}</p>
+                            </div>
+                            <div class="card-arrow">→</div>
+                        </div>
+                    </template>
+
+                    <!-- Card 2: Credit Notes -->
+                    <template if:true={isCard2}>
+                        <div class="d360-card credit" onclick={openCredit}>
+                            <div class="card-icon credit-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-label">Credit Notes</p>
+                                <p class="card-value">₹ {summary.totalCreditNotes}</p>
+                            </div>
+                            <div class="card-arrow">→</div>
+                        </div>
+                    </template>
+
+                    <!-- Card 3: Debit Notes -->
+                    <template if:true={isCard3}>
+                        <div class="d360-card debit" onclick={openDebit}>
+                            <div class="card-icon debit-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-label">Debit Notes</p>
+                                <p class="card-value">₹ {summary.totalDebitNotes}</p>
+                            </div>
+                            <div class="card-arrow">→</div>
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- Next Button -->
+                <button class="carousel-nav carousel-nav--next" onclick={nextCard} disabled={isLast} aria-label="Next">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+
+            </div>
+
+            <!-- Dot Indicators -->
+            <div class="carousel-dots">
+                <span class={dot0}></span>
+                <span class={dot1}></span>
+                <span class={dot2}></span>
+                <span class={dot3}></span>
+            </div>
+        </template>
+
+        <!-- ── No Data ── -->
+        <template if:false={hasData}>
+            <div class="d360-empty">
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <p>Loading dealer data...</p>
+                </div>
+            </div>
+        </template>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MODAL: ORDERS (unchanged)
+    ══════════════════════════════════════ -->
+    <template if:true={showOrdersModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div>
+                        <p class="modal-title">Orders</p>
+                        <p class="modal-sub">All orders placed by this dealer</p>
+                    </div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={ordersLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading orders...</span></div>
+                </template>
+                <template if:true={orders}>
+                    <div class="modal-body">
+                        <template for:each={orders} for:item="ord">
+                            <div key={ord.orderId} class="order-block">
+                                <div class="order-row" data-id={ord.orderId} onclick={toggleOrder}>
+                                    <div class="order-row-left">
+                                        <span class="order-num">{ord.orderNumber}</span>
+                                        <span class={ord.statusClass}>{ord.status}</span>
+                                    </div>
+                                    <div class="order-row-right">
+                                        <span class="order-amount">₹ {ord.netAmount}</span>
+                                        <span class="order-date">{ord.orderDate}</span>
+                                        <span class="expand-icon">{ord.expandIcon}</span>
+                                    </div>
+                                </div>
+                                <template if:true={ord.expanded}>
+                                    <div class="line-items">
+                                        <table class="items-table">
+                                            <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+                                            <tbody>
+                                                <template for:each={ord.items} for:item="item">
+                                                    <tr key={item.productName}>
+                                                        <td>{item.productName}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>₹ {item.unitPrice}</td>
+                                                        <td>₹ {item.totalPrice}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: PAYMENTS (unchanged)
+    ══════════════════════════════════════ -->
+    <template if:true={showPaymentsModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Payments</p><p class="modal-sub">All cleared payments from this dealer</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={paymentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading payments...</span></div>
+                </template>
+                <template if:true={payments}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Mode</th><th>Status</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={payments} for:item="pay">
+                                    <tr key={pay.paymentName}>
+                                        <td>{pay.paymentName}</td><td>{pay.paymentDate}</td>
+                                        <td><span class="mode-chip">{pay.mode}</span></td>
+                                        <td><span class={pay.statusClass}>{pay.status}</span></td>
+                                        <td class="amt-cell">₹ {pay.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: CREDIT NOTES (unchanged)
+    ══════════════════════════════════════ -->
+    <template if:true={showCreditModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Credit Notes</p><p class="modal-sub">Adjustments in dealer's favour</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={adjustmentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading credit notes...</span></div>
+                </template>
+                <template if:true={creditNotes}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Reason</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={creditNotes} for:item="cn">
+                                    <tr key={cn.name}>
+                                        <td>{cn.name}</td><td>{cn.adjustmentDate}</td>
+                                        <td class="reason-cell">{cn.reason}</td>
+                                        <td class="amt-cell credit-amt">₹ {cn.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══════════════════════════════════════
+         MODAL: DEBIT NOTES (unchanged)
+    ══════════════════════════════════════ -->
+    <template if:true={showDebitModal}>
+        <div class="modal-backdrop" onclick={closeModal}>
+            <div class="modal-box" onclick={stopProp}>
+                <div class="modal-header">
+                    <div><p class="modal-title">Debit Notes</p><p class="modal-sub">Adjustments charged to dealer</p></div>
+                    <button class="modal-close" onclick={closeModal}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6L18 18"/></svg>
+                    </button>
+                </div>
+                <template if:true={adjustmentsLoading}>
+                    <div class="modal-loader"><div class="spinner"></div><span>Loading debit notes...</span></div>
+                </template>
+                <template if:true={debitNotes}>
+                    <div class="modal-body">
+                        <table class="items-table full">
+                            <thead><tr><th>Reference</th><th>Date</th><th>Reason</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                <template for:each={debitNotes} for:item="dn">
+                                    <tr key={dn.name}>
+                                        <td>{dn.name}</td><td>{dn.adjustmentDate}</td>
+                                        <td class="reason-cell">{dn.reason}</td>
+                                        <td class="amt-cell debit-amt">₹ {dn.amount}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</template>

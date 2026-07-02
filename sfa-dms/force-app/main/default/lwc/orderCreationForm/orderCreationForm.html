@@ -1,0 +1,103 @@
+<template>
+
+    <lightning-card>
+
+        <!-- STEP 1 -->
+        <template if:true={isStep1}>
+            <div class="step-container">
+
+                <h2 class="title">New Order</h2>
+
+                <div class="radio-group">
+                    <lightning-radio-group label="Select a record type" options={recordTypeOptions}
+                        value={selectedRecordType} onchange={handleRecordTypeChange}>
+                    </lightning-radio-group>
+                </div>
+
+                <div class="footer">
+                    <lightning-button label="Cancel"></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={goToStep2}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- STEP 2 -->
+        <template if:true={isStep2}>
+            <div class="step-container">
+
+                <h2 class="title">New Order: {selectedRecordType}</h2>
+
+                <div class="form-grid">
+
+                    <!-- 🔥 Dynamic Fields -->
+                    <template for:each={fields} for:item="field">
+                        <div key={field.apiName} class="field">
+
+                            <!-- ACCOUNT -->
+                            <template if:true={field.isAccount}>
+                                <c-lookup label={field.label} object-api-name="Account" is-secondary={isSecondary}
+                                    onlookupchange={handleAccountChange}>
+                                </c-lookup>
+                            </template>
+
+                            <!-- PICKLIST -->
+                            <template if:true={field.isPicklist}>
+                                <lightning-combobox label={field.label} options={field.options}
+                                    data-field={field.apiName} onchange={handleChange}>
+                                </lightning-combobox>
+                            </template>
+
+                            <!-- DATE -->
+                            <template if:true={field.isDate}>
+                                <lightning-input type="date" label={field.label} data-field={field.apiName}
+                                    onchange={handleChange}>
+                                </lightning-input>
+                            </template>
+
+                            <!-- DATETIME -->
+                            <template if:true={field.isDateTime}>
+                                <lightning-input type="datetime" label={field.label} data-field={field.apiName}
+                                    onchange={handleChange}>
+                                </lightning-input>
+                            </template>
+
+                            <!-- NUMBER -->
+                            <template if:true={field.isNumber}>
+                                <lightning-input type="number" label={field.label} data-field={field.apiName}
+                                    onchange={handleChange}>
+                                </lightning-input>
+                            </template>
+
+                            <!-- BOOLEAN -->
+                            <template if:true={field.isBoolean}>
+                                <lightning-input type="checkbox" label={field.label} data-field={field.apiName}
+                                    onchange={handleCheckboxChange}>
+                                </lightning-input>
+                            </template>
+
+                            <!-- TEXT -->
+                            <template if:true={field.isText}>
+                                <lightning-input type="text" label={field.label} data-field={field.apiName}
+                                    onchange={handleChange}>
+                                </lightning-input>
+                            </template>
+
+                        </div>
+                    </template>
+
+                </div>
+
+                <div class="footer">
+                    <lightning-button label="Cancel" onclick={goBack}></lightning-button>
+                    <lightning-button variant="brand" label="Save" onclick={handleSave}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </template>
+
+    </lightning-card>
+
+</template>

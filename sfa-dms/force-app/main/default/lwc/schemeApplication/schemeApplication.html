@@ -1,0 +1,105 @@
+<template>
+    <div class="portal">
+
+        <!-- ── HEADER ─────────────────────────────────────────── -->
+        <div class="portal-header">
+            <div class="header-left">
+                <div class="header-icon">🎁</div>
+                <div>
+                    <h2 class="portal-title">Available Schemes</h2>
+                    <p class="portal-subtitle">Schemes eligible for this order</p>
+                </div>
+            </div>
+            <template if:true={hasSchemes}>
+                <div class="count-pill">{schemeCount} eligible</div>
+            </template>
+        </div>
+
+        <!-- ── GLOBAL LOADING ─────────────────────────────────── -->
+        <template if:true={isLoadingData}>
+            <div class="skeleton-wrap">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </template>
+
+        <!-- ── ERROR ─────────────────────────────────────────── -->
+        <template if:true={loadError}>
+            <div class="error-banner">
+                <span class="error-icon">⚠️</span>
+                <span>{loadError}</span>
+            </div>
+        </template>
+
+        <!-- ── SCHEME LIST ────────────────────────────────────── -->
+        <template if:false={isLoadingData}>
+            <template if:true={hasSchemes}>
+                <div class="scheme-list">
+                    <template for:each={schemes} for:item="sch">
+                        <div key={sch.schemeId} class={sch.cardClass}>
+
+                            <!-- Glow blob (decorative) -->
+                            <div class={sch.blobClass}></div>
+
+                            <!-- Top row: chip + applied badge -->
+                            <div class="card-top">
+                                <span class={sch.chipClass}>{sch.schemeType}</span>
+                                <template if:true={sch.alreadyApplied}>
+                                    <span class="applied-badge">✓ Applied</span>
+                                </template>
+                            </div>
+
+                            <!-- Scheme name -->
+                            <h3 class="card-name">{sch.name}</h3>
+
+                            <!-- Eligibility note -->
+                            <p class="card-note">{sch.eligibilityNote}</p>
+
+                            <!-- Divider -->
+                            <div class="card-divider"></div>
+
+                            <!-- Benefit row + CTA -->
+                            <div class="card-bottom">
+                                <div class="benefit-block">
+                                    <span class="benefit-label">Your benefit</span>
+                                    <span class={sch.benefitClass}>{sch.benefitDisplay}</span>
+                                </div>
+
+                                <button
+                                    class={sch.btnClass}
+                                    data-id={sch.schemeId}
+                                    onclick={handleApply}
+                                    disabled={sch.btnDisabled}>
+                                    <template if:true={sch.isApplying}>
+                                        <span class="btn-spinner"></span>
+                                    </template>
+                                    <template if:false={sch.isApplying}>
+                                        {sch.btnLabel}
+                                    </template>
+                                </button>
+                            </div>
+
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ── EMPTY STATE ───────────────────────────────── -->
+            <template if:false={hasSchemes}>
+                <div class="empty-state">
+                    <div class="empty-illustration">
+                        <div class="empty-circle"></div>
+                        <div class="empty-icon-wrap">🔖</div>
+                    </div>
+                    <p class="empty-title">No schemes available</p>
+                    <p class="empty-sub">
+                        This order doesn't qualify for any active schemes yet.
+                        Add more products or increase the order value to unlock offers.
+                    </p>
+                </div>
+            </template>
+        </template>
+
+    </div>
+</template>

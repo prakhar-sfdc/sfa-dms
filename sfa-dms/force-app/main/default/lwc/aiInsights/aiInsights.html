@@ -1,0 +1,188 @@
+<template>
+    <div class="ai-container">
+
+        <!-- KPI SECTION -->
+        <section class="section">
+            <h2 class="section-title">AI Recommendations – KPI Overview</h2>
+            <div class="kpi-grid">
+                <template for:each={kpis} for:item="kpi">
+                    <div key={kpi.id} class="kpi-card glass-card">
+                        <p class="kpi-label">{kpi.title}</p>
+                        <div class="kpi-value">{kpi.value}</div>
+                        <span class="kpi-subtitle">{kpi.subtitle}</span>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- ACTIVE SCHEMES SECTION -->
+        <template if:true={hasSchemes}>
+            <section class="section">
+                <h2 class="section-title">Active Schemes for You</h2>
+                <div class="scheme-grid">
+                    <template for:each={schemes} for:item="scheme">
+                        <div key={scheme.id} class={scheme.cardClass}>
+
+                            <!-- Header row -->
+                            <div class="scheme-header">
+                                <span class="scheme-type-badge">{scheme.schemeType}</span>
+                                <span class={scheme.statusBadgeClass}>{scheme.statusLabel}</span>
+                            </div>
+
+                            <h3 class="scheme-name">{scheme.schemeName}</h3>
+                            <p class="scheme-benefit">🎁 {scheme.benefit}</p>
+
+                            <!-- Applied / Not Applied pill -->
+                            <div class="scheme-applied-row">
+                                <template if:true={scheme.isApplied}>
+                                    <span class="applied-pill applied">✅ Applied – Saved {scheme.totalDiscount}</span>
+                                </template>
+                                <template if:false={scheme.isApplied}>
+                                    <span class="applied-pill not-applied">⏳ Not yet applied</span>
+                                </template>
+                            </div>
+
+                            <!-- Gap / next slab -->
+                            <div class="scheme-gap-box">
+                                <span class="gap-label">📊 What you need:</span>
+                                <span class="gap-value">{scheme.gap}</span>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="scheme-footer">
+                                <span class="scheme-date">🗓 Ends: {scheme.endDate}</span>
+                                <template if:true={scheme.daysLeftLabel}>
+                                    <span class="scheme-days">{scheme.daysLeftLabel}</span>
+                                </template>
+                            </div>
+
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <!-- AI INSIGHTS SECTION -->
+        <section class="section">
+            <h2 class="section-title">AI Powered Insights</h2>
+
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="state-box">
+                    <lightning-spinner alternative-text="Loading insights..." size="medium">
+                    </lightning-spinner>
+                    <p class="state-text">Einstein is analysing your dealer data…</p>
+                </div>
+            </template>
+
+            <!-- Error State -->
+            <template if:true={hasError}>
+                <div class="state-box error-box">
+                    <p class="error-icon">⚠️</p>
+                    <p class="error-text">{errorMessage}</p>
+                    <button class="retry-btn" onclick={handleRetry}>
+                        Retry
+                    </button>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template if:true={isEmpty}>
+                <div class="state-box">
+                    <p class="state-text">No insights available yet.</p>
+                </div>
+            </template>
+
+            <!-- Insights Cards -->
+            <template if:true={hasInsights}>
+                <div class="insight-grid">
+                    <template for:each={insights} for:item="insight">
+                        <div key={insight.id} class={insight.cardClass}>
+                            <div class="insight-badge">
+                                {insight.level}
+                            </div>
+                            <h3 class="insight-title">{insight.title}</h3>
+                            <p class="insight-desc">{insight.description}</p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </section>
+
+        <!-- SCHEME AI INSIGHTS (from Einstein) -->
+        <template if:true={hasSchemeInsights}>
+            <section class="section">
+                <h2 class="section-title">Scheme Intelligence</h2>
+                <div class="insight-grid">
+                    <template for:each={schemeInsights} for:item="si">
+                        <div key={si.schemeName} class={si.cardClass}>
+                            <div class="insight-badge">{si.status}</div>
+                            <h3 class="insight-title">{si.schemeName}</h3>
+                            <p class="insight-desc">{si.benefit}</p>
+                            <div class="si-gap-row">
+                                <span class="si-gap">{si.gap}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <!-- WEEKLY PERFORMANCE + TOP PRODUCTS -->
+        <section class="section grid-two">
+
+            <div class="card glass-card">
+                <h2 class="card-title">Weekly Performance</h2>
+                <div class="table-wrapper">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Visits</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={weeklyPerformance} for:item="day">
+                                <tr key={day.id}>
+                                    <td>{day.day}</td>
+                                    <td>{day.visits}</td>
+                                    <td>{day.orders}</td>
+                                    <td>{day.revenue}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card glass-card">
+                <h2 class="card-title">Top Performing Products</h2>
+                <ul class="product-list">
+                    <template for:each={topProducts} for:item="product">
+                        <li key={product.id} class="product-item">
+                            <span class="product-name">{product.name}</span>
+                            <span class="product-sales">{product.sales}</span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+        </section>
+
+        <!-- AI RECOMMENDATIONS SECTION -->
+        <section class="section">
+            <h2 class="section-title">Dealers AI Recommendations</h2>
+            <div class="recommendations-list">
+                <template for:each={recommendations} for:item="rec">
+                    <div key={rec.id} class="recommendation-card glass-card">
+                        <h3 class="rec-title">{rec.title}</h3>
+                        <p class="rec-desc">{rec.description}</p>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+    </div>
+</template>

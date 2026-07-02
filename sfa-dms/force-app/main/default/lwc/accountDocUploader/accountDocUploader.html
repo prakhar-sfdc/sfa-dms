@@ -1,0 +1,39 @@
+<template>
+    <lightning-card title="Upload Documents">
+
+        <template if:true={availableOptions.length}>
+            <div class="slds-p-around_medium">
+
+                <lightning-combobox
+                    name="docType"
+                    label="Select Document Type"
+                    value={selectedDoc}
+                    placeholder="Select document"
+                    options={availableOptions}
+                    onchange={handleDocChange}>
+                </lightning-combobox>
+
+                <template if:true={selectedDoc}>
+                    <div class="slds-m-top_medium">
+                        <lightning-file-upload
+                            label="Upload Document"
+                            name="fileUploader"
+                            accept={acceptedFormats}
+                            record-id={accountId}
+                            onuploadfinished={handleUploadFinished}
+                            multiple>
+                        </lightning-file-upload>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+        <template if:false={availableOptions.length}>
+            <p class="slds-p-around_medium">
+                ✅ All required documents have been uploaded.
+            </p>
+        </template>
+
+    </lightning-card>
+</template>

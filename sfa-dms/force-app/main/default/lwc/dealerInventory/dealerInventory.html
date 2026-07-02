@@ -1,0 +1,62 @@
+<template>
+
+<div class="inventory-container">
+
+    <div class="inventory-header">
+
+        <div>
+            <h1>Inventory</h1> 
+            <p>Available products for ordering</p>
+        </div>
+
+    </div>
+
+
+    <div class="inventory-table">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Product</th>
+                    <th>Available Stock</th>
+                    <th>Unit Price</th>
+                    <th>Status</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <template for:each={inventory} for:item="item">
+
+                    <tr key={item.Id}>
+
+                        <td>{item.Product__r.Name}</td>
+
+                        <td>{item.Available_Stock__c}</td>
+
+                        <td>{item.formattedPrice}</td>
+
+                        <td>
+
+                            <span class={item.stockClass}>
+                                {item.stockStatus}
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                </template>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</template>

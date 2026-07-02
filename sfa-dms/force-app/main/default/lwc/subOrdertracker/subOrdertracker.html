@@ -1,0 +1,344 @@
+<template>
+    <div class="sot-root">
+
+        <!-- ══════════════════ LOADING ══════════════════ -->
+        <template if:true={isLoading}>
+            <div class="sot-loader">
+                <div class="sot-pulse-ring"></div>
+                <div class="sot-pulse-ring sot-pulse-ring--2"></div>
+                <div class="sot-pulse-ring sot-pulse-ring--3"></div>
+                <div class="sot-loader-icon">📦</div>
+                <p class="sot-loader-text">Loading Sub Order…</p>
+            </div>
+        </template>
+
+        <!-- ══════════════════ ERROR ══════════════════ -->
+        <template if:true={errorMessage}>
+            <div class="sot-error-banner">
+                <span class="sot-error-icon">⚠️</span>
+                <span class="sot-error-text">{errorMessage}</span>
+                <button class="sot-error-dismiss" onclick={clearError}>✕</button>
+            </div>
+        </template>
+
+        <!-- ══════════════════ MAIN CONTENT ══════════════════ -->
+        <template if:true={subOrder}>
+
+            <!-- ── HEADER ── -->
+            <div class={headerClass}>
+                <div class="sot-header-bg-pattern"></div>
+                <div class="sot-header-content">
+                    <div class="sot-header-top">
+                        <div class="sot-status-pill" style={chipStyle}>
+                            <span class="sot-pill-dot"></span>
+                            {statusConfig.label}
+                        </div>
+                        <span class="sot-order-number-tag">{subOrder.Name}</span>
+                    </div>
+                    <h1 class="sot-order-title">Sub Order Tracker</h1>
+                    <div class="sot-header-meta">
+                        <div class="sot-meta-chip">
+                            <span class="sot-meta-chip-icon">📋</span>
+                            <span>{subOrder.Order__r.Name}</span>
+                        </div>
+                        <div class="sot-meta-chip">
+                            <span class="sot-meta-chip-icon">🏢</span>
+                            <span>{subOrder.Account__r.Name}</span>
+                        </div>
+                        <div class="sot-meta-chip">
+                            <span class="sot-meta-chip-icon">📅</span>
+                            <span>{formattedDate}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PROGRESS STEPPER ── -->
+            <div class="sot-stepper-outer">
+                <div class="sot-stepper">
+                    <template for:each={steps} for:item="step">
+                        <div key={step.id} class={step.cls}>
+                            <div class="sot-step-track">
+                                <div class="sot-step-line sot-step-line--before"></div>
+                                <div class="sot-step-node">
+                                    <span class="sot-step-icon-inner">{step.icon}</span>
+                                    <div class="sot-step-glow"></div>
+                                </div>
+                                <div class="sot-step-line sot-step-line--after"></div>
+                            </div>
+                            <span class="sot-step-label">{step.label}</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- ── SUMMARY STATS ── -->
+            <div class="sot-stats-row">
+                <div class="sot-stat-card">
+                    <span class="sot-stat-icon">📦</span>
+                    <div class="sot-stat-body">
+                        <span class="sot-stat-val">{totalQuantity}</span>
+                        <span class="sot-stat-lbl">Total Units</span>
+                    </div>
+                </div>
+                <div class="sot-stat-card">
+                    <span class="sot-stat-icon">💰</span>
+                    <div class="sot-stat-body">
+                        <span class="sot-stat-val">{subOrder.Cost__c}</span>
+                        <span class="sot-stat-lbl">Order Value</span>
+                    </div>
+                </div>
+                <div class="sot-stat-card">
+                    <span class="sot-stat-icon">🔄</span>
+                    <div class="sot-stat-body">
+                        <span class="sot-stat-val">{transactionCount}</span>
+                        <span class="sot-stat-lbl">Transactions</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PRODUCTS TABLE ── -->
+            <div class="sot-card sot-products-card">
+                <div class="sot-card-header">
+                    <div class="sot-card-header-left">
+                        <span class="sot-card-icon-wrap">📦</span>
+                        <h2 class="sot-card-title">Order Products</h2>
+                    </div>
+                    <span class="sot-total-badge">
+                        <span class="sot-total-badge-dot"></span>
+                        Total Qty: {totalQuantity}
+                    </span>
+                </div>
+                <div class="sot-table-scroll">
+                    <table class="sot-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="sot-num">Quantity</th>
+                                <th class="sot-num">Unit Price</th>
+                                <th class="sot-num">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={products} for:item="p">
+                                <tr key={p.Id} class="sot-table-row">
+                                    <td class="sot-product-name">
+                                        <span class="sot-product-dot"></span>
+                                        {p.Product__r.Name}
+                                    </td>
+                                    <td class="sot-num">
+                                        <span class="sot-qty-badge">{p.Product_Quantity__c}</span>
+                                    </td>
+                                    <td class="sot-num sot-price-cell">{p.Unit_Price__c}</td>
+                                    <td class="sot-num sot-amount-cell">{p.Total_Amount__c}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                        <tfoot>
+                            <tr class="sot-tfoot-row">
+                                <td colspan="2" class="sot-tfoot-label">Grand Total</td>
+                                <td class="sot-num sot-tfoot-price">{subOrder.Cost__c}</td>
+                                <td class="sot-num sot-grand-total">{subOrder.Cost__c}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── TRANSACTION HISTORY ── -->
+            <template if:true={hasTransactions}>
+                <div class="sot-card sot-history-card">
+                    <div class="sot-card-header">
+                        <div class="sot-card-header-left">
+                            <span class="sot-card-icon-wrap">🕐</span>
+                            <h2 class="sot-card-title">Transaction History</h2>
+                        </div>
+                        <span class="sot-history-count">{transactionCount} records</span>
+                    </div>
+                    <div class="sot-history-timeline">
+                        <template for:each={transactions} for:item="txn">
+                            <div key={txn.Id} class="sot-history-item">
+                                <div class="sot-timeline-node">
+                                    <div class={txn.nodeCls}>
+                                        <span class="sot-timeline-icon">{txn.icon}</span>
+                                    </div>
+                                    <div class="sot-timeline-line"></div>
+                                </div>
+                                <div class="sot-history-content">
+                                    <div class="sot-history-header">
+                                        <span class={txn.badgeCls}>{txn.Transaction_Type__c}</span>
+                                        <span class="sot-history-date">{txn.formattedDate}</span>
+                                    </div>
+                                    <div class="sot-history-detail-row">
+                                        <div class="sot-history-qty-pill">
+                                            <span class="sot-history-qty-label">Qty</span>
+                                            <span class="sot-history-qty-val">{txn.Quantity__c}</span>
+                                        </div>
+                                        <template if:true={txn.Remarks__c}>
+                                            <span class="sot-history-remarks">{txn.Remarks__c}</span>
+                                        </template>
+                                    </div>
+                                    <template if:true={txn.Video_Attachment_Id__c}>
+                                        <a class="sot-video-link"
+                                           href={txn.videoUrl}
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            <span class="sot-video-link-icon">🎬</span>
+                                            <span>View Video Proof</span>
+                                            <span class="sot-video-link-arrow">↗</span>
+                                        </a>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ── ACTION FORM (status-based) ── -->
+            <template if:false={isReturned}>
+                <div class={formCardClass}>
+                    <div class="sot-card-header">
+                        <div class="sot-card-header-left">
+                            <span class="sot-card-icon-wrap">{statusConfig.formIcon}</span>
+                            <h2 class="sot-card-title">{statusConfig.formTitle}</h2>
+                        </div>
+                        <div class="sot-next-status-preview">
+                            <span class="sot-next-label">Next →</span>
+                            <span class="sot-next-val" style={chipStyle}>{statusConfig.nextStatus}</span>
+                        </div>
+                    </div>
+
+                    <div class="sot-form-body">
+
+                        <!-- Video Upload -->
+                        <div class="sot-field-group">
+                            <label class="sot-field-label">
+                                <span class="sot-field-label-icon">🎥</span>
+                                Video Proof
+                                <span class="sot-field-required">*</span>
+                            </label>
+                            <div class="sot-upload-zone">
+                                <lightning-file-upload
+                                    label="Choose video file"
+                                    name="videoUpload"
+                                    accept=".mp4,.mov,.avi,.webm,.mkv"
+                                    record-id={subOrderId}
+                                    onuploadfinished={handleUploadFinished}
+                                    multiple="false"
+                                    class="sot-file-upload">
+                                </lightning-file-upload>
+                            </div>
+                            <template if:true={uploadedFileName}>
+                                <div class="sot-upload-success">
+                                    <span class="sot-upload-check">✅</span>
+                                    <span class="sot-upload-name">{uploadedFileName}</span>
+                                    <span class="sot-upload-ready-badge">Ready</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Quantity Input -->
+                        <div class="sot-field-group">
+                            <label class="sot-field-label">
+                                <span class="sot-field-label-icon">🔢</span>
+                                {statusConfig.quantityLabel}
+                                <span class="sot-field-required">*</span>
+                            </label>
+                            <div class="sot-qty-input-wrap">
+                                <input
+                                    type="number"
+                                    class={quantityInputClass}
+                                    value={quantityInput}
+                                    min="0"
+                                    placeholder="Enter quantity…"
+                                    onchange={handleQuantityChange}
+                                    oninput={handleQuantityChange} />
+                                <span class="sot-qty-suffix">/ {totalQuantity}</span>
+                            </div>
+                            <template if:true={showQuantityError}>
+                                <p class="sot-inline-error">
+                                    ⚠️ Quantity must equal <strong>{totalQuantity}</strong> (total ordered quantity)
+                                </p>
+                            </template>
+                            <template if:true={quantityMatch}>
+                                <p class="sot-inline-success">✅ Quantity matches perfectly</p>
+                            </template>
+                            <template if:true={showReturnQtyError}>
+                                <p class="sot-inline-error">
+                                    ⚠️ Returned quantity cannot exceed <strong>{totalQuantity}</strong>
+                                </p>
+                            </template>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="sot-field-group">
+                            <label class="sot-field-label">
+                                <span class="sot-field-label-icon">📝</span>
+                                Remarks
+                                <span class="sot-field-optional">(optional)</span>
+                            </label>
+                            <textarea
+                                class="sot-textarea"
+                                value={remarks}
+                                placeholder="Add notes, observations, or remarks…"
+                                rows="3"
+                                onchange={handleRemarksChange}>
+                            </textarea>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="sot-form-footer">
+                            <button
+                                class={submitBtnClass}
+                                onclick={handleSubmit}
+                                disabled={isSubmitDisabled}>
+                                <template if:true={isSubmitting}>
+                                    <span class="sot-btn-spinner"></span>
+                                    Processing…
+                                </template>
+                                <template if:false={isSubmitting}>
+                                    <span class="sot-btn-icon">{statusConfig.btnIcon}</span>
+                                    {statusConfig.buttonLabel}
+                                </template>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <!-- ── RETURNED / COMPLETED STATE ── -->
+            <template if:true={isReturned}>
+                <div class="sot-completed-card">
+                    <div class="sot-completed-confetti">
+                        <span>🎉</span><span>✨</span><span>🎊</span>
+                    </div>
+                    <div class="sot-completed-graphic">🏁</div>
+                    <h2 class="sot-completed-title">Sub Order Closed</h2>
+                    <p class="sot-completed-sub">
+                        This sub order has been fully processed through all stages.
+                    </p>
+                    <div class="sot-completed-stats">
+                        <div class="sot-cstat">
+                            <span class="sot-cstat-val">{subOrder.Quantity__c}</span>
+                            <span class="sot-cstat-label">Total Units</span>
+                        </div>
+                        <div class="sot-cstat-divider"></div>
+                        <div class="sot-cstat">
+                            <span class="sot-cstat-val">{subOrder.Cost__c}</span>
+                            <span class="sot-cstat-label">Order Value</span>
+                        </div>
+                        <div class="sot-cstat-divider"></div>
+                        <div class="sot-cstat">
+                            <span class="sot-cstat-val">{transactionCount}</span>
+                            <span class="sot-cstat-label">Transactions</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+        </template>
+
+    </div>
+</template>

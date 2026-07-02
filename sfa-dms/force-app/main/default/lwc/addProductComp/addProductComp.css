@@ -1,0 +1,327 @@
+/* inventoryOrderManager.css */
+/* Full width & modern styling - no logic changes, only visual enhancements */
+
+/* Base: Ensure component takes full available width */
+:host {
+    display: block;
+    width: 100%;
+    margin: 0;
+    --lwc-fontFamily: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.full-width-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.inventory-card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.inventory-card:hover {
+    box-shadow: 0 20px 32px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Override default card radius */
+.inventory-card .slds-card {
+    border-radius: 1.5rem;
+    border: none;
+}
+
+/* Card header styling */
+.inventory-card .slds-card__header {
+    padding: 1.5rem 2rem 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: transparent;
+}
+
+.inventory-card .slds-card__header-title {
+    font-weight: 700;
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #1E3A5F, #2C5A7A);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Wrapper with spacious padding */
+.wrapper {
+    padding: 1.5rem 2rem 2rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ========== STATE BOXES (Loading, Error, Empty) ========== */
+.state-box {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: #F9FBFD;
+    border-radius: 1.25rem;
+    margin: 1rem 0;
+}
+
+.loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.state-text {
+    color: #5B6E8C;
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.error-box {
+    background: #FFF5F5;
+    color: #C2410C;
+    border: 1px solid #FFE4E2;
+    border-radius: 1rem;
+}
+
+.error-box p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.empty-state {
+    background: #F9FBFD;
+    color: #5B6E8C;
+    font-weight: 500;
+}
+
+/* ========== MODERN TABLE STYLES ========== */
+.table-container {
+    overflow-x: auto;
+    border-radius: 1rem;
+    background: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.modern-table thead tr {
+    background: linear-gradient(135deg, #F8FAFE 0%, #F1F5F9 100%);
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.modern-table th {
+    text-align: left;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #1E3A5F;
+}
+
+.modern-table th.quantity-header {
+    text-align: right;
+}
+
+.modern-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #EDF2F7;
+    color: #1A2C3E;
+    vertical-align: middle;
+}
+
+.modern-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.modern-table tbody tr:hover {
+    background: rgba(44, 90, 122, 0.03);
+}
+
+/* Product name styling */
+.product-name {
+    font-weight: 500;
+    color: #0F2B3F;
+}
+
+/* Stock badge styling */
+.stock-badge {
+    display: inline-block;
+    background: #EFF6FF;
+    color: #1E6F9F;
+    font-weight: 600;
+    padding: 0.25rem 0.85rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 60px;
+}
+
+/* Quantity input column alignment */
+.modern-table td:last-child {
+    text-align: right;
+}
+
+.qty-input {
+    --lwc-formElementSpacing: 0.5rem;
+    --lwc-borderRadiusMedium: 0.75rem;
+    display: inline-block;
+    width: 110px;
+}
+
+.qty-input lightning-input {
+    margin: 0;
+}
+
+.qty-input .slds-input {
+    border-radius: 0.75rem;
+    border: 1px solid #CBD5E1;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    text-align: center;
+}
+
+.qty-input .slds-input:focus {
+    border-color: #2C6E9E;
+    box-shadow: 0 0 0 3px rgba(44, 110, 158, 0.2);
+    outline: none;
+}
+
+/* ========== BUTTON SECTION ========== */
+.btn-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.add-button {
+    --lwc-brandAccessible: #2C6E9E;
+    --lwc-brandAccessibleActive: #1E4A76;
+    --lwc-borderRadiusMedium: 2rem;
+}
+
+.add-button .slds-button {
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 2rem;
+    background: linear-gradient(105deg, #2C6E9E, #1E4A76);
+    border: none;
+    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+    transition: all 0.25s ease;
+}
+
+.add-button .slds-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(105deg, #1E5A7E, #123D60);
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 1.25rem;
+    }
+    
+    .inventory-card .slds-card__header {
+        padding: 1.25rem 1.25rem 0.5rem;
+    }
+    
+    .modern-table thead {
+        display: none;
+    }
+    
+    .modern-table tbody tr {
+        display: block;
+        margin-bottom: 1.25rem;
+        border: 1px solid #E2E8F0;
+        border-radius: 1rem;
+        background: white;
+        padding: 0.75rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    
+    .modern-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #F0F2F5;
+        text-align: left;
+    }
+    
+    .modern-table td:last-child {
+        border-bottom: none;
+    }
+    
+    .modern-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #2C6E9E;
+        width: 40%;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stock-badge {
+        display: inline-block;
+        margin-left: auto;
+    }
+    
+    .qty-input {
+        width: 120px;
+        margin-left: auto;
+    }
+    
+    .modern-table td:last-child {
+        text-align: left;
+    }
+    
+    .btn-row {
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+    
+    .add-button .slds-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ========== SCROLLBAR (for table overflow) ========== */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+:host {
+    --slds-c-card-body-spacing-block-start: 0;
+    --slds-c-card-body-spacing-block-end: 0;
+    --slds-c-card-body-spacing-inline-start: 0;
+    --slds-c-card-body-spacing-inline-end: 0;
+}

@@ -1,0 +1,995 @@
+/* ============================================================
+   VISIT DETAIL VIEW — Styles matching DashboardComponent UI
+   ============================================================ */
+
+/* ── OUTER CONTAINER ─────────────────────────────────────── */
+.vdv-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #f8fafc;
+    min-height: 100vh;
+    font-family: 'Segoe UI', 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* ── HEADER ──────────────────────────────────────────────── */
+.vdv-header {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #dddbda;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.vdv-back-btn {
+    background: none;
+    border: 1px solid #dddbda;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #0176d3;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.vdv-back-btn:hover {
+    background: #f0f7ff;
+    border-color: #0176d3;
+}
+
+.vdv-account-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.vdv-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0176d3, #00d4ff);
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(1, 118, 211, 0.25);
+}
+
+.vdv-account-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0 0 6px 0;
+}
+
+.vdv-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.vdv-meta-item {
+    font-size: 13px;
+    color: #706e6b;
+    background: #f8fafc;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+}
+
+/* ── 3 ACTION BUTTONS ────────────────────────────────────── */
+.vdv-actions {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding-top: 32px; /* aligns with account info below back btn */
+}
+
+.vdv-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 110px;
+    color: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+.vdv-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.vdv-action-btn:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.vdv-action-order {
+    background: linear-gradient(135deg, #0176d3 0%, #005fb2 100%);
+}
+
+.vdv-action-competitor {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+}
+
+.vdv-action-checkout {
+    background: linear-gradient(135deg, #45c65a 0%, #2e844a 100%);
+}
+
+/* After check-out, grey it out with a tick style */
+.vdv-action-checkout:disabled.checked-out-done {
+    background: linear-gradient(135deg, #706e6b 0%, #444441 100%);
+    opacity: 0.8;
+    cursor: default;
+}
+
+.vdv-btn-icon {
+    font-size: 22px;
+}
+
+.vdv-btn-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Spinner in button */
+.vdv-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: vdv-spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes vdv-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── TAB BAR ─────────────────────────────────────────────── */
+.vdv-tab-bar {
+    display: flex;
+    gap: 0;
+    background: white;
+    border-left: 1px solid #dddbda;
+    border-right: 1px solid #dddbda;
+    border-bottom: 1px solid #dddbda;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.vdv-tab {
+    padding: 14px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #706e6b;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vdv-tab:hover {
+    color: #0176d3;
+    background: #f8fafc;
+}
+
+.vdv-tab.active {
+    color: #0176d3;
+    border-bottom-color: #0176d3;
+    font-weight: 600;
+    background: #f8fafc;
+}
+
+.vdv-tab-badge {
+    background: #0176d3;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* ── TAB CONTENT ─────────────────────────────────────────── */
+.vdv-tab-content {
+    padding: 24px 0;
+}
+
+/* ── DETAIL GRID ─────────────────────────────────────────── */
+.vdv-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.vdv-detail-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border: 1px solid #dddbda;
+}
+
+.vdv-card-full {
+    grid-column: 1 / -1;
+}
+
+.vdv-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #181818;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f3f3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vdv-field-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.vdv-field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8fafc;
+    gap: 12px;
+}
+
+.vdv-field-row:last-child {
+    border-bottom: none;
+}
+
+.vdv-field-label {
+    font-size: 13px;
+    color: #706e6b;
+    font-weight: 500;
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.vdv-field-value {
+    font-size: 14px;
+    color: #181818;
+    font-weight: 500;
+    text-align: right;
+}
+
+.vdv-highlight-green { color: #2e844a; }
+.vdv-highlight-red   { color: #c23934; }
+.vdv-highlight-blue  { color: #0176d3; font-weight: 700; }
+.vdv-mono            { font-family: 'Courier New', monospace; font-size: 12px; }
+
+/* ── NOTES ───────────────────────────────────────────────── */
+.vdv-notes-area { margin-top: 8px; }
+
+.vdv-notes-text {
+    font-size: 14px;
+    color: #181818;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    min-height: 60px;
+}
+
+.vdv-edit-notes-btn {
+    padding: 8px 16px;
+    background: #f8fafc;
+    border: 1px solid #dddbda;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #0176d3;
+    transition: all 0.2s ease;
+}
+
+.vdv-edit-notes-btn:hover {
+    background: #f0f7ff;
+    border-color: #0176d3;
+}
+
+.vdv-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.vdv-textarea:focus {
+    outline: none;
+    border-color: #0176d3;
+    box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.1);
+}
+
+.vdv-notes-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* ── ORDERS SECTION ──────────────────────────────────────── */
+.vdv-orders-section,
+.vdv-competitor-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border: 1px solid #dddbda;
+    min-height: 200px;
+}
+
+.vdv-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.vdv-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.vdv-empty-title {
+    font-size: 16px;
+    color: #706e6b;
+    margin-bottom: 20px;
+}
+
+.vdv-cta-btn {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #0176d3 0%, #005fb2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.2);
+}
+
+.vdv-cta-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(1, 118, 211, 0.3);
+}
+
+.vdv-cta-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.vdv-orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.vdv-orders-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #181818;
+}
+
+.vdv-add-btn {
+    padding: 8px 16px;
+    background: #45c65a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vdv-add-btn:hover:not(:disabled) { background: #2e844a; }
+.vdv-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Orders Table */
+.vdv-table-wrap {
+    border-radius: 8px;
+    border: 1px solid #dddbda;
+    overflow: hidden;
+    overflow-x: auto;
+}
+
+.vdv-table-head {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px 110px 110px 100px;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #dddbda;
+    min-width: 640px;
+}
+
+.vdv-th {
+    font-size: 13px;
+    font-weight: 700;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.vdv-table-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px 110px 110px 100px;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f3f3;
+    align-items: center;
+    background: white;
+    transition: background 0.15s;
+    min-width: 640px;
+}
+
+.vdv-table-row:last-child { border-bottom: none; }
+.vdv-table-row:hover      { background: #f8fafc; }
+
+.vdv-td {
+    font-size: 14px;
+    color: #181818;
+}
+
+.vdv-order-num { color: #0176d3; font-weight: 600; }
+.vdv-bold      { font-weight: 700; }
+
+.vdv-orders-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid #e5e5e5;
+}
+
+.vdv-footer-label { font-size: 14px; color: #706e6b; font-weight: 500; }
+.vdv-footer-value { font-size: 20px; font-weight: 700; color: #032d60; }
+
+/* Status pills */
+.vdv-status-draft     { background: #f3f3f3; color: #706e6b; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.vdv-status-submitted { background: #fff5e6; color: #ff9e2c; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.vdv-status-approved  { background: #f0f8f0; color: #45c65a; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.vdv-status-rejected  { background: #fef0f0; color: #ea001e; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+
+/* Visit status pills */
+.status-inprogress { color: #ff9e2c; font-weight: 600; font-size: 12px; padding: 4px 12px; background: #fff5e6; border-radius: 20px; }
+.status-completed  { color: #45c65a; font-weight: 600; font-size: 12px; padding: 4px 12px; background: #f0f8f0; border-radius: 20px; }
+.status-scheduled  { color: #0176d3; font-weight: 600; font-size: 12px; padding: 4px 12px; background: #f0f7ff; border-radius: 20px; }
+.status-pending    { color: #706e6b; font-weight: 600; font-size: 12px; padding: 4px 12px; background: #f3f3f3; border-radius: 20px; }
+
+/* ── COMPETITOR CARDS ────────────────────────────────────── */
+.vdv-competitor-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid #e5e5e5;
+    margin-bottom: 14px;
+}
+
+.vdv-competitor-card:last-child { margin-bottom: 0; }
+
+.vdv-competitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dddbda;
+}
+
+.vdv-competitor-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #032d60;
+}
+
+.vdv-competitor-date {
+    font-size: 13px;
+    color: #706e6b;
+}
+
+.vdv-competitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.vdv-comp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vdv-comp-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.vdv-comp-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #181818;
+}
+
+.vdv-comp-remarks {
+    font-size: 13px;
+    color: #706e6b;
+    background: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e5e5;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+/* ── MODALS ──────────────────────────────────────────────── */
+.vdv-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
+}
+
+.vdv-modal {
+    background: white;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+}
+
+.vdv-modal-wide { max-width: 820px; }
+
+.vdv-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #dddbda;
+    background: #f8fafc;
+    border-radius: 14px 14px 0 0;
+    flex-shrink: 0;
+}
+
+.vdv-modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0;
+}
+
+.vdv-modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #706e6b;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.vdv-modal-close:hover { background: #f3f3f3; color: #ea001e; }
+
+.vdv-modal-body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.vdv-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #dddbda;
+    background: #f8fafc;
+    border-radius: 0 0 14px 14px;
+    flex-shrink: 0;
+}
+
+/* ── ORDER TAG BANNER ────────────────────────────────────── */
+.vdv-order-tag-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f7ff;
+    border: 1px solid #d4e6f7;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #0176d3;
+    flex-wrap: wrap;
+}
+
+.vdv-order-tag-banner strong {
+    font-weight: 700;
+    color: #032d60;
+}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────── */
+.vdv-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.vdv-form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.vdv-form-section-label {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 700;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-top: 12px;
+    padding-bottom: 4px;
+    border-top: 1px solid #f3f3f3;
+    margin-top: 4px;
+}
+
+.vdv-form-section-label:first-child {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.vdv-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vdv-full-col { grid-column: 1 / -1; }
+
+.vdv-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #181818;
+}
+
+.req { color: #ea001e; }
+
+.vdv-input,
+.vdv-select {
+    padding: 10px 14px;
+    border: 1px solid #dddbda;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vdv-input:focus,
+.vdv-select:focus {
+    outline: none;
+    border-color: #0176d3;
+    box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.1);
+}
+
+.vdv-error {
+    font-size: 12px;
+    color: #ea001e;
+    margin-top: 2px;
+}
+
+/* ── ORDER TOTAL PREVIEW ─────────────────────────────────── */
+.vdv-order-total-preview {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: #f0f7ff;
+    border-radius: 8px;
+    border: 1px solid #d4e6f7;
+    font-size: 14px;
+    color: #0176d3;
+    font-weight: 500;
+}
+
+.vdv-total-amt {
+    font-size: 22px;
+    font-weight: 700;
+    color: #032d60;
+}
+
+/* ── MODAL BUTTONS ───────────────────────────────────────── */
+.vdv-btn-primary {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #0176d3 0%, #005fb2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(1, 118, 211, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vdv-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(1, 118, 211, 0.3);
+}
+
+.vdv-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.vdv-btn-competitor {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    box-shadow: 0 4px 12px rgba(106, 17, 203, 0.2);
+}
+
+.vdv-btn-competitor:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(106, 17, 203, 0.3);
+}
+
+.vdv-btn-secondary {
+    padding: 12px 24px;
+    background: white;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #181818;
+    transition: all 0.2s;
+}
+
+.vdv-btn-secondary:hover { background: #f3f3f3; border-color: #0176d3; color: #0176d3; }
+
+.vdv-save-btn {
+    padding: 8px 18px;
+    background: #0176d3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.vdv-save-btn:hover { background: #005fb2; }
+
+.vdv-cancel-btn {
+    padding: 8px 18px;
+    background: white;
+    border: 1px solid #dddbda;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #706e6b;
+    transition: all 0.2s;
+}
+
+.vdv-cancel-btn:hover { background: #f3f3f3; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .vdv-header { flex-direction: column; }
+    .vdv-actions { padding-top: 0; justify-content: stretch; }
+    .vdv-action-btn { flex: 1; min-width: 0; }
+    .vdv-detail-grid { grid-template-columns: 1fr; }
+    .vdv-form-grid { grid-template-columns: 1fr; }
+    .vdv-form-grid-3 { grid-template-columns: 1fr; }
+    .vdv-table-head,
+    .vdv-table-row { min-width: 500px; grid-template-columns: 100px 1fr 70px 90px 90px 90px; }
+    .vdv-modal { max-width: 100%; max-height: 100vh; border-radius: 0; }
+    .vdv-tab { padding: 12px 16px; font-size: 13px; }
+    .vdv-competitor-grid { grid-template-columns: repeat(2, 1fr); }
+    .vdv-modal-wide { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+    .vdv-account-name { font-size: 18px; }
+    .vdv-actions { flex-direction: row; }
+    .vdv-action-btn { padding: 10px 12px; min-width: 80px; }
+    .vdv-btn-icon { font-size: 18px; }
+    .vdv-modal-footer { flex-direction: column; }
+    .vdv-btn-primary,
+    .vdv-btn-secondary { width: 100%; justify-content: center; }
+    .vdv-competitor-grid { grid-template-columns: 1fr; }
+}
+
+/* ================================================================
+   ADDITIONS to visitDetailView.css
+   Append these rules to your existing visitDetailView.css file
+   ================================================================ */
+
+/* ── Loading States ────────────────────────────────────────────── */
+.vdv-loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 48px 24px;
+    font-size: 14px;
+    color: #706e6b;
+}
+
+.vdv-spinner-lg {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e8e8e8;
+    border-top-color: #0176d3;
+    border-radius: 50%;
+    animation: vdv-spin 0.75s linear infinite;
+    flex-shrink: 0;
+}
+
+.vdv-spinner-sm {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: vdv-spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+.vdv-header-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #706e6b;
+    padding: 8px 0;
+}
+
+/* ── Clickable Order Rows ───────────────────────────────────────── */
+.vdv-order-row {
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.vdv-order-row:hover {
+    background: #f0f7ff !important;
+    transform: translateX(2px);
+}
+
+/* ── Order Table Grid Columns ──────────────────────────────────── */
+.vdv-order-grid {
+    display: grid;
+    grid-template-columns: 130px 130px 1fr 120px 90px;
+    gap: 12px;
+    padding: 12px 16px;
+    align-items: center;
+    min-width: 580px;
+}
+
+.vdv-align-right {
+    text-align: right;
+    justify-content: flex-end;
+}
+
+/* ── View Order Button ─────────────────────────────────────────── */
+.vdv-view-btn {
+    padding: 6px 14px;
+    background: #0176d3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.vdv-view-btn:hover {
+    background: #005fb2;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(1, 118, 211, 0.25);
+}
+
+/* ── Empty sub-text ────────────────────────────────────────────── */
+.vdv-empty-sub {
+    font-size: 13px;
+    color: #706e6b;
+    max-width: 360px;
+    text-align: center;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ── Order Form Grid within modal ──────────────────────────────── */
+/* Override vdv-form-grid to 1-column inside order modal for cleaner layout */
+.vdv-modal .vdv-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 20px;
+}
+
+/* ── Fieldset note (warning banner) ────────────────────────────── */
+.vdv-fieldset-note {
+    background: #fff5e6;
+    border: 1px solid #ff9e2c;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #b75d00;
+    margin-bottom: 16px;
+}
+
+/* ── Tab active class (kept here for safety) ────────────────────── */
+.vdv-tab.active {
+    color: #0176d3;
+    border-bottom-color: #0176d3;
+    font-weight: 600;
+    background: #f8fafc;
+}

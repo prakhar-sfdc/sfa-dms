@@ -1,0 +1,2151 @@
+<template>
+    <div class="container">
+
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo-container">
+                <div class="company-logo">🚀 Kloudrac</div>
+                <div class="tagline">Field Force Excellence</div>
+            </div>
+
+            <nav class="nav-tabs">
+                <template for:each={tabs} for:item="tab">
+                    <div key={tab.id} class="nav-tab" onclick={handleTabClick} data-id={tab.id}>
+                        <span class="tab-icon">{tab.icon}</span>
+                        <span class="tab-label">{tab.label}</span>
+                        <span class="indicator"></span>
+                    </div>
+                </template>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">👨‍💼</div>
+                <div class="user-info">
+                    <div class="user-name">{userName}</div>
+                    <div class="user-role">{userRole}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Dashboard Tab Content -->
+            <template if:true={isDashboardActive}>
+                <div class="dashboard">
+                    <!-- Welcome Header -->
+                    <div class="welcome-header">
+                        <h1>Field Force Dashboard</h1>
+                        <p class="subtitle">Welcome back! Here's your activity summary</p>
+                        <div class="date-display">📅 {currentDate}</div>
+                    </div>
+
+                    <!-- Main Metrics Cards -->
+                    <div class="metrics-grid">
+                        <template for:each={mainMetrics} for:item="metric">
+                            <div key={metric.id} class="metric-card" data-priority={metric.priority}>
+                                <div class="metric-header">
+                                    <span class="metric-icon">{metric.icon}</span>
+                                    <span class="metric-title">{metric.title}</span>
+                                </div>
+                                <div class="metric-value">{metric.value}</div>
+                                <div class="metric-trend">
+                                    <span class={metric.trendClass}>{metric.trend}</span>
+                                    <span class="metric-subtext">{metric.subtext}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Dashboard Sections -->
+                    <div class="dashboard-sections">
+                        <!-- Attendance Compliance -->
+                        <div class="dashboard-section">
+                            <div class="section-header">
+                                <h2>📊 Attendance Compliance</h2>
+                                <span class="compliance-rate">{attendanceComplianceSummary.compliancePercent}%</span>
+                            </div>
+                            <div class="compliance-chart">
+                                <div class="chart-bar"></div>
+                            </div>
+                            <div class="compliance-details">
+                                <div class="compliance-item">
+                                    <span class="value">{attendanceComplianceSummary.presentDays}/{attendanceComplianceSummary.totalDays}</span>
+                                </div>
+                                <div class="compliance-item">
+                                    <span class="value">{attendanceComplianceSummary.onTimeDays} days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Visits -->
+                        <div class="dashboard-section">
+                            <div class="section-header">
+                                <h2>📍 Recent Visits</h2>
+                                <button class="view-all" onclick={handleViewAllVisits}>
+    View All →
+</button>
+
+                            </div>
+                            <div class="visits-list">
+                                <template for:each={recentVisits} for:item="visit">
+                                    <div key={visit.id} class="visit-item">
+                                        <div class="visit-icon">{visit.icon}</div>
+                                        <div class="visit-details">
+                                            <div class="visit-account">{visit.account}</div>
+                                            <div class="visit-time">{visit.time}</div>
+                                        </div>
+                                        <div class={visit.statusClass}>{visit.status}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Sections -->
+                    <div class="dashboard-sections">
+                        <!-- Priority Accounts -->
+                        <div class="dashboard-section">
+                            <div class="section-header">
+                                <h2>🎯 Priority Accounts</h2>
+                                <div class="priority-count">{priorityAccounts.length}</div>
+                            </div>
+                            <div class="priority-list">
+                                <template for:each={priorityAccounts} for:item="account">
+                                    <div key={account.id} class="priority-item" data-priority={account.priority}>
+                                        <div class={account.priorityClass}></div>
+                                        <div class="account-name">{account.name}</div>
+                                        <button class="action-btn"
+        data-id={account.id}
+        onclick={openScheduleVisitModal}>
+    Schedule
+</button>
+
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Target Achievement -->
+                        <div class="dashboard-section">
+                            <div class="section-header">
+                                <h2>🏆 Target Achievement</h2>
+                                <div class="target-progress">78%</div>
+                            </div>
+                            <div class="target-chart">
+                                <div class="progress-ring">
+                                    <div class="ring"></div>
+                                    <div class="progress-text">78%</div>
+                                </div>
+                            </div>
+                            <div class="target-details">
+                                <div class="target-item">
+                                    <span class="label">Achieved</span>
+                                    <span class="value">₹7.8L</span>
+                                </div>
+                                <div class="target-item">
+                                    <span class="label">Target</span>
+                                    <span class="value">₹10.0L</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Attendance Tab Content -->
+            <template if:true={isAttendanceActive}>
+                <div class="attendance-container">
+                    <!-- Header with Time and Check-In -->
+                    <div class="attendance-header">
+                        <div class="time-location-section">
+                            <div class="real-time-clock">
+                                <div class="clock-icon">🕐</div>
+                                <div class="clock-display">
+                                    <div class="time">{currentTime}</div>
+                                    <div class="date">{currentDate}</div>
+                                </div>
+                            </div>
+                            <div class="gps-location">
+                                <div class="location-icon">📍</div>
+                                <div class="location-info">
+                                    <div class="coordinates">{gpsCoordinates}</div>
+                                    <div class="address">{currentAddress}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checkin-section">
+                            <div class={statusIndicatorClass}>
+                                <span class="status-dot"></span>
+                                <span class="status-text">{attendanceStatus}</span>
+                            </div>
+                            <button class={checkinButtonClass} onclick={handleCheckInOut}>
+                                {checkInOutButtonText}
+                            </button>
+                            <div class="duration-display" if:true={isCheckedIn}>
+                                ⏱️ Duration: {currentDuration}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Map Section -->
+                    <div class="map-container">
+                        <div class="map-header">
+                            <h2>📍 Live Location Tracker</h2>
+                            <div class="map-controls">
+                                <button class="map-btn" onclick={getCurrentLocation}>
+                                    📍 Get My Location
+                                </button>
+                                <button class="map-btn" onclick={refreshMap}>
+                                    🔄 Refresh Map
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lightning Map Component -->
+                        <div class="map-wrapper">
+                            <lightning-map map-markers={mapMarkers} zoom-level={zoomLevel} list-view="visible"
+                                show-footer="true" class="salesforce-map">
+                            </lightning-map>
+                        </div>
+
+                        <!-- Map Info Panel -->
+                        <!-- <div class="map-info-panel">
+                            <div class="info-card">
+                                <h3>📍 Location Details</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="label">Latitude</span>
+                                        <span class="value">{displayLatitude}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Longitude</span>
+                                        <span class="value">{displayLongitude}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Accuracy</span>
+                                        <span class="value">{displayAccuracy}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Last Updated</span>
+                                        <span class="value">{locationUpdateTime}</span>
+                                    </div>
+                                </div>
+                                <div class="location-actions">
+                                    <button class="action-btn" onclick={saveCurrentLocation}>
+                                        💾 Save Location
+                                    </button>
+                                    <button class="action-btn secondary" onclick={shareLocation}>
+                                        📤 Share Location
+                                    </button>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+
+                    <!-- Compliance and Recent Attendance -->
+                    <div class="attendance-cards">
+                        <!-- 7-Day Compliance Card -->
+                        <div class="compliance-card">
+                            <div class="card-header">
+                                <h3>📊 7-Day Compliance</h3>
+                                <div class="compliance-score">{weeklyCompliance}%</div>
+                            </div>
+                            <div class="compliance-chart-small">
+                                <div class="day-bars">
+                                    <template for:each={weeklyData} for:item="day">
+                                        <div key={day.id} class="day-bar">
+                                            <div class="bar-label">{day.label}</div>
+                                            <div class="bar-container">
+                                                <div class="bar-fill"></div>
+                                            </div>
+                                            <div class="bar-value">{day.value}%</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="compliance-summary">
+                                <div class="summary-item">
+                                    <span class="summary-icon">✅</span>
+                                    <span class="summary-text">On Time: {onTimeCount}/7 days</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-icon">⚠️</span>
+                                    <span class="summary-text">Late: {lateCount} days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Attendance Card -->
+                        <!-- Recent Attendance Card -->
+                        <div class="recent-attendance-card">
+                            <div class="card-header">
+                                <h3>📋 Recent Attendance</h3>
+
+                                <!-- ✅ View All button (only when recent list showing) -->
+                                <template if:false={showAllAttendance}>
+                                    <button class="view-all-btn" onclick={viewAllAttendance}>View All →</button>
+                                </template>
+
+                                <!-- ✅ Back button (only when all list showing) -->
+                                <template if:true={showAllAttendance}>
+                                    <button class="view-all-btn" onclick={backToRecentAttendance}>← Back</button>
+                                </template>
+                            </div>
+
+                            <!-- ✅ Loader -->
+                            <template if:true={isAttendanceLoading}>
+                                <div style="padding: 12px;">Loading attendance...</div>
+                            </template>
+
+                            <!-- ✅ RECENT Attendance (last 3) -->
+
+                            <template if:false={showAllAttendance}>
+                                <div class="attendance-list">
+                                    <template for:each={recentAttendance} for:item="record">
+                                        <div key={record.id} class="attendance-item" data-id={record.id}>
+                                            <div class="attendance-date">
+                                                <div class="day">{record.day}</div>
+                                                <div class="date">{record.date}</div>
+                                            </div>
+
+                                            <div class="attendance-times">
+                                                <div class="time-entry">
+                                                    <span class="time-label">In:</span>
+                                                    <span class="time-value">{record.checkIn}</span>
+                                                </div>
+                                                <div class="time-entry">
+                                                    <span class="time-label">Out:</span>
+                                                    <span class="time-value">{record.checkOut}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class={record.statusClass}>
+                                                {record.status}
+                                            </div>
+
+                                            <div class="attendance-action">
+                                                <button onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- ✅ ALL Attendance (last 14 days) -->
+                            <template if:true={showAllAttendance}>
+                                <div class="attendance-list">
+                                    <template for:each={allAttendance} for:item="record">
+                                        <div key={record.id} class="attendance-item" data-id={record.id}>
+                                            <div class="attendance-date">
+                                                <div class="day">{record.day}</div>
+                                                <div class="date">{record.date}</div>
+                                            </div>
+
+                                            <div class="attendance-times">
+                                                <div class="time-entry">
+                                                    <span class="time-label">In:</span>
+                                                    <span class="time-value">{record.checkIn}</span>
+                                                </div>
+                                                <div class="time-entry">
+                                                    <span class="time-label">Out:</span>
+                                                    <span class="time-value">{record.checkOut}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class={record.statusClass}>
+                                                {record.status}
+                                            </div>
+
+                                            <div class="attendance-action">
+                                                <button onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <!-- Journey Plan Tab Content -->
+            <template if:true={isJourneyPlanActive}>
+                <div class="journey-plan-container">
+                    <!-- Header -->
+                    <div class="journey-header">
+                        <div class="header-left">
+                            <h1>Journey Planning (PJP)</h1>
+                            <p class="subtitle">Plan and optimize your daily route</p>
+                        </div>
+                        <div class="header-right">
+                            <!-- Date Picker -->
+                            <div class="date-picker">
+                                <button class="date-btn" onclick={toggleCalendar}>
+                                    📅 {selectedDateDisplay}
+                                </button>
+                                <!-- Calendar Popup -->
+                                <template if:true={showCalendar}>
+                                    <div class="calendar-popup">
+                                        <div class="calendar-header">
+                                            <button class="calendar-nav" onclick={prevMonth}>←</button>
+                                            <span class="calendar-title">{calendarMonth} {calendarYear}</span>
+                                            <button class="calendar-nav" onclick={nextMonth}>→</button>
+                                        </div>
+                                        <div class="calendar-grid">
+                                            <div class="calendar-weekdays">
+                                                <div class="weekday">Sun</div>
+                                                <div class="weekday">Mon</div>
+                                                <div class="weekday">Tue</div>
+                                                <div class="weekday">Wed</div>
+                                                <div class="weekday">Thu</div>
+                                                <div class="weekday">Fri</div>
+                                                <div class="weekday">Sat</div>
+                                            </div>
+                                            <template for:each={calendarDays} for:item="day">
+                                                <div key={day.key} class={calendarDayClass} onclick={selectDate}
+                                                    data-date={day.date}>
+                                                    <span class="day-number">{day.day}</span>
+                                                    <template if:true={day.hasVisits}>
+                                                        <span class="visit-count">{day.visits}</span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- View Options -->
+                            <div class="view-options">
+                                <button class="view-btn" onclick={changeView} data-view="day">
+                                    Day
+                                </button>
+                                <button class="view-btn" onclick={changeView} data-view="week">
+                                    Week
+                                </button>
+                                <button class="view-btn" onclick={changeView} data-view="month">
+                                    Month
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Carousel -->
+
+                    <div class="date-carousel">
+                        <button class="carousel-btn" onclick={prevDate}>←</button>
+                        <div class="carousel-dates">
+                            <template for:each={carouselDates} for:item="dateItem">
+                                <div key={dateItem.id} class="carousel-date">
+                                    <div class="carousel-day">{dateItem.dayName}</div>
+                                    <div class="carousel-date-num">{dateItem.dateNum}</div>
+                                    <div class="carousel-month">{dateItem.month}</div>
+                                    <div class="carousel-visits">{dateItem.visits} visits</div>
+                                </div>
+                            </template>
+
+                        </div>
+                        <button class="carousel-btn" onclick={nextDate}>→</button>
+                    </div>
+
+                    <!-- Day View -->
+
+                    <template if:true={isDayView}>
+                        <div class="day-view">
+                            <!-- Today's Progress Card -->
+                            <div class="progress-card">
+                                <h3>📊 Today's Progress</h3>
+                                <div class="progress-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value">{todayProgress.planned}</div>
+                                        <div class="stat-label">Planned</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">{todayProgress.completed}</div>
+                                        <div class="stat-label">Completed</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">{todayProgress.pending}</div>
+                                        <div class="stat-label">Pending</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">{todayProgress.successRate}%</div>
+                                        <div class="stat-label">Success Rate</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style={todayProgressWidth}></div>
+                                </div>
+                            </div>
+
+                            <!-- Middle Section Cards -->
+                            <div class="middle-cards">
+                                <div class="middle-card">
+                                    <div class="card-icon">📍</div>
+                                    <div class="card-content">
+                                        <h4>Planned Visits</h4>
+                                        <div class="card-value">{dayStats.plannedVisits}</div>
+                                        <div class="card-trend">+2 from yesterday</div>
+                                    </div>
+                                </div>
+                                <div class="middle-card">
+                                    <div class="card-icon">⏱️</div>
+                                    <div class="card-content">
+                                        <h4>Estimated Duration</h4>
+                                        <div class="card-value">{dayStats.estimatedDuration}</div>
+                                        <div class="card-trend">Optimize route</div>
+                                    </div>
+                                </div>
+                                <div class="middle-card">
+                                    <div class="card-icon">✅</div>
+                                    <div class="card-content">
+                                        <h4>Completed Today</h4>
+                                        <div class="card-value">{dayStats.completedToday}</div>
+                                        <div class="card-trend">On track</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Section Cards -->
+                            <div class="bottom-cards">
+                                <!-- Priority Accounts Card -->
+                                <div class="bottom-card priority-card">
+                                    <div class="card-header">
+                                        <h3>🎯 Priority Accounts</h3>
+                                        <span class="count-badge">{priorityAccountsJP.length}</span>
+                                    </div>
+                                    <div class="priority-list">
+                                        <template for:each={priorityAccountsJP} for:item="account">
+                                            <div key={account.id} class="priority-account">
+
+                                                <!-- ✅ Left Priority Color Bar -->
+                                                <div class={account.priorityClass}></div>
+
+                                                <div class="account-info">
+                                                    <div class="account-name">{account.name}</div>
+                                                    <div class="account-location">{account.location}</div>
+                                                </div>
+
+                                                <div class="account-status">{account.status}</div>
+
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                                <!-- Visits for Selected Date Card -->
+                                <div class="bottom-card plan-card" style="margin-top: 20px;">
+                                    <div class="card-header">
+                                        <h3>📅 Visits — {selectedDateDisplay}</h3>
+                                        <div style="display:flex; gap:8px;">
+                                            <button class="add-btn" onclick={openScheduleVisitFromJP}>Add Visit</button>
+                                            <button class="add-btn" onclick={openBulkUploadJP}
+                style="background:#7f8de1;">Bulk Upload</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Empty state -->
+                                    <template if:false={dailyVisits.length}>
+                                        <div class="ve-empty">
+                                            <div class="ve-empty-icon">📋</div>
+                                            <div class="ve-empty-title">No visits planned for {selectedDateDisplay}
+                                            </div>
+                                            <div
+                                                style="display:flex; gap:12px; justify-content:center; margin-top:16px;">
+                                                <button class="primary-btn" onclick={openScheduleVisitFromJP}>
+                    ➕ Schedule a Visit
+                </button>
+                                                <button class="primary-btn" onclick={openBulkUploadJP}
+                    style="background:linear-gradient(135deg,#7f8de1,#5b6de0);">
+                    ⬆ Bulk Upload Visits
+                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Visit rows (same table as Visit Execution) -->
+                                    <template if:true={dailyVisits.length}>
+                                        <div class="ve-visit-rows">
+                                            <!-- Header -->
+                                            <div class="ve-row ve-row--header">
+                                                <div class="ve-col ve-col-time">Time</div>
+                                                <div class="ve-col ve-col-account">Account</div>
+                                                <div class="ve-col ve-col-purpose">Purpose</div>
+                                                <div class="ve-col ve-col-status">Status</div>
+                                                <div class="ve-col ve-col-action">Action</div>
+                                            </div>
+
+                                            <template for:each={dailyVisitsWithMeta} for:item="visit">
+                                                <div key={visit.id} class="ve-row ve-row--data">
+                                                    <div class="ve-col ve-col-time">
+                                                        <span class="ve-time">{visit.time}</span>
+                                                    </div>
+                                                    <div class="ve-col ve-col-account">
+                                                        <div class="ve-account-avatar">{visit.accountInitial}</div>
+                                                        <div class="ve-account-info">
+                                                            <div class="ve-account-name">{visit.account}</div>
+                                                            <div class="ve-account-location">{visit.location}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ve-col ve-col-purpose">
+                                                        <span class="ve-purpose">{visit.purpose}</span>
+                                                    </div>
+                                                    <div class="ve-col ve-col-status">
+                                                        <span class={visit.statusClass}>{visit.status}</span>
+                                                    </div>
+                                                    <div class="ve-col ve-col-action">
+                                                        <template if:true={visit.canCheckIn}>
+                                                            <button class="ve-checkin-btn"
+                                data-id={visit.id}
+                                onclick={handleJPVisitAction}>
+                                ✓ Check In
+                            </button>
+                                                        </template>
+                                                        <template if:true={visit.isInProgress}>
+                                                            <span class="ve-done-label" style="background:#fff5e6;color:#ff9e2c;">
+                                ⏳ In Progress
+                            </span>
+                                                        </template>
+                                                        <template if:true={visit.isCompleted}>
+                                                            <span class="ve-done-label">✓ Done</span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Plan for Selected Date Card -->
+                                <!-- <div class="bottom-card plan-card">
+                                    <div class="card-header">
+                                        <h3>📅 Plan for {selectedDateDisplay}</h3>
+                                        <button class="add-btn" onclick={addVisit}>+ Add Visit</button>
+                                    </div>
+                                    <div class="plan-list"> -->
+                                <!-- Saurav Change --->
+                                <!-- <template for:each={dailyVisits} for:item="visit">
+                                            <div key={visit.id} class="plan-item"> -->
+
+                                <!-- Start Time -->
+                                <!-- <div class="visit-time">
+                                                    {visit.time}
+                                                </div> -->
+
+                                <!-- Account Name -->
+                                <!-- <div class="visit-details">
+                                                    <div class="visit-account">
+                                                        {visit.account}
+                                                    </div>
+                                                </div> -->
+                                <!-- Visit Status -->
+                                <!-- <div class={visit.statusClass}>
+                                                    {visit.status}
+                                                </div> -->
+                                <!-- </div>
+                                        </template> -->
+
+                                <!-- Saurav Change --->
+
+
+                                <!-- </div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Week View -->
+                    <template if:true={isWeekView}>
+                        <div class="week-view">
+                            <div class="week-header">
+                                <h3>Week Overview: {weekRangeDisplay}</h3>
+                                <div class="week-stats">
+                                    <span class="stat">📅 {weekStats.days} days</span>
+                                    <span class="stat">📍 {weekStats.totalVisits} visits</span>
+                                    <span class="stat">⏱️ {weekStats.totalHours} hours</span>
+                                </div>
+                            </div>
+                            <div class="week-cards">
+                                <template for:each={weekDays} for:item="day">
+                                    <div key={day.id} class="week-card" onclick={selectWeekDay} data-date={day.date}>
+                                        <div class="week-day">{day.dayName}</div>
+                                        <div class="week-date">{day.date}</div>
+                                        <div class="week-visits">
+                                            <span class="visit-count">{day.visits}</span>
+                                            <span class="visit-label">visits</span>
+                                        </div>
+                                        <div class="week-progress">
+                                            <div class="progress-dot"></div>
+                                            <div class="progress-dot"></div>
+                                            <div class="progress-dot"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="week-details">
+                                <h4>Detailed Schedule</h4>
+                                <div class="week-schedule">
+                                    <template for:each={weekSchedule} for:item="visit">
+                                        <div key={visit.id} class="schedule-item">
+                                            <div class="schedule-day">{visit.day}</div>
+                                            <div class="schedule-time">{visit.time}</div>
+                                            <div class="schedule-account">{visit.account}</div>
+                                            <div class="schedule-purpose">{visit.purpose}</div>
+                                            <div class={visit.statusClass}>{visit.status}</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Month View -->
+                    <template if:true={isMonthView}>
+                        <div class="month-view">
+                            <div class="month-header">
+                                <h3>{calendarMonth} {calendarYear}</h3>
+                                <div class="month-stats">
+                                    <span class="stat">📅 {monthSummary.totalDays} days</span>
+                                    <span class="stat">📍 {monthSummary.totalVisits} visits</span>
+                                    <span class="stat">🏢 {monthSummary.totalAccounts} accounts</span>
+                                </div>
+                            </div>
+                            <div class="month-grid">
+                                <div class="month-weekdays">
+                                    <div class="weekday">Sun</div>
+                                    <div class="weekday">Mon</div>
+                                    <div class="weekday">Tue</div>
+                                    <div class="weekday">Wed</div>
+                                    <div class="weekday">Thu</div>
+                                    <div class="weekday">Fri</div>
+                                    <div class="weekday">Sat</div>
+                                </div>
+                                <template for:each={monthDays} for:item="day">
+                                    <div key={day.id} class="month-day" data-date={day.date}>
+                                        <div class="day-header">
+                                            <span class="day-number">{day.day}</span>
+                                            <template if:true={day.hasVisits}>
+                                                <span class="day-visits">{day.visits}</span>
+                                            </template>
+                                        </div>
+                                        <template if:true={day.events}>
+                                            <div class="day-events">
+                                                <template for:each={day.events} for:item="event">
+                                                    <div key={event.id} class="day-event">
+                                                        {event.time} - {event.account}
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="month-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color today"></div>
+                                    <span>Today</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color has-visits"></div>
+                                    <span>Has Visits</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color priority"></div>
+                                    <span>Priority</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+
+
+
+            <!-- Expenses Tab Content -->
+            <template if:true={isExpensesActive}>
+                <div class="expenses-container">
+                    <!-- Header Section -->
+                    <div class="expense-header">
+                        <div class="header-left">
+                            <h1>Expense Management</h1>
+                            <p class="subtitle">Track and manage your expenses</p>
+                        </div>
+                        <div class="header-right">
+                            <button class="primary-btn expense-submit-btn" onclick={handleSubmitExpense}>
+                    Submit Expense
+                </button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-icon">💰</div>
+                            <div class="summary-content">
+                                <h3>Total Expenses</h3>
+                                <div class="summary-value">₹{expenseSummary.totalAmount}</div>
+                                <div class="summary-trend">All time total</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">✅</div>
+                            <div class="summary-content">
+                                <h3>Approved</h3>
+                                <div class="summary-value">{expenseSummary.approvedCount}</div>
+                                <div class="summary-trend">Expenses approved</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">⏳</div>
+                            <div class="summary-content">
+                                <h3>Pending</h3>
+                                <div class="summary-value">{expenseSummary.pendingCount}</div>
+                                <div class="summary-trend">Awaiting approval</div>
+                            </div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-icon">📋</div>
+                            <div class="summary-content">
+                                <h3>Submissions</h3>
+                                <div class="summary-value">{expenseSummary.totalSubmissions}</div>
+                                <div class="summary-trend">Total submitted</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Section - Two Cards Inline -->
+                    <div class="middle-cards-expenses">
+                        <!-- Budget Compliance Card -->
+                        <div class="budget-card">
+                            <div class="card-header">
+                                <h3>📊 Budget Compliance</h3>
+                                <div class={budgetStatusClass}>
+                                    {budget.status}
+                                </div>
+
+                            </div>
+                            <div class="budget-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style={budgetProgressWidth}></div>
+                                </div>
+                                <div class="progress-label">{budgetPercentageText}</div>
+                            </div>
+                            <div class="budget-details">
+                                <div class="budget-item">
+                                    <span class="budget-label">Used</span>
+                                    <span class="budget-value">₹{budget.used}</span>
+                                </div>
+                                <div class="budget-item">
+                                    <span class="budget-label">Total</span>
+                                    <span class="budget-value">₹{budget.total}</span>
+                                </div>
+                                <div class="budget-item">
+                                    <span class="budget-label">Remaining</span>
+                                    <span class="budget-value">₹{budget.remaining}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expenses by Type Card -->
+                        <div class="expense-type-card">
+                            <div class="card-header">
+                                <h3>📈 Expenses by Type</h3>
+                            </div>
+                            <div class="type-chart">
+                                <div class="chart-bars">
+                                    <!-- Using if:true for each expense type -->
+                                    <template if:true={hasTravelExpenses}>
+                                        <div class="chart-bar-item">
+                                            <div class="bar-label">Travel</div>
+                                            <div class="bar-container">
+                                                <div class="bar" style={travelBarStyle}></div>
+                                            </div>
+                                            <div class="bar-value">₹{travelAmount}</div>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={hasFoodExpenses}>
+                                        <div class="chart-bar-item">
+                                            <div class="bar-label">Food</div>
+                                            <div class="bar-container">
+                                                <div class="bar" style={foodBarStyle}></div>
+                                            </div>
+                                            <div class="bar-value">₹{foodAmount}</div>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={hasStayExpenses}>
+                                        <div class="chart-bar-item">
+                                            <div class="bar-label">Stay</div>
+                                            <div class="bar-container">
+                                                <div class="bar" style={stayBarStyle}></div>
+                                            </div>
+                                            <div class="bar-value">₹{stayAmount}</div>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={hasMiscExpenses}>
+                                        <div class="chart-bar-item">
+                                            <div class="bar-label">Misc</div>
+                                            <div class="bar-container">
+                                                <div class="bar" style={miscBarStyle}></div>
+                                            </div>
+                                            <div class="bar-value">₹{miscAmount}</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="type-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color travel-color"></div>
+                                    <span class="legend-label">Travel</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color food-color"></div>
+                                    <span class="legend-label">Food</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color stay-color"></div>
+                                    <span class="legend-label">Stay</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color misc-color"></div>
+                                    <span class="legend-label">Misc</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Section - Recent Expenses -->
+
+                    <div class="recent-expenses-card">
+                        <div class="card-header">
+                            <h3>📋 Recent Expenses</h3>
+                            <button class="view-all-btn" onclick={viewAllExpenses}>View All →</button>
+                        </div>
+                        <div class="expenses-table">
+                            <div class="table-header">
+                                <div class="table-cell">Date</div>
+                                <div class="table-cell">Expense Type</div>
+                                <div class="table-cell">Description</div>
+                                <div class="table-cell">Amount</div>
+                                <div class="table-cell">Status</div>
+                                <div class="table-cell">Submitted By</div>
+                                <div class="table-cell">Actions</div>
+                            </div>
+                            <div class="table-body">
+                                <template for:each={recentExpensesList} for:item="expense">
+                                    <div key={expense.id} class="table-row">
+                                        <div class="table-cell">{expense.formattedDate}</div>
+                                        <div class="table-cell">
+                                            <span class={expense.typeBadgeClass}>
+                                    {expense.type}
+                                </span>
+                                        </div>
+                                        <div class="table-cell">{expense.description}</div>
+                                        <div class="table-cell">₹{expense.amount}</div>
+                                        <div class="table-cell">
+                                            <span class={expense.statusClass}>{expense.status}</span>
+                                        </div>
+                                        <div class="table-cell">{expense.submittedBy}</div>
+                                        <div class="table-cell">
+                                            <button class="action-btn small" onclick={handleViewExpenseDetails} data-id={expense.id}>
+                                    View
+                                </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit Expense Modal -->
+                <template if:true={showExpenseSubmitModal}>
+                    <div class="modal-overlay" onclick={closeExpenseSubmitModal}>
+                        <div class="attendance-modal" onclick={handleModalClick}>
+
+                            <div class="modal-header">
+                                <h2>💰 Submit Expense</h2>
+                                <button class="modal-close" onclick={closeExpenseSubmitModal}>×</button>
+                            </div>
+
+                            <div class="modal-content" style="display:block; padding: 24px 32px;">
+                                <lightning-record-edit-form object-api-name="Expense__c"
+                                    onsuccess={handleExpenseSubmitSuccess} onerror={handleExpenseSubmitError}>
+
+                                    <lightning-messages></lightning-messages>
+
+                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                                        <div>
+                                            <lightning-input-field field-name="Expense_Date__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div>
+                                            <lightning-input-field field-name="Expense_Type__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div>
+                                            <lightning-input-field field-name="Amount__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div>
+                                            <lightning-input-field field-name="Expense_Source__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div>
+                                            <lightning-input-field field-name="Visit__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div>
+                                            <lightning-input-field field-name="City__c">
+                                            </lightning-input-field>
+                                        </div>
+                                        <div style="grid-column: 1 / -1;">
+                                            <lightning-input-field field-name="Description__c">
+                                            </lightning-input-field>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-m-top_medium"
+                                        style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid #dddbda;">
+                                        <button class="secondary-btn" type="button" onclick={closeExpenseSubmitModal}>
+                            Cancel
+                        </button>
+                                        <lightning-button type="submit" label="Submit Expense" variant="brand">
+                                        </lightning-button>
+                                    </div>
+
+                                </lightning-record-edit-form>
+                            </div>
+
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Visit Execution Tab Content -->
+            <template if:true={isVisitExecutionActive}>
+
+                <!-- ── DETAIL VIEW (replaces list when a visit is active) ──── -->
+                <template if:true={activeVisitId}>
+                    <c-visit-detail-view visit-id={activeVisitId} check-in-time={activeVisitCheckInTime}
+                        check-in-lat={activeVisitLat} check-in-lng={activeVisitLng}
+                        check-in-address={activeVisitAddress} onback={handleVisitDetailBack}
+                        oncheckout={handleVisitCheckOutEvent}>
+                    </c-visit-detail-view>
+                </template>
+
+                <!-- ── LIST VIEW (default — shown when no active visit) ─────── -->
+                <template if:false={activeVisitId}>
+                    <div class="visit-execution-container">
+
+                        <!-- Header -->
+                        <div class="journey-header">
+                            <div class="header-left">
+                                <h1>Visit Execution</h1>
+                                <p class="subtitle">Check in to your planned visits for today</p>
+                            </div>
+                            <div class="header-right">
+                                <button class="primary-btn" onclick={openCreateVisitFromExecution}>
+                        ➕ Create New Visit
+                    </button>
+                            </div>
+                        </div>
+
+                        <!-- Date Carousel -->
+                        <div class="date-carousel">
+                            <button class="carousel-btn" onclick={prevDate}>←</button>
+                            <div class="carousel-dates">
+                                <template for:each={carouselDates} for:item="dateItem">
+                                    <div key={dateItem.id} class="carousel-date" data-date={dateItem.id}
+                                        onclick={handleExecutionDateClick}>
+                                        <div class="carousel-day">{dateItem.dayName}</div>
+                                        <div class="carousel-date-num">{dateItem.dateNum}</div>
+                                        <div class="carousel-month">{dateItem.month}</div>
+                                        <div class="carousel-visits">{dateItem.visits} visits</div>
+                                    </div>
+                                </template>
+                            </div>
+                            <button class="carousel-btn" onclick={nextDate}>→</button>
+                        </div>
+
+                        <!-- Today's Visit List Card -->
+                        <div class="ve-visit-list-card">
+                            <div class="ve-list-header">
+                                <div class="ve-list-title">
+                                    <span>📅 Visits — {selectedDateDisplay}</span>
+                                    <span class="count-badge-sm">{dailyVisits.length}</span>
+                                </div>
+                                <button class="add-btn" onclick={openCreateVisitFromExecution}>+ Add Visit</button>
+                            </div>
+
+                            <!-- No visits state -->
+                            <template if:false={dailyVisits.length}>
+                                <div class="ve-empty">
+                                    <div class="ve-empty-icon">📋</div>
+                                    <div class="ve-empty-title">No visits planned for this date</div>
+                                    <button class="primary-btn" onclick={openCreateVisitFromExecution}>
+                            Schedule a Visit
+                        </button>
+                                </div>
+                            </template>
+
+                            <!-- Visit rows -->
+                            <template if:true={dailyVisits.length}>
+                                <div class="ve-visit-rows">
+
+                                    <!-- Table header -->
+                                    <div class="ve-row ve-row--header">
+                                        <div class="ve-col ve-col-time">Time</div>
+                                        <div class="ve-col ve-col-account">Account</div>
+                                        <div class="ve-col ve-col-purpose">Purpose</div>
+                                        <div class="ve-col ve-col-status">Status</div>
+                                        <div class="ve-col ve-col-action">Action</div>
+                                    </div>
+
+                                    <template for:each={dailyVisitsWithMeta} for:item="visit">
+                                        <div key={visit.id} class="ve-row ve-row--data">
+
+                                            <!-- Time -->
+                                            <div class="ve-col ve-col-time">
+                                                <span class="ve-time">{visit.time}</span>
+                                            </div>
+
+                                            <!-- Account -->
+                                            <div class="ve-col ve-col-account">
+                                                <div class="ve-account-avatar">{visit.accountInitial}</div>
+                                                <div class="ve-account-info">
+                                                    <div class="ve-account-name">{visit.account}</div>
+                                                    <div class="ve-account-location">{visit.location}</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Purpose -->
+                                            <div class="ve-col ve-col-purpose">
+                                                <span class="ve-purpose">{visit.purpose}</span>
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div class="ve-col ve-col-status">
+                                                <span class={visit.statusClass}>{visit.status}</span>
+                                            </div>
+
+                                            <!-- Action buttons -->
+                                            <div class="ve-col ve-col-action">
+                                                <!-- Check In (Planned / Scheduled) -->
+                                                <template if:true={visit.canCheckIn}>
+                                                    <button
+                                            class="ve-checkin-btn"
+                                            data-id={visit.id}
+                                            data-account={visit.account}
+                                            onclick={handleVisitCheckIn}
+                                            disabled={visit.isCheckingIn}>
+                                            <template if:true={visit.isCheckingIn}>
+                                                <span class="ve-spinner"></span> Locating…
+                                            </template>
+                                            <template if:false={visit.isCheckingIn}>
+                                                ✓ Check In
+                                            </template>
+                                        </button>
+                                                </template>
+
+                                                <!-- Resume (In Progress — navigate back to detail view) -->
+                                                <template if:true={visit.isInProgress}>
+                                                    <button
+                                            class="ve-checkin-btn ve-checkin-btn--resume"
+                                            data-id={visit.id}
+                                            onclick={handleResumeVisit}>
+                                            ▶ Resume
+                                        </button>
+                                                </template>
+
+                                                <!-- Completed -->
+                                                <template if:true={visit.isCompleted}>
+                                                    <span class="ve-done-label">✓ Completed</span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Recent Visit History -->
+                        <div class="bottom-card priority-card" style="margin-top:20px;">
+                            <div class="card-header">
+                                <h3>📍 Recent Visit History</h3>
+                                <button class="view-all-btn" onclick={handleViewAllVisits}>View All →</button>
+                            </div>
+                            <div class="priority-list">
+                                <template for:each={recentVisits} for:item="visit">
+                                    <div key={visit.id} class="priority-account">
+                                        <div class="account-info">
+                                            <div class="account-name">{visit.account}</div>
+                                            <div class="account-location">{visit.time}</div>
+                                        </div>
+                                        <div class={visit.statusClass}>{visit.status}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                    </div><!-- end visit-execution-container -->
+                </template>
+
+            </template>
+
+
+            <!-- New Account  Tab Content-->
+            <template if:true={isNewAccountActive}>
+                <div class="account-onboarding-container">
+                    <!-- Header Section -->
+                    <div class="onboarding-header">
+                        <div class="header-content">
+                            <h1>Account Onboarding</h1>
+                            <p class="subtitle">Add new dealer or customer account</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Area -->
+                    <div class="onboarding-content">
+                        <!-- Form Section -->
+                        <div class="onboarding-form-section">
+                            <div class="form-header">
+                                <h2>Create Account Form</h2>
+                                <p class="form-subtitle">Fill in the details to create a new account</p>
+                            </div>
+
+                            <!-- Success State -->
+                            <template if:true={showSuccessState}>
+                                <div class="success-state">
+                                    <div class="success-animation">
+                                        <div class="checkmark-container">
+                                            <div class="checkmark">✓</div>
+                                        </div>
+                                        <div class="success-title">Account created successfully!</div>
+                                        <div class="success-message">The account is pending approval.</div>
+                                        <div class="success-actions">
+                                            <button type="button" class="success-action-btn" onclick={createAnotherAccount}>
+                                    Create Another Account
+                                </button>
+                                            <button type="button" class="success-action-btn secondary" onclick={goToAccountDashboard}>
+                                    Go to Account Dashboard
+                                </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Form - Show when not in success state -->
+                            <template if:true={showForm}>
+                                <form class="account-form" onsubmit={handleSubmit}>
+                                    <!-- Business Information Section -->
+                                    <div class="form-section">
+                                        <h3 class="section-title">Business Information</h3>
+                                        <div class="form-grid">
+                                            <div class="form-group full-width">
+                                                <label for="businessName">Business Name <span class="required">*</span></label>
+                                                <input
+                                        type="text"
+                                        id="businessName"
+                                        name="businessName"
+                                        class="form-input"
+                                        placeholder="Enter business name"
+                                        required
+                                        value={formData.businessName}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.businessName}>
+                                                    {errors.businessName}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="accountType">Account Type <span class="required">*</span></label>
+                                                <select
+                                        id="accountType"
+                                        name="accountType"
+                                        class="form-select"
+                                        required
+                                        value={formData.accountType}
+                                        onchange={handleInputChange}
+                                    >
+                                        <option value="">Select account type</option>
+                                        <option value="dealer">Dealer</option>
+                                        <option value="customer">Customer</option>
+                                    </select>
+                                                <div class="error-message" if:true={errors.accountType}>
+                                                    {errors.accountType}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="gstin">GSTIN</label>
+                                                <input
+                                        type="text"
+                                        id="gstin"
+                                        name="gstin"
+                                        class="form-input"
+                                        placeholder="22AAAAA0000A1Z5"
+                                        value={formData.gstin}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="form-hint">(Optional – recommended for dealers)</div>
+                                                <div class="error-message" if:true={errors.gstin}>
+                                                    {errors.gstin}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact Information Section -->
+                                    <div class="form-section">
+                                        <h3 class="section-title">Contact Information</h3>
+                                        <div class="form-grid">
+                                            <div class="form-group full-width">
+                                                <label for="contactPerson">Contact Person <span class="required">*</span></label>
+                                                <input
+                                        type="text"
+                                        id="contactPerson"
+                                        name="contactPerson"
+                                        class="form-input"
+                                        placeholder="Enter contact name"
+                                        required
+                                        value={formData.contactPerson}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.contactPerson}>
+                                                    {errors.contactPerson}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="phoneNumber">Phone Number <span class="required">*</span></label>
+                                                <input
+                                        type="tel"
+                                        id="phoneNumber"
+                                        name="phoneNumber"
+                                        class="form-input"
+                                        placeholder="+91-9876543210"
+                                        required
+                                        value={formData.phoneNumber}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.phoneNumber}>
+                                                    {errors.phoneNumber}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="email">Email</label>
+                                                <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        class="form-input"
+                                        placeholder="email@example.com"
+                                        value={formData.email}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.email}>
+                                                    {errors.email}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Address Information Section -->
+                                    <div class="form-section">
+                                        <h3 class="section-title">Address Information</h3>
+                                        <div class="form-grid">
+                                            <div class="form-group full-width">
+                                                <label for="streetAddress">Street Address <span class="required">*</span></label>
+                                                <textarea
+                                        id="streetAddress"
+                                        name="streetAddress"
+                                        class="form-textarea"
+                                        placeholder="Enter complete address"
+                                        required
+                                        value={formData.streetAddress}
+                                        onchange={handleInputChange}
+                                        rows="3"
+                                    ></textarea>
+                                                <div class="error-message" if:true={errors.streetAddress}>
+                                                    {errors.streetAddress}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="city">City <span class="required">*</span></label>
+                                                <input
+                                        type="text"
+                                        id="city"
+                                        name="city"
+                                        class="form-input"
+                                        placeholder="City"
+                                        required
+                                        value={formData.city}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.city}>
+                                                    {errors.city}
+                                                </div>
+                                            </div>
+
+
+
+                                            <div class="form-group">
+                                                <label for="state">State <span class="required">*</span></label>
+                                                <input
+                                        type="text"
+                                        id="state"
+                                        name="state"
+                                        class="form-input"
+                                        placeholder="State"
+                                        required
+                                        value={formData.state}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.state}>
+                                                    {errors.state}
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="pincode">Pincode <span class="required">*</span></label>
+                                                <input
+                                        type="text"
+                                        id="pincode"
+                                        name="pincode"
+                                        class="form-input"
+                                        placeholder="110001"
+                                        required
+                                        value={formData.pincode}
+                                        onchange={handleInputChange}
+                                    />
+                                                <div class="error-message" if:true={errors.pincode}>
+                                                    {errors.pincode}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="form-actions">
+                                        <button type="submit" class="submit-btn" disabled={isSubmitting}>
+                                <template if:true={isSubmitting}>
+                                    <span class="spinner"></span>
+                                    Creating Account...
+                                </template>
+                                <template if:false={isSubmitting}>
+                                    Create Account
+                                </template>
+                            </button>
+                                    </div>
+                                </form>
+                            </template>
+                        </div>
+
+                        <!-- Tips Sidebar -->
+                        <div class="onboarding-tips">
+                            <div class="tips-card">
+                                <h3 class="tips-title">Account Onboarding Tips</h3>
+                                <div class="tips-list">
+                                    <div class="tip-item">
+                                        <div class="tip-icon">📋</div>
+                                        <div class="tip-content">
+                                            <h4>Verify Details</h4>
+                                            <p>Verify all contact details before submission</p>
+                                        </div>
+                                    </div>
+                                    <div class="tip-item">
+                                        <div class="tip-icon">🏢</div>
+                                        <div class="tip-content">
+                                            <h4>GSTIN for Dealers</h4>
+                                            <p>GSTIN is optional but recommended for dealers</p>
+                                        </div>
+                                    </div>
+                                    <div class="tip-item">
+                                        <div class="tip-icon">⏳</div>
+                                        <div class="tip-content">
+                                            <h4>Approval Process</h4>
+                                            <p>Account will be pending approval after creation</p>
+                                        </div>
+                                    </div>
+                                    <div class="tip-item">
+                                        <div class="tip-icon">✅</div>
+                                        <div class="tip-content">
+                                            <h4>Required Fields</h4>
+                                            <p>Fields marked with * are mandatory</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+
+            <!-- AI & Analytics Tab Content -->
+            <template if:true={isAiAnalyticsActive}>
+                <div class="ai-analytics-container">
+                    <template if:true={isAILoading}>
+                        <div class="ai-loading-banner">
+                            <div class="ai-spinner"></div>
+                            <span>Einstein is analysing your field data…</span>
+                        </div>
+                    </template>
+                    <template if:true={aiLoadError}>
+                        <div class="ai-error-banner">
+                            <span>⚠️ {aiLoadError}</span>
+                            <button onclick={refreshAIInsights}>Retry</button>
+                        </div>
+                    </template>
+                    <!-- Header Section -->
+                    <div class="ai-header">
+                        <div class="header-left">
+                            <h1>AI & Analytics</h1>
+                            <p class="subtitle">Smart insights and performance metrics</p>
+                        </div>
+                        <div class="header-right">
+                            <div class="ai-status">
+                                <span class="ai-indicator active"></span>
+                                <span class="ai-status-text">AI Recommendations Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Recommendations - KPI Overview -->
+                    <div class="kpi-section">
+                        <div class="section-header">
+                            <h2>🎯 AI Recommendations – KPI Overview</h2>
+                            <button class="refresh-btn" onclick={refreshAIInsights}>
+                    🔄 Refresh Insights
+                </button>
+                        </div>
+
+                        <div class="kpi-cards-container">
+                            <div class="kpi-cards-scroll">
+                                <template for:each={aiData.kpis} for:item="kpi">
+                                    <div key={kpi.id} class="kpi-card">
+                                        <div class="kpi-header">
+                                            <div class="kpi-title">{kpi.title}</div>
+                                            <div class={kpi.trendClass}>
+                                                <span class="trend-icon">{kpi.trendIcon}</span>
+                                                {kpi.trend}
+                                            </div>
+                                        </div>
+                                        <div class="kpi-value">{kpi.value}</div>
+                                        <div class="kpi-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style={kpi.progressStyle}></div>
+                                            </div>
+                                            <div class="progress-label">
+                                                <span class="target">Target: {kpi.target}</span>
+                                                <span class="achievement">Achievement: {kpi.achievement}</span>
+                                            </div>
+                                        </div>
+                                        <div class="kpi-insight">
+                                            <div class="insight-icon">💡</div>
+                                            <div class="insight-text">{kpi.insight}</div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI-Powered Insights -->
+                    <div class="insights-section">
+                        <div class="section-header">
+                            <h2>🤖 AI-Powered Insights</h2>
+                            <div class="section-subtitle">Personalized recommendations for you</div>
+                        </div>
+
+                        <div class="insights-grid">
+                            <template for:each={aiData.insights} for:item="insight">
+                                <div key={insight.id} class={insight.cardClass}>
+                                    <div class="insight-header">
+                                        <div class={insight.priorityBadgeClass}>{insight.priorityLabel}</div>
+                                        <div class="insight-title">{insight.title}</div>
+                                    </div>
+                                    <div class="insight-content">
+                                        <div class="insight-detail">
+                                            <span class="detail-label">{insight.metric1Label}</span>
+                                            <span class="detail-value">{insight.metric1Value}</span>
+                                        </div>
+                                        <template if:true={insight.hasMetric2}>
+                                            <div class="insight-detail">
+                                                <span class="detail-label">{insight.metric2Label}</span>
+                                                <span class="detail-value">{insight.metric2Value}</span>
+                                            </div>
+                                        </template>
+                                        <div class="ai-recommendation">
+                                            <div class="rec-icon">{insight.icon}</div>
+                                            <div class="rec-text">{insight.recommendation}</div>
+                                        </div>
+                                        <div class={insight.impactClass}>
+                                            <div class="impact-icon">{insight.impactIcon}</div>
+                                            <div class="impact-text">{insight.impact}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Performance Charts Section -->
+                    <div class="charts-section">
+                        <div class="chart-row">
+                            <!-- Weekly Performance Summary -->
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <h3>📊 Weekly Performance Summary</h3>
+                                    <button class="chart-action" onclick={exportWeeklyData}>Export</button>
+                                </div>
+                                <div class="chart-content">
+                                    <div class="weekly-table">
+                                        <div class="table-header" style="grid-template-columns: 1fr 1fr 1fr;">
+                                            <div class="table-cell">Day</div>
+                                            <div class="table-cell">Performance</div>
+                                            <div class="table-cell">Conversion</div>
+                                        </div>
+                                        <div class="table-body">
+                                            <template for:each={aiData.weeklyPerformance} for:item="day">
+                                                <div key={day.day} class="table-row"
+                                                    style="grid-template-columns: 1fr 1fr 1fr;">
+                                                    <div class="table-cell">{day.day}</div>
+                                                    <div class="table-cell">{day.summary}</div>
+                                                    <div class={day.conversionClass}>{day.conversion}</div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Top Performing Products -->
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <h3>🏆 Top Performing Products</h3>
+                                    <div class="time-filter">This Month</div>
+                                </div>
+                                <div class="chart-content">
+                                    <div class="product-list">
+                                        <template for:each={aiData.topProducts} for:item="product">
+                                            <div key={product.rank} class="product-item">
+                                                <div class="product-rank">{product.rank}</div>
+                                                <div class="product-info">
+                                                    <div class="product-name">{product.name}</div>
+                                                    <div class="product-meta">
+                                                        <span class="meta-item">Growth: <span class="positive">{product.growth}</span></span>
+                                                        <span class="meta-item">Quantity: {product.quantity}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="product-revenue">{product.revenue}</div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dealer Performance Analysis -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>📈 Dealer Performance Analysis</h3>
+                                <button class="chart-action" onclick={exportDealerData}>Export Report</button>
+                            </div>
+                            <div class="chart-content">
+                                <div class="dealer-table">
+                                    <div class="table-header" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;">
+                                        <div class="table-cell">Dealer Name</div>
+                                        <div class="table-cell">Revenue (This Month)</div>
+                                        <div class="table-cell">Visits</div>
+                                        <div class="table-cell">Orders</div>
+                                        <div class="table-cell">Trend</div>
+                                        <div class="table-cell">AI Action</div>
+                                    </div>
+                                    <div class="table-body">
+                                        <template for:each={aiData.dealerPerformance} for:item="dealer">
+                                            <div key={dealer.id} class="table-row" onclick={viewDealerRecommendations}
+                                                data-dealer={dealer.name}
+                                                style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;">
+                                                <div class="table-cell">{dealer.name}</div>
+                                                <div class="table-cell">{dealer.revenue}</div>
+                                                <div class="table-cell">{dealer.visits}</div>
+                                                <div class="table-cell">{dealer.orders}</div>
+                                                <div class="table-cell">
+                                                    <span class={dealer.trendClass}>{dealer.trendText}</span>
+                                                </div>
+                                                <div class="table-cell">
+                                                    <button class={dealer.actionBtnClass}>View Recommendations</button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Rep AI Recommendations -->
+                    <div class="action-section">
+                        <div class="section-header">
+                            <h2>🎯 Sales Rep AI Recommendations (Action-Focused)</h2>
+                            <div class="section-subtitle">Your personalized action checklist</div>
+                        </div>
+
+                        <div class="action-checklist">
+                            <template for:each={aiData.actionItems} for:item="action">
+                                <div key={action.id} class={action.itemClass}>
+                                    <div class="action-icon">{action.icon}</div>
+                                    <div class="action-content">
+                                        <div class="action-title">{action.title}</div>
+                                        <div class="action-detail">{action.detail}</div>
+                                        <div class="action-suggestion">{action.suggestion}</div>
+                                    </div>
+                                    <button class={action.buttonClass}
+                    onclick={handleActionDispatch}
+                    data-id={action.id}
+                    data-dealer={action.dealerName}
+                    data-type={action.actionType}>
+                {action.buttonText}
+            </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Competitor Market Analysis Section -->
+                    <div class="competitor-section">
+                        <div class="section-header">
+                            <div>
+                                <h2>🏆 Competitor Market Analysis</h2>
+                                <div class="section-subtitle">AI-powered competitive intelligence from field data</div>
+                            </div>
+                            <button class="refresh-btn" onclick={refreshAIInsights}>
+            🔄 Refresh
+        </button>
+                        </div>
+
+                        <template if:true={hasCompetitorData}>
+                            <!-- Summary Strip -->
+                            <div class="comp-summary-strip">
+                                <div class="comp-summary-item">
+                                    <div class="comp-summary-value">{competitorSummary.total}</div>
+                                    <div class="comp-summary-label">Records Analysed</div>
+                                </div>
+                                <div class="comp-summary-item threat-high">
+                                    <div class="comp-summary-value">{competitorSummary.highThreat}</div>
+                                    <div class="comp-summary-label">High Threat</div>
+                                </div>
+                                <div class="comp-summary-item threat-medium">
+                                    <div class="comp-summary-value">{competitorSummary.mediumThreat}</div>
+                                    <div class="comp-summary-label">Medium Threat</div>
+                                </div>
+                                <div class="comp-summary-item threat-low">
+                                    <div class="comp-summary-value">{competitorSummary.lowThreat}</div>
+                                    <div class="comp-summary-label">Low Threat</div>
+                                </div>
+                                <div class="comp-summary-item">
+                                    <div class="comp-summary-value">{competitorSummary.weCheaper}</div>
+                                    <div class="comp-summary-label">Price Advantage</div>
+                                </div>
+                            </div>
+
+                            <!-- Competitor Cards Grid -->
+                            <div class="comp-cards-grid">
+                                <template for:each={aiData.competitorAnalysis} for:item="comp">
+                                    <div key={comp.id} class={comp.cardClass}>
+
+                                        <!-- Card Header -->
+                                        <div class="comp-card-header">
+                                            <div class="comp-card-title-row">
+                                                <div class="comp-brand-icon">🏢</div>
+                                                <div class="comp-card-titles">
+                                                    <div class="comp-competitor-name">{comp.competitorName}</div>
+                                                    <div class="comp-account-name">📍 {comp.accountName}</div>
+                                                </div>
+                                                <div class={comp.threatBadgeClass}>{comp.threatLabel}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Product Comparison -->
+                                        <div class="comp-product-row">
+                                            <div class="comp-product-us">
+                                                <div class="comp-product-label">Our Product</div>
+                                                <div class="comp-product-name">{comp.ourProduct}</div>
+                                            </div>
+                                            <div class="comp-vs-badge">VS</div>
+                                            <div class="comp-product-them">
+                                                <div class="comp-product-label">Competitor</div>
+                                                <div class="comp-product-name">{comp.competitorProduct}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Price Comparison -->
+                                        <div class="comp-metrics-row">
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Our Price</div>
+                                                <div class="comp-metric-value our-value">{comp.ourPrice}</div>
+                                            </div>
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Their Price</div>
+                                                <div class="comp-metric-value their-value">{comp.competitorPrice}</div>
+                                            </div>
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Difference</div>
+                                                <div class={comp.priceDiffClass}>{comp.priceDifference}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stock & Shelf Share -->
+                                        <div class="comp-metrics-row">
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Our Stock</div>
+                                                <div class="comp-metric-value">{comp.ourStock}</div>
+                                            </div>
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Their Stock</div>
+                                                <div class="comp-metric-value">{comp.competitorStock}</div>
+                                            </div>
+                                            <div class="comp-metric-box">
+                                                <div class="comp-metric-label">Shelf Share</div>
+                                                <div class="comp-metric-value">{comp.shelfShare}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tags Row -->
+                                        <div class="comp-tags-row">
+                                            <span class={comp.demandBadgeClass}>📈 {comp.demandTrend}</span>
+                                            <span class={comp.prefBadgeClass}>❤️ {comp.dealerPreference}</span>
+                                            <span class="comp-tag-neutral">👁 {comp.displayVisibility}</span>
+                                            <template if:true={comp.isPromoActive}>
+                                                <span class="comp-tag-promo">🎁 Promo Active</span>
+                                            </template>
+                                        </div>
+
+                                        <!-- AI Insight -->
+                                        <div class="comp-ai-insight">
+                                            <div class="comp-insight-icon">🤖</div>
+                                            <div class="comp-insight-text">{comp.aiInsight}</div>
+                                        </div>
+
+                                        <!-- Recommended Action -->
+                                        <div class="comp-action-row">
+                                            <div class="comp-action-icon">🎯</div>
+                                            <div class="comp-action-text">{comp.recommendedAction}</div>
+                                        </div>
+
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:false={hasCompetitorData}>
+                            <div class="comp-empty-state">
+                                <div class="comp-empty-icon">📊</div>
+                                <div class="comp-empty-title">No Competitor Data Available</div>
+                                <div class="comp-empty-subtitle">Competitor market analysis records will appear here
+                                    once field reps log competitor observations during visits.</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={isAccount360Active}>
+                <c-account360-module onaccountselect={handleAccountSelect}>
+                </c-account360-module>
+            </template>
+
+            <template if:true={isPrimaryOrdersActive}>
+                <c-primary-orders></c-primary-orders>
+            </template>
+
+
+            <!-- Other Tabs Content -->
+            <!-- <template if:true={isOtherTabActive}>
+                <div class="tab-content">
+                    <h1 class="tab-title">{activeTabLabel}</h1>
+                    <div class="coming-soon">
+                        <div class="soon-icon">🚧</div>
+                        <h2>Coming Soon</h2>
+                        <p>{activeTabLabel} feature is under development</p>
+                        <button class="primary-btn" onclick={handleNotify}>Notify Me</button>
+                    </div>
+                </div>
+            </template> -->
+        </div>
+
+    </div>
+
+    <!-- Attendance Details Modal -->
+    <template if:true={showAttendanceModal}>
+        <div class="modal-overlay" onclick={closeModal}>
+            <div class="attendance-modal" onclick={handleModalClick}>
+                <div class="modal-header">
+                    <h2>📋 Attendance Details</h2>
+                    <button class="modal-close" onclick={closeModal}>×</button>
+                </div>
+                <div class="modal-content">
+                    <!-- Left Column - Check-In Details -->
+                    <div class="modal-column">
+                        <div class="column-header checkin-header">
+                            <h3>✅ Check-In Details</h3>
+                            <div class="time-badge">{selectedAttendance.checkIn}</div>
+                        </div>
+                        <div class="details-card">
+                            <div class="detail-item">
+                                <span class="detail-label">📅 Date</span>
+                                <span class="detail-value">{selectedAttendance.fullDate}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Time</span>
+                                <span class="detail-value">{selectedAttendance.checkIn}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">📍 GPS Coordinates</span>
+                                <span class="detail-value">{selectedAttendance.checkInCoords}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🏢 Location</span>
+                                <span class="detail-value">{selectedAttendance.checkInLocation}</span>
+                            </div>
+                        </div>
+                        <div class="map-container-small">
+                            <div class="map-header-small">
+                                <h4>Check-In Location</h4>
+                            </div>
+                            <div class="mini-map-container">
+                                <lightning-map map-markers={checkInMapMarkers} zoom-level="15" list-view="hidden"
+                                    show-footer="false" class="small-map">
+                                </lightning-map>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Check-Out Details -->
+                    <div class="modal-column">
+                        <div class="column-header checkout-header">
+                            <h3>🚪 Check-Out Details</h3>
+                            <div class="time-badge">{selectedAttendance.checkOut}</div>
+                        </div>
+                        <div class="details-card">
+                            <div class="detail-item">
+                                <span class="detail-label">📅 Date</span>
+                                <span class="detail-value">{selectedAttendance.fullDate}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Time</span>
+                                <span class="detail-value">{selectedAttendance.checkOut}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">📍 GPS Coordinates</span>
+                                <span class="detail-value">{selectedAttendance.checkOutCoords}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🏢 Location</span>
+                                <span class="detail-value">{selectedAttendance.checkOutLocation}</span>
+                            </div>
+                        </div>
+                        <div class="map-container-small">
+                            <div class="map-header-small">
+                                <h4>Check-Out Location</h4>
+                            </div>
+                            <div class="mini-map-container">
+                                <lightning-map map-markers={checkOutMapMarkers} zoom-level="15" list-view="hidden"
+                                    show-footer="false" class="small-map">
+                                </lightning-map>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeModal}>Close</button>
+                    <button class="primary-btn" onclick={downloadAttendance}>
+                        📥 Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!--handleViewExpenseDetails-->
+    <template if:true={showExpenseModal}>
+        <div class="modal-overlay" onclick={closeExpenseModal}>
+            <div class="attendance-modal" onclick={handleModalClick}>
+                <div class="modal-header">
+                    <h2>📋 Expense Details</h2>
+                    <button class="modal-close" onclick={closeExpenseModal}>×</button>
+                </div>
+
+                <div class="modal-content">
+                    <div class="details-card">
+                        <div class="detail-item">
+                            <span class="detail-label">Expense Date</span>
+                            <span class="detail-value">{selectedExpense.formattedDate}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Expense Type</span>
+                            <span class="detail-value">{selectedExpense.type}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Amount</span>
+                            <span class="detail-value">₹{selectedExpense.amount}</span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Status</span>
+                            <span class={selectedExpense.statusClass}>
+                            {selectedExpense.status}
+                        </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Description</span>
+                            <span class="detail-value">{selectedExpense.description}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeExpenseModal}>Close</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+    <!-- Visit History Modal -->
+    <!-- Visit History Modal -->
+    <template if:true={showVisitHistoryModal}>
+        <div class="modal-overlay" onclick={closeVisitHistoryModal}>
+            <div class="attendance-modal" onclick={handleModalClick}>
+
+                <!-- Header -->
+                <div class="modal-header">
+                    <h2>📍 Visit History</h2>
+                    <button class="modal-close" onclick={closeVisitHistoryModal}>×</button>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="vhf-filter-bar">
+                    <button class={vhfAllClass} data-filter="all" onclick={handleVisitHistoryFilter}>
+                    All
+                </button>
+                    <button class={vhfMonthClass} data-filter="month" onclick={handleVisitHistoryFilter}>
+                    📅 This Month
+                </button>
+                    <button class={vhfWeekClass} data-filter="week" onclick={handleVisitHistoryFilter}>
+                    📆 This Week
+                </button>
+                    <span class="vhf-count">{filteredVisits.length} visits</span>
+                </div>
+
+                <!-- List -->
+                <div class="modal-content" style="display:block; padding: 8px 24px 16px;">
+
+                    <template if:false={filteredVisits.length}>
+                        <div class="ve-empty" style="padding:32px;">
+                            <div class="ve-empty-icon">📋</div>
+                            <div class="ve-empty-title">No visits found for this period</div>
+                        </div>
+                    </template>
+
+                    <div class="attendance-list">
+                        <template for:each={filteredVisits} for:item="visit">
+                            <div key={visit.id} class="attendance-item vhf-clickable-row" data-id={visit.id}
+                                onclick={handleVisitHistoryItemClick}>
+
+                                <!-- Date Column -->
+                                <div class="attendance-date">
+                                    <div class="day">{visit.dayLabel}</div>
+                                    <div class="date">{visit.dateDisplay}</div>
+                                </div>
+
+                                <!-- Account + Time -->
+                                <div class="attendance-times">
+                                    <div class="time-entry">
+                                        <span class="time-label">Account:</span>
+                                        <span class="time-value">{visit.account}</span>
+                                    </div>
+                                    <div class="time-entry">
+                                        <span class="time-label">Time:</span>
+                                        <span class="time-value">{visit.time}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class={visit.statusClass}>{visit.status}</div>
+
+                                <!-- Arrow indicator -->
+                                <div class="vhf-arrow">→</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeVisitHistoryModal}>Close</button>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+    <template if:true={showScheduleVisitModal}>
+        <div class="modal-overlay" onclick={closeScheduleVisitModal}>
+            <div class="attendance-modal" onclick={handleModalClick}>
+
+                <div class="modal-header">
+                    <h2>📅 Schedule Visit</h2>
+                    <button class="modal-close" onclick={closeScheduleVisitModal}>×</button>
+                </div>
+
+                <div class="modal-content" style="grid-template-columns: 1fr;">
+                    <lightning-record-edit-form object-api-name="Visit__c" onsuccess={handleSuccess}
+                        onerror={handleError}>
+
+                        <lightning-messages></lightning-messages>
+
+                        <lightning-input-field field-name="Account__c">
+                        </lightning-input-field>
+
+                        <lightning-input-field field-name="Visit_Date__c">
+                        </lightning-input-field>
+
+                        <lightning-input-field field-name="Planned_Start_Time__c">
+                        </lightning-input-field>
+
+                        <lightning-input-field field-name="Visit_Purpose__c">
+                        </lightning-input-field>
+
+                        <lightning-input-field field-name="Visit_Status__c">
+                        </lightning-input-field>
+
+                        <div class="slds-m-top_medium">
+                            <lightning-button type="submit" label="Create Visit" variant="brand">
+                            </lightning-button>
+                        </div>
+
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</template>

@@ -1,0 +1,30 @@
+<template>
+    <div class="related-list-container">
+
+        <!-- Header -->
+        <div class="header">
+            <h2>Related Records</h2>
+        </div>
+
+        <!-- Table -->
+        <template if:true={data}>
+            <div class="table-wrapper">
+                <lightning-datatable
+                    key-field="Id"
+                    data={data}
+                    columns={columns}
+                    hide-checkbox-column
+                    resize-column-disabled>
+                </lightning-datatable>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template if:false={data}>
+            <div class="empty-state">
+                No records found
+            </div>
+        </template>
+
+    </div>
+</template>

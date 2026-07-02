@@ -1,0 +1,431 @@
+/* ═══════════════════════════════════════════════════
+   SCHEME SELECTOR — Bright Modern UI
+   Color palette:
+     Slab     → Indigo/Violet  #6366F1 / #EEF2FF
+     Free     → Amber/Orange   #F59E0B / #FFFBEB
+     Discount → Emerald/Green  #10B981 / #ECFDF5
+═══════════════════════════════════════════════════ */
+
+:host {
+    --radius-card : 20px;
+    --radius-pill : 100px;
+    --radius-btn  : 12px;
+
+    --slab-main   : #6366F1;
+    --slab-light  : #EEF2FF;
+    --slab-mid    : #C7D2FE;
+    --slab-dark   : #4338CA;
+
+    --free-main   : #F59E0B;
+    --free-light  : #FFFBEB;
+    --free-mid    : #FDE68A;
+    --free-dark   : #D97706;
+
+    --disc-main   : #10B981;
+    --disc-light  : #ECFDF5;
+    --disc-mid    : #A7F3D0;
+    --disc-dark   : #059669;
+
+    --surface     : #FFFFFF;
+    --bg          : #F8FAFF;
+    --border      : #E8ECF4;
+    --text-primary: #0F172A;
+    --text-mid    : #475569;
+    --text-muted  : #94A3B8;
+
+    --shadow-sm   : 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md   : 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+    --shadow-lg   : 0 12px 32px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.05);
+
+    --ease        : cubic-bezier(.22,.68,0,1.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Outer shell ───────────────────────────────────── */
+.portal {
+    background   : var(--bg);
+    padding      : 1.75rem;
+    border-radius: 24px;
+    min-height   : 200px;
+    font-family  : 'Inter', 'SF Pro Text', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.portal-header {
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    margin-bottom  : 1.75rem;
+}
+
+.header-left {
+    display    : flex;
+    align-items: center;
+    gap        : 14px;
+}
+
+.header-icon {
+    width          : 44px;
+    height         : 44px;
+    background     : linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    border-radius  : 14px;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    font-size      : 20px;
+    box-shadow     : 0 4px 12px rgba(99,102,241,.35);
+    flex-shrink    : 0;
+}
+
+.portal-title {
+    font-size  : 1.35rem;
+    font-weight: 750;
+    color      : var(--text-primary);
+    letter-spacing: -0.4px;
+}
+
+.portal-subtitle {
+    font-size : 0.82rem;
+    color     : var(--text-muted);
+    margin-top: 2px;
+}
+
+.count-pill {
+    background   : linear-gradient(135deg, #6366F1, #8B5CF6);
+    color        : #fff;
+    font-size    : 0.78rem;
+    font-weight  : 600;
+    padding      : 5px 14px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.2px;
+    box-shadow   : 0 2px 8px rgba(99,102,241,.3);
+}
+
+/* ── Scheme list ─────────────────────────────────────── */
+.scheme-list {
+    display       : flex;
+    flex-direction: column;
+    gap           : 16px;
+}
+
+/* ── Scheme card ─────────────────────────────────────── */
+.scheme-card {
+    position     : relative;
+    background   : var(--surface);
+    border-radius: var(--radius-card);
+    padding      : 1.4rem 1.5rem;
+    border       : 1.5px solid var(--border);
+    overflow     : hidden;
+    box-shadow   : var(--shadow-sm);
+    transition   : transform .25s var(--ease), box-shadow .25s var(--ease), border-color .2s;
+}
+
+.scheme-card:hover {
+    transform : translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Per-type border accent on left edge */
+.card-slab     { border-left: 4px solid var(--slab-main); }
+.card-free     { border-left: 4px solid var(--free-main); }
+.card-discount { border-left: 4px solid var(--disc-main); }
+.card-default  { border-left: 4px solid #CBD5E1; }
+
+/* ── Decorative blob ─────────────────────────────────── */
+.blob {
+    position     : absolute;
+    top          : -30px;
+    right        : -30px;
+    width        : 110px;
+    height       : 110px;
+    border-radius: 50%;
+    opacity      : 0.12;
+    pointer-events: none;
+}
+.blob-slab     { background: var(--slab-main); }
+.blob-free     { background: var(--free-main); }
+.blob-discount { background: var(--disc-main); }
+.blob-default  { background: #94A3B8; }
+
+/* ── Card top row ────────────────────────────────────── */
+.card-top {
+    display    : flex;
+    align-items: center;
+    gap        : 10px;
+    margin-bottom: 10px;
+}
+
+/* ── Type chip ───────────────────────────────────────── */
+.type-chip {
+    display      : inline-flex;
+    align-items  : center;
+    font-size    : 11px;
+    font-weight  : 600;
+    padding      : 3px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.chip-slab {
+    background: var(--slab-light);
+    color     : var(--slab-dark);
+    border    : 1px solid var(--slab-mid);
+}
+.chip-free {
+    background: var(--free-light);
+    color     : var(--free-dark);
+    border    : 1px solid var(--free-mid);
+}
+.chip-discount {
+    background: var(--disc-light);
+    color     : var(--disc-dark);
+    border    : 1px solid var(--disc-mid);
+}
+.chip-default {
+    background: #F1F5F9;
+    color     : #64748B;
+    border    : 1px solid #CBD5E1;
+}
+
+/* Applied badge */
+.applied-badge {
+    font-size    : 11px;
+    font-weight  : 600;
+    padding      : 3px 10px;
+    border-radius: var(--radius-pill);
+    background   : #DCFCE7;
+    color        : #15803D;
+    border       : 1px solid #86EFAC;
+    margin-left  : auto;
+}
+
+/* ── Scheme name ─────────────────────────────────────── */
+.card-name {
+    font-size    : 1.05rem;
+    font-weight  : 700;
+    color        : var(--text-primary);
+    letter-spacing: -0.2px;
+    margin-bottom: 5px;
+}
+
+/* ── Eligibility note ────────────────────────────────── */
+.card-note {
+    font-size  : 0.82rem;
+    color      : var(--text-mid);
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+/* ── Divider ─────────────────────────────────────────── */
+.card-divider {
+    height       : 1px;
+    background   : var(--border);
+    margin-bottom: 14px;
+    border-radius: 1px;
+}
+
+/* ── Card bottom: benefit + button ───────────────────── */
+.card-bottom {
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    gap            : 12px;
+}
+
+.benefit-block {
+    display       : flex;
+    flex-direction: column;
+    gap           : 2px;
+}
+
+.benefit-label {
+    font-size  : 11px;
+    color      : var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.benefit-amount {
+    font-size  : 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+}
+.benefit-slab     { color: var(--slab-main); }
+.benefit-free     { color: var(--free-dark); }
+.benefit-discount { color: var(--disc-dark); }
+.benefit-muted    { color: var(--text-muted); }
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn {
+    font-family  : inherit;
+    font-size    : 0.85rem;
+    font-weight  : 600;
+    padding      : 9px 20px;
+    border-radius: var(--radius-btn);
+    border       : none;
+    cursor       : pointer;
+    white-space  : nowrap;
+    display      : flex;
+    align-items  : center;
+    gap          : 7px;
+    transition   : transform .15s var(--ease), box-shadow .15s, opacity .15s;
+    letter-spacing: 0.1px;
+    flex-shrink  : 0;
+}
+
+.btn:active:not(:disabled) { transform: scale(0.96); }
+
+/* Slab apply */
+.btn-slab {
+    background : linear-gradient(135deg, var(--slab-main), #8B5CF6);
+    color      : #fff;
+    box-shadow : 0 3px 10px rgba(99,102,241,.35);
+}
+.btn-slab:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(99,102,241,.45);
+    transform : translateY(-1px);
+}
+
+/* Free apply */
+.btn-free {
+    background : linear-gradient(135deg, var(--free-main), #F97316);
+    color      : #fff;
+    box-shadow : 0 3px 10px rgba(245,158,11,.35);
+}
+.btn-free:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(245,158,11,.45);
+    transform : translateY(-1px);
+}
+
+/* Discount apply */
+.btn-discount {
+    background : linear-gradient(135deg, var(--disc-main), #34D399);
+    color      : #fff;
+    box-shadow : 0 3px 10px rgba(16,185,129,.35);
+}
+.btn-discount:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(16,185,129,.45);
+    transform : translateY(-1px);
+}
+
+/* Default */
+.btn-default {
+    background : #F1F5F9;
+    color      : #475569;
+    border     : 1px solid #CBD5E1;
+}
+
+/* Applied (disabled) */
+.btn-done {
+    background : #DCFCE7;
+    color      : #15803D;
+    border     : 1px solid #86EFAC;
+    cursor     : default;
+    opacity    : 1;
+}
+
+/* Loading spinner inside button */
+.btn-loading {
+    background : #F1F5F9;
+    color      : #64748B;
+    cursor     : not-allowed;
+    border     : 1px solid #CBD5E1;
+}
+
+.btn-spinner {
+    display      : inline-block;
+    width        : 14px;
+    height       : 14px;
+    border       : 2px solid #CBD5E1;
+    border-top   : 2px solid #6366F1;
+    border-radius: 50%;
+    animation    : spin .65s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Skeleton loading ────────────────────────────────── */
+.skeleton-wrap {
+    display       : flex;
+    flex-direction: column;
+    gap           : 16px;
+}
+
+.skeleton-card {
+    height       : 120px;
+    border-radius: var(--radius-card);
+    background   : linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+    background-size: 400% 100%;
+    animation    : shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+    0%   { background-position: 100% 50%; }
+    100% { background-position:   0% 50%; }
+}
+
+/* ── Error banner ────────────────────────────────────── */
+.error-banner {
+    display      : flex;
+    align-items  : center;
+    gap          : 10px;
+    background   : #FFF1F2;
+    border       : 1px solid #FECDD3;
+    border-radius: 14px;
+    padding      : 1rem 1.25rem;
+    color        : #BE123C;
+    font-size    : 0.88rem;
+    font-weight  : 500;
+}
+.error-icon { font-size: 18px; }
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state {
+    display        : flex;
+    flex-direction : column;
+    align-items    : center;
+    justify-content: center;
+    text-align     : center;
+    padding        : 3rem 1.5rem;
+    gap            : 10px;
+}
+
+.empty-illustration {
+    position : relative;
+    width    : 80px;
+    height   : 80px;
+    margin   : 0 auto 8px;
+}
+
+.empty-circle {
+    position     : absolute;
+    inset        : 0;
+    border-radius: 50%;
+    background   : linear-gradient(135deg, #EEF2FF, #E0E7FF);
+}
+
+.empty-icon-wrap {
+    position       : absolute;
+    inset          : 0;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    font-size      : 32px;
+}
+
+.empty-title {
+    font-size  : 1rem;
+    font-weight: 700;
+    color      : var(--text-primary);
+}
+
+.empty-sub {
+    font-size  : 0.83rem;
+    color      : var(--text-muted);
+    max-width  : 320px;
+    line-height: 1.6;
+}

@@ -1,0 +1,26 @@
+.step-container {
+    padding: 2rem;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.radio-group {
+    margin-bottom: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}

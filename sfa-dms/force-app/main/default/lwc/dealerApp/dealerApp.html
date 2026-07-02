@@ -1,0 +1,87 @@
+<template>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">📦</span>
+                <span>D.M.S.</span>
+            </div>
+
+            <ul class="menu">
+                <li class={dashboardClass} onclick={openDashboard}>
+                    <span class="menu-icon">🏠</span>
+                    <span>Dashboard</span>
+                </li>
+                <li class={dealersClass} onclick={openDealers}>
+                    <span class="menu-icon">👥</span>
+                    <span>My Dealers</span>
+                </li>
+                <li class={ordersClass} onclick={openOrders}>
+                    <span class="menu-icon">📋</span>
+                    <span>Orders</span>
+                </li>
+                <li class={inventoryClass} onclick={openInventory}>
+                    <span class="menu-icon">📦</span>
+                    <span>Inventory</span>
+                </li>
+                <li class={insightsClass} onclick={openInsights}>
+                    <span class="menu-icon">🤖</span>
+                    <span>AI Insights</span>
+                </li>
+            </ul>
+            <!-- USER FOOTER -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-icon">👤</span>
+                    <span class="user-name">{userName}</span>
+                </div>
+
+                <button class="logout-btn" onclick={handleLogout}>
+        🚪 Logout
+    </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <!-- HEADER -->
+            <!-- <div class="header">
+                <h2 class="page-title">{pageTitle}</h2>
+                <div class="user">
+                    <span class="user-icon">👤</span>
+                    <span>Dealer User</span>
+                </div>
+            </div> -->
+
+            <!-- PAGE CONTENT with fade transition -->
+            <div class="content" key={activeMenuItem}>
+                <template if:true={isDashboard}>
+                    <div class="content-placeholder">
+                        <c-dealer-dashboard onopenorder={handleOpenOrder}></c-dealer-dashboard>
+                    </div>
+                </template>
+                <template if:true={isDealers}>
+                    <div class="content-placeholder">
+                        <c-dealer-management></c-dealer-management>
+                    </div>
+                </template>
+                <template if:true={isOrders}>
+                    <div class="content-placeholder">
+                        <c-dealer-order selected-order-id={selectedOrderId}></c-dealer-order>
+                    </div>
+                </template>
+
+                <template if:true={isInventory}>
+                    <div class="content-placeholder">
+                        <c-dealer-inventory></c-dealer-inventory>
+                    </div>
+                </template>
+                <template if:true={isInsights}>
+                    <div class="content-placeholder">
+                        <c-ai-insights></c-ai-insights>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>

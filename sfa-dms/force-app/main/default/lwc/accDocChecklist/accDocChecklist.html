@@ -1,0 +1,26 @@
+<template>
+    <lightning-card title="Document Checklist">
+        <template if:true={docStatus}>
+            <div class="checklist-container">
+                <template for:each={docStatus} for:item="doc">
+                    <div key={doc.label} class="doc-item" style={doc.statusStyle}>
+                        <div class="doc-left">
+                            <span class="status-icon">{doc.statusIcon}</span>
+                            <span class="doc-label">{doc.label}</span>
+                        </div>
+                        <span class={doc.statusClass}>
+                            {doc.statusText}
+                        </span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={docStatus}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading checklist" size="medium"></lightning-spinner>
+                <p class="loading-text">Fetching document checklist...</p>
+            </div>
+        </template>
+    </lightning-card>
+</template>

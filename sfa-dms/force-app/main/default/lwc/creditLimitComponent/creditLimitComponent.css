@@ -1,0 +1,315 @@
+/* Enhanced UI with beautiful icon styling */
+
+.cards-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    padding: 1rem 0;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Premium card styling */
+.credit-card {
+    flex: 0 0 auto;
+    width: 160px;
+    /* height: 180px; */
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.credit-card__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Icon wrapper with gradient background */
+.credit-card__icon-wrapper {
+    padding: 0.5rem;
+    border-radius: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.credit-card__icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.icon {
+    width: 100%;
+    height: 100%;
+}
+
+/* Individual card border and glow colors */
+.credit-card--sanctioned {
+    border-color: #2e7d32;
+    background: linear-gradient(145deg, #ffffff, #f8fff9);
+}
+
+.credit-card--utilized {
+    border-color: #ed6c02;
+    background: linear-gradient(145deg, #ffffff, #fff8f0);
+}
+
+.credit-card--available {
+    border-color: #1565c0;
+    background: linear-gradient(145deg, #ffffff, #f0f8ff);
+}
+
+.credit-card--dpd {
+    border-color: #9c27b0;
+    background: linear-gradient(145deg, #ffffff, #faf5ff);
+}
+
+.credit-card--overdue {
+    border-color: #c62828;
+    background: linear-gradient(145deg, #ffffff, #fff5f5);
+}
+
+.credit-card--status {
+    border-color: #0070d2;
+    background: linear-gradient(145deg, #ffffff, #f0f7ff);
+}
+
+/* Icon colors and styling */
+.credit-card__icon {
+    color: currentColor;
+}
+
+.credit-card--sanctioned .credit-card__icon {
+    color: #2e7d32;
+}
+
+.credit-card--utilized .credit-card__icon {
+    color: #ed6c02;
+}
+
+.credit-card--available .credit-card__icon {
+    color: #1565c0;
+}
+
+.credit-card--dpd .credit-card__icon {
+    color: #9c27b0;
+}
+
+.credit-card--overdue .credit-card__icon {
+    color: #c62828;
+}
+
+.credit-card--status .credit-card__icon {
+    color: #0070d2;
+}
+
+/* Glow effect */
+.credit-card__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle at center, currentColor 0%, transparent 70%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+    transition: all 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: soft-light;
+}
+
+.credit-card--sanctioned .credit-card__glow {
+    color: #2e7d32;
+}
+
+.credit-card--utilized .credit-card__glow {
+    color: #ed6c02;
+}
+
+.credit-card--available .credit-card__glow {
+    color: #1565c0;
+}
+
+.credit-card--dpd .credit-card__glow {
+    color: #9c27b0;
+}
+
+.credit-card--overdue .credit-card__glow {
+    color: #c62828;
+}
+
+.credit-card--status .credit-card__glow {
+    color: #0070d2;
+}
+
+/* Hover effects */
+.credit-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-width: 2.5px;
+    box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.25);
+}
+
+.credit-card:hover .credit-card__icon-wrapper {
+    transform: scale(1.1);
+}
+
+.credit-card:hover .credit-card__icon {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.credit-card:hover .credit-card__glow {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Active state */
+.credit-card:active {
+    transform: translateY(-4px) scale(0.98);
+    transition: all 0.1s;
+}
+
+/* Text styling - enhanced */
+.credit-card__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+    position: relative;
+    z-index: 2;
+}
+
+.credit-card__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #4a5a6e;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    backdrop-filter: blur(4px);
+}
+
+.credit-card__value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #1a2634;
+    font-family: 'Inter', 'Salesforce Sans', system-ui, -apple-system, sans-serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    background: linear-gradient(135deg, #1a2634, #2c3e50);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+}
+
+/* Status text special styling */
+.status-text {
+    font-size: 1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0070d2, #005fb2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Pulse animation */
+.credit-card--pulse {
+    animation: premium-pulse 0.4s ease-out;
+}
+
+@keyframes premium-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 112, 210, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 12px rgba(0, 112, 210, 0.1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 112, 210, 0);
+    }
+}
+
+/* Custom scrollbar - premium */
+.cards-row::-webkit-scrollbar {
+    height: 6px;
+}
+
+.cards-row::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 10px;
+}
+
+.cards-row::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #cbd5e0, #a0aec0);
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.cards-row::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #a0aec0, #718096);
+}
+
+/* Focus style */
+.credit-card:focus-visible {
+    outline: 3px solid #0070d2;
+    outline-offset: 3px;
+}
+
+/* Additional decorative elements */
+.credit-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.credit-card:hover::before {
+    opacity: 0.3;
+}
+
+/* Responsive adjustment */
+@media (max-width: 640px) {
+    .credit-card {
+        width: 140px;
+        height: 160px;
+    }
+    
+    .credit-card__value {
+        font-size: 1rem;
+    }
+    
+    .status-text {
+        font-size: 0.9rem;
+    }
+}

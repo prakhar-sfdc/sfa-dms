@@ -1,0 +1,137 @@
+<template>
+
+    <!-- STEP 1 -->
+    <template if:true={isStep1}>
+        <lightning-card title="Financial Adjustment - Step 1">
+            <div class="slds-p-around_medium">
+
+                <lightning-combobox
+                    label="Type"
+                    placeholder="-- Select Type --"
+                    options={typeOptions}
+                    value={type}
+                    required
+                    onchange={handleTypeChange}>
+                </lightning-combobox>
+
+                <div class="slds-m-top_small">
+                    <lightning-record-picker
+                        label="Invoice"
+                        object-api-name="Order_Invoice__c"
+                        required
+                        onchange={handleInvoiceChange}>
+                    </lightning-record-picker>
+                </div>
+
+                <div class="slds-m-top_small">
+                    <lightning-combobox
+                        label="Reason"
+                        placeholder="-- Select Reason --"
+                        options={reasonOptions}
+                        value={reason}
+                        required
+                        onchange={handleReasonChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="slds-m-top_small">
+                    <lightning-combobox
+                        label="Sub Reason"
+                        placeholder="-- Select Sub Reason --"
+                        options={subReasonOptions}
+                        value={subReason}
+                        onchange={handleSubReasonChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="slds-m-top_small">
+                    <lightning-textarea
+                        label="Description"
+                        value={description}
+                        onchange={handleDescriptionChange}>
+                    </lightning-textarea>
+                </div>
+
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        variant="brand"
+                        label="Next"
+                        onclick={handleNext}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </lightning-card>
+    </template>
+
+    <!-- STEP 2 -->
+    <template if:true={isStep2}>
+        <lightning-card title="Select Products - Step 2">
+            <div class="slds-p-around_medium">
+
+                <!-- Table Header -->
+                <div class="slds-grid slds-gutters slds-m-bottom_small">
+                    <div class="slds-col slds-size_4-of-12">
+                        <strong>Product</strong>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12">
+                        <strong>Unit Price</strong>
+                    </div>
+                    <div class="slds-col slds-size_2-of-12">
+                        <strong>Max Qty</strong>
+                    </div>
+                    <div class="slds-col slds-size_3-of-12">
+                        <strong>Adjust Qty</strong>
+                    </div>
+                </div>
+
+                <!-- Table Rows -->
+                <template for:each={orderItems} for:item="item" for:index="index">
+                    <div key={item.Id} class="slds-grid slds-gutters slds-m-bottom_small slds-align_absolute-center">
+
+                        <div class="slds-col slds-size_4-of-12">
+                            <p>{item.productName}</p>
+                        </div>
+
+                        <div class="slds-col slds-size_3-of-12">
+                            <p>{item.unitPrice}</p>
+                        </div>
+
+                        <div class="slds-col slds-size_2-of-12">
+                            <p>{item.quantity}</p>
+                        </div>
+
+                        <div class="slds-col slds-size_3-of-12">
+                            <!-- ✅ value binding + min="0" added -->
+                            <lightning-input
+                                type="number"
+                                label=""
+                                value={item.adjustQty}
+                                min="0"
+                                data-index={index}
+                                onchange={handleQtyChange}>
+                            </lightning-input>
+                        </div>
+
+                    </div>
+                </template>
+
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label="Back"
+                        onclick={handleBack}
+                        class="slds-m-right_small">
+                    </lightning-button>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Save"
+                        onclick={handleSave}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </lightning-card>
+    </template>
+
+</template>

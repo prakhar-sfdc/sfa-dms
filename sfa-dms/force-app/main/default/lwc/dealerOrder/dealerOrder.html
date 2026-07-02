@@ -1,0 +1,421 @@
+<template>
+    <div class="orders-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>Track Orders</h1>
+                <p>Manage and track dealer orders</p>
+            </div>
+            <lightning-button label="Create Order" variant="brand" onclick={openCreateOrder} class="create-btn">
+            </lightning-button>
+        </div>
+
+        <!-- LIST VIEW -->
+        <template if:true={showListView}>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Account</th>
+                            <!-- <th>Order Date</th> -->
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>Delivery Status</th>
+                            <!-- <th></th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={orders} for:item="order">
+                            <tr key={order.Id} class="order-row">
+                                <td>
+                                    <a href="#" onclick={viewOrder} data-id={order.Id} class="order-link">
+                                        {order.OrderNumber}
+                                    </a>
+                                </td>
+                                <td>{order.Account.Name}</td>
+                                <!-- <td>{order.formattedDate}</td> -->
+                                <td>{order.formattedAmount}</td>
+                                <td>
+                                    <span class={order.statusClass}>{order.Status}</span>
+                                </td>
+                                <td>
+                                    <span class={order.recordTypeClass}>
+        {order.recordTypeName}
+    </span>
+                                </td>
+                                <td>
+                                    <span class={order.deliveryClass}>
+                                        {order.deliveryStatus}
+                                    </span>
+                                </td>
+                                <!-- <td>
+                                    <lightning-button
+                                        label="View"
+                                        variant="neutral"
+                                        data-id={order.Id}
+                                        onclick={viewOrder}
+                                        class="view-btn">
+                                    </lightning-button>
+                                </td> -->
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- DETAIL VIEW with tabs -->
+        <template if:true={showDetailView}>
+            <div class="order-detail">
+               <div class="detail-header">
+    <lightning-button-icon icon-name="utility:back" onclick={backToList} class="back-btn">
+    </lightning-button-icon>
+</div>
+
+<div class="order-top-header">
+    <div>
+        <h1>Order {selectedOrder.OrderNumber}</h1>
+        <p class="sub">{selectedOrder.Account.Name}</p>
+    </div>
+
+    <div>
+        <lightning-button label="Edit" variant="brand" onclick={handleEdit}></lightning-button>
+    </div>
+</div>
+
+<lightning-progress-indicator 
+    current-step={currentStage} 
+    type="path"
+    variant="base">
+
+    <template for:each={stages} for:item="stage">
+        <lightning-progress-step
+            key={stage.value}
+            label={stage.label}
+            value={stage.value}
+            onclick={handleStageClick}>
+        </lightning-progress-step>
+    </template>
+
+</lightning-progress-indicator>
+
+<div class="path-action">
+    <lightning-button 
+        label="Mark as Current Stage"
+        variant="brand"
+        onclick={handleMarkStage}>
+    </lightning-button>
+</div>
+
+                <!-- Tabs -->
+                <div class="tab-header">
+                    <button class={detailTabClass} onclick={showDetailTab}>Details</button>
+                    <button class={productsTabClass} onclick={showProductsTab}>Products</button>
+                </div>
+
+                <!-- Tab 1: Details -->
+                <template if:true={isDetailsActive}>
+                        <div class="order-top-header">
+                            <div>
+                                <h1>Order {selectedOrder.OrderNumber}</h1>
+                                <p class="sub">{selectedOrder.Account.Name}</p>
+                            </div>
+
+                            <div class="order-meta">
+                                <span class={selectedOrder.statusClassDetail}>
+            {selectedOrder.Status}
+        </span>
+                                <div class="amount">
+                                    {selectedOrder.formattedTotalAmount}
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="detail-layout">
+
+
+                            <!-- LEFT SIDE -->
+                            <div class="detail-panel">
+
+                                <!-- ACCOUNT + SUMMARY -->
+                                <div class="info-card full">
+                                    <h3>Order Details</h3>
+
+                                    <div class="info-grid">
+                                        <template for:each={detailFields} for:item="field">
+                                            <div key={field.label} class="info-item">
+
+                                                <span class="label">{field.label}</span>
+                                                <span class="value">{field.value}</span>
+
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- Right column: TAT component -->
+                            <div class="tat-wrapper">
+                                <div class="tat-header">
+                                    <div class="tat-title">DELIVERY TIMELINE</div>
+                                    <div class="tat-subtitle">Turnaround Time Tracking</div>
+                                </div>
+
+                                <div class="tat-circle-container">
+                                    <div class="tat-clock-circle">
+                                        <svg viewBox="0 0 200 200" class="tat-progress-ring">
+                                            <circle class="tat-bg" cx="100" cy="100" r="85"></circle>
+                                            <circle class={selectedOrder.tatRingClass} cx="100" cy="100" r="85"
+                                                stroke-dasharray="534" stroke-dashoffset={selectedOrder.tatDashOffset}
+                                                stroke-linecap="round">
+                                            </circle>
+                                            <circle class="tat-inner-circle" cx="100" cy="100" r="75"></circle>
+                                            <defs>
+                                                <linearGradient id="tatSafeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stop-color="#10b981" />
+                                                    <stop offset="100%" stop-color="#059669" />
+                                                </linearGradient>
+                                                <linearGradient id="tatWarningGradient" x1="0%" y1="0%" x2="100%"
+                                                    y2="0%">
+                                                    <stop offset="0%" stop-color="#f59e0b" />
+                                                    <stop offset="100%" stop-color="#d97706" />
+                                                </linearGradient>
+                                                <linearGradient id="tatCriticalGradient" x1="0%" y1="0%" x2="100%"
+                                                    y2="0%">
+                                                    <stop offset="0%" stop-color="#ef4444" />
+                                                    <stop offset="100%" stop-color="#dc2626" />
+                                                </linearGradient>
+                                                <linearGradient id="tatOverdueGradient" x1="0%" y1="0%" x2="100%"
+                                                    y2="0%">
+                                                    <stop offset="0%" stop-color="#7f1d1d" />
+                                                    <stop offset="100%" stop-color="#450a0a" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+
+                                        <div class="tat-center-content">
+                                            <div class="tat-days-count">{selectedOrder.tatDisplayDays}</div>
+                                            <div class="tat-days-label">{selectedOrder.tatStatusText}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tat-footer">
+                                    <div class="tat-timeline-info">
+                                        <div class="tat-timeline-item">
+                                            <div class="tat-timeline-label">Start Date</div>
+                                            <div class="tat-timeline-value">{selectedOrder.formattedCreatedDate}</div>
+                                        </div>
+                                        <div class="tat-progress-bar-container">
+                                            <div class="tat-progress-bar-bg">
+                                                <div class="tat-progress-bar-fill"
+                                                    style={selectedOrder.tatProgressBarStyle}></div>
+                                            </div>
+                                            <div class="tat-progress-dot" style={selectedOrder.tatProgressDotStyle}>
+                                            </div>
+                                        </div>
+                                        <div class="tat-timeline-item">
+                                            <div class="tat-timeline-label">Due Date</div>
+                                            <div class="tat-timeline-value">{selectedOrder.formattedEstimatedDelivery}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </template>
+
+                <!-- Tab 2: Products -->
+                <template if:true={isProductsActive}>
+                    <div class="products-tab">
+                        <div class="products-header">
+                            <h3>Order Products</h3>
+                            <lightning-button label="Add Product" variant="brand" onclick={openAddProductModal}
+                                class="add-product-btn">
+                            </lightning-button>
+                        </div>
+
+                        <!-- Products Table -->
+                        <div class="table-container products-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={orderItems} for:item="item">
+                                        <tr key={item.Id}>
+                                            <td>{item.Product2.Name}</td>
+                                            <td>{item.Quantity}</td>
+                                            <td>{item.formattedUnitPrice}</td>
+                                            <td>{item.formattedTotalPrice}</td>
+                                        </tr>
+                                    </template>
+                                    <template if:true={orderItemsEmpty}>
+                                        <tr>
+                                            <td colspan="4" class="no-data">No products added yet.</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- ORDER TYPE MODAL (new) -->
+        <template if:true={showOrderTypeModal}>
+            <div class="modal-backdrop">
+                <div class="modal type-modal">
+                    <div class="modal-header">
+                        <h2>Select Order Type</h2>
+                        <button class="close-btn" onclick={closeOrderTypeModal}>×</button>
+                    </div>
+                    <div class="modal-body type-modal-body">
+                        <div class="type-options">
+                            <div class="type-card" onclick={selectPrimary}>
+                                <h3>Primary Order</h3>
+                                <p>Order will be tagged to you automatically</p>
+                            </div>
+                            <div class="type-card" onclick={selectSecondary}>
+                                <h3>Secondary Order</h3>
+                                <p>Select a contact to tag this order</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- CREATE ORDER MODAL (updated with conditional contact picker) -->
+        <template if:true={showCreateModal}>
+            <div class="modal-backdrop">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2>{modalTitle}</h2>
+                        <button class="close-btn" onclick={closeModal}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <template for:each={orderFields} for:item="field">
+
+                            <!-- 🔥 HIDE DEALER FOR PRIMARY -->
+                            <template if:false={field.isDealerFieldHidden} key={field.fieldPath}>
+
+                                <div class="field" key={field.fieldPath}>
+
+                                    <label>{field.label}</label>
+
+                                    <!-- 🔥 LOOKUP -->
+                                    <template if:true={field.isLookup}>
+                                        <lightning-combobox name={field.fieldPath} options={contactOptions}
+                                            value={field.value} onchange={handleDynamicChange}>
+                                        </lightning-combobox>
+                                    </template>
+
+                                    <!-- PICKLIST -->
+                                    <template if:true={field.isPicklist}>
+                                        <lightning-combobox name={field.fieldPath} options={field.options}
+                                            value={field.value} onchange={handleDynamicChange}>
+                                        </lightning-combobox>
+                                    </template>
+
+                                    <!-- DATE -->
+                                    <template if:true={field.isDate}>
+                                        <lightning-input type="date" name={field.fieldPath} value={field.value}
+                                            onchange={handleDynamicChange}>
+                                        </lightning-input>
+                                    </template>
+
+                                    <!-- DEFAULT -->
+                                    <template if:false={field.isLookup}>
+                                        <template if:false={field.isPicklist}>
+                                            <template if:false={field.isDate}>
+                                                <lightning-input type="text" name={field.fieldPath} value={field.value}
+                                                    onchange={handleDynamicChange}>
+                                                </lightning-input>
+                                            </template>
+                                        </template>
+                                    </template>
+
+                                </div>
+
+                            </template>
+
+                        </template>
+                    </div>
+
+                    <div class="modal-footer">
+                        <lightning-button label="Back" onclick={backToOrderType} variant="neutral">
+                        </lightning-button>
+                        <lightning-button  label={modalButtonLabel} onclick={handleSubmit} variant="brand">
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ADD PRODUCT MODAL (two-step) -->
+        <template if:true={showAddProductModal}>
+            <div class="modal-backdrop">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h2>Add Products</h2>
+                        <button class="close-btn" onclick={closeAddProductModal}>×</button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="product-table">
+
+                            <!-- HEADER -->
+                            <div class="product-row header" style="margin-bottom:0 !important;">
+                                <div>Product</div>
+                                <div>Price</div>
+                                <div>Available</div>
+                                <div>Quantity</div>
+                            </div>
+
+                            <!-- ROWS -->
+                            <template for:each={productsUI} for:item="prod">
+                                <div key={prod.pricebookEntryId} class="product-row">
+
+                                    <div class="col name">{prod.productName}</div>
+
+                                    <div class="col">{prod.formattedPrice}</div>
+
+                                    <div class="col stock">{prod.availableStock}</div>
+
+                                    <div class="col qty">
+                                        <lightning-input type="number" min="0" value={prod.quantity}
+                                            data-id={prod.pricebookEntryId} onchange={handleQuantityChange}
+                                            variant="label-hidden">
+                                        </lightning-input>
+                                    </div>
+
+                                </div>
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <lightning-button label="Close" onclick={closeAddProductModal}></lightning-button>
+                        <lightning-button label="Add All Selected" variant="brand" onclick={saveOrderItems}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

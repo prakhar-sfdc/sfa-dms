@@ -1,0 +1,112 @@
+<template>
+    <lightning-card title="Credit Limit Overview" icon-name="standard:account">
+        <div class="slds-var-p-around_small">
+            <!-- Single row flex container for all six cards -->
+            <div class="cards-row">
+                <!-- Sanctioned Limit - Bank/Approval Icon -->
+                <div class="credit-card credit-card--sanctioned"
+                     role="button"
+                     tabindex="0"
+                     onclick={handleCardClick}
+                     onkeydown={handleKeyDown}
+                     data-metric="sanctioned">
+                    <div class="credit-card__inner">
+                        <!-- <div class="credit-card__icon-wrapper">
+                            <div class="credit-card__icon credit-card__icon--sanctioned">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="12" r="2" fill="currentColor" fill-opacity="0.3" stroke="none"/>
+                                </svg>
+                            </div>
+                        </div> -->
+                        <div class="credit-card__content">
+                            <span class="credit-card__label">Sanctioned</span>
+                            <span class="credit-card__value">₹ {sanctionedLimitDisplay}</span>
+                        </div>
+                        <div class="credit-card__glow"></div>
+                    </div>
+                </div>
+
+                <!-- Utilized Limit - Trending Up Icon -->
+                <div class="credit-card credit-card--utilized"
+                     role="button"
+                     tabindex="0"
+                     onclick={handleCardClick}
+                     onkeydown={handleKeyDown}
+                     data-metric="utilized">
+                    <div class="credit-card__inner">
+                        <!-- <div class="credit-card__icon-wrapper">
+                            <div class="credit-card__icon credit-card__icon--utilized">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polyline points="17 6 23 6 23 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="18" cy="9" r="1.5" fill="currentColor" fill-opacity="0.3" stroke="none"/>
+                                </svg>
+                            </div>
+                        </div> -->
+                        <div class="credit-card__content">
+                            <span class="credit-card__label">Utilized</span>
+                            <span class="credit-card__value">₹ {utilizedLimitDisplay}</span>
+                        </div>
+                        <div class="credit-card__glow"></div>
+                    </div>
+                </div>
+
+                <!-- Available Limit - Money Bag Icon -->
+                <div class="credit-card credit-card--available"
+                     role="button"
+                     tabindex="0"
+                     onclick={handleCardClick}
+                     onkeydown={handleKeyDown}
+                     data-metric="available">
+                    <div class="credit-card__inner">
+                        <!-- <div class="credit-card__icon-wrapper">
+                            <div class="credit-card__icon credit-card__icon--available">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 10h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="14" r="1.5" fill="currentColor" fill-opacity="0.3" stroke="none"/>
+                                    <circle cx="12" cy="18" r="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+                                    <circle cx="16" cy="14" r="1.5" fill="currentColor" fill-opacity="0.3" stroke="none"/>
+                                    <circle cx="8" cy="18" r="1.5" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+                                </svg>
+                            </div>
+                        </div> -->
+                        <div class="credit-card__content">
+                            <span class="credit-card__label">Available</span>
+                            <span class="credit-card__value">₹ {availableLimitDisplay}</span>
+                        </div>
+                        <div class="credit-card__glow"></div>
+                    </div>
+                </div>
+
+
+               <!-- Credit Status - Shield Check Icon -->
+                <div class="credit-card credit-card--status"
+                     role="button"
+                     tabindex="0"
+                     onclick={handleCardClick}
+                     onkeydown={handleKeyDown}
+                     data-metric="status">
+                    <div class="credit-card__inner">
+                        <!-- <div class="credit-card__icon-wrapper">
+                            <div class="credit-card__icon credit-card__icon--status">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polyline points="9 12 11 14 15 10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="12" r="2" fill="currentColor" fill-opacity="0.2" stroke="none"/>
+                                </svg>
+                            </div>
+                        </div> -->
+                        <div class="credit-card__content">
+                            <span class="credit-card__label"> Credit-Status</span>
+                            <span class="credit-card__value status-text">{creditStatus}</span>
+                        </div>
+                        <div class="credit-card__glow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>

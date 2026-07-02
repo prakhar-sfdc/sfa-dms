@@ -1,0 +1,299 @@
+<template>
+    <div class="dealers-container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>My Dealers</h1>
+                <p>Manage and track your dealers</p>
+            </div>
+
+            <lightning-button label="Create Dealer" variant="brand" class="create-btn" onclick={openCreateDealer}>
+            </lightning-button>
+        </div>
+
+        <!-- LIST VIEW -->
+        <template if:true={showListView}>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dealer Name</th>
+                            <th>Dealer Code</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Credit Limit</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <template for:each={dealers} for:item="dealer">
+                            <tr key={dealer.Id} class="dealer-row">
+
+                                <td>
+                                    <a href="#" class="dealer-link" data-id={dealer.Id} onclick={viewDealer}>
+                                        {dealer.fullName}
+                                    </a>
+                                </td>
+
+                                <td>{dealer.Dealer_Code__c}</td>
+
+                                <td>{dealer.Phone}</td>
+
+                                <td>{dealer.Email}</td>
+
+                                <td>
+                                    <span class={dealer.statusClass}>
+                                    {dealer.Dealer_Status__c}
+                                </span>
+                                </td>
+
+                                <td>{dealer.formattedCredit}</td>
+
+                            </tr>
+                        </template>
+
+                        <template if:true={isEmpty}>
+                            <tr>
+                                <td colspan="6" class="no-data">
+                                    No dealers found
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+        <template if:true={showDetailView}>
+            <div class="dealer-detail">
+                <div class="detail-header">
+                    <lightning-button-icon icon-name="utility:back" onclick={backToList} class="back-btn">
+                    </lightning-button-icon>
+                </div>
+
+                <!-- HEADER -->
+                <div class="order-top-header">
+
+                    <div>
+                        <h1>{selectedDealer.Name}</h1>
+                    </div>
+
+                    <div style="display:flex; gap:0.5rem;">
+
+                        <lightning-button label="Upload Documents" variant="neutral" onclick={openUploadModal}>
+                        </lightning-button>
+
+                        <lightning-button label="Edit" variant="brand" onclick={openEditDealer}>
+                        </lightning-button>
+
+                    </div>
+
+                </div>
+
+                <!-- TABS -->
+                <div class="tab-header">
+                    <button class={detailTabClass} onclick={showDetailTab}>Details</button>
+                    <button class={ordersTabClass}>Related Orders</button>
+                </div>
+
+                <!-- DETAILS TAB -->
+                <template if:true={isDetailsTab}>
+
+                    <div class="detail-layout">
+
+                        <!-- LEFT SIDE -->
+                        <div class="details-grid">
+
+                            <!-- BASIC -->
+                            <div class="info-card full">
+                                <h3>Basic Information</h3>
+
+                                <div class="info-grid">
+                                    <template for:each={fieldSetFields} for:item="field">
+
+                                        <div key={field.fieldPath} class="info-item">
+
+                                            <span class="label">{field.label}</span>
+
+                                            <span class="value">
+
+    <template if:true={field.isBoolean}>
+        {field.displayValue ? 'Yes' : 'No'}
+    </template>
+
+    <template if:false={field.isBoolean}>
+        {field.displayValue}
+    </template>
+
+</span>
+
+                                        </div>
+
+                                    </template>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT SIDE -->
+                        <div class="doc-wrapper" style="height:fit-content;">
+
+                            <div class="doc-header">
+                                <h3>Document Checklist</h3>
+                                <span class="doc-sub">KYC Status</span>
+                            </div>
+
+                            <div class="doc-list">
+
+                                <div class="doc-item">
+                                    <span>GST Certificate</span>
+                                    <span class={selectedDealer.gstStatusClass}>{selectedDealer.gstStatus}</span>
+                                </div>
+
+                                <div class="doc-item">
+                                    <span>PAN Card</span>
+                                    <span class={selectedDealer.panStatusClass}>{selectedDealer.panStatus}</span>
+                                </div>
+
+                                <div class="doc-item">
+                                    <span>Aadhaar Card</span>
+                                    <span class={selectedDealer.aadhaarStatusClass}>{selectedDealer.aadhaarStatus}</span>
+                                </div>
+
+                                <div class="doc-item">
+                                    <span>Bank Proof</span>
+                                    <span class={selectedDealer.bankStatusClass}>{selectedDealer.bankStatus}</span>
+                                </div>
+
+                                <div class="doc-item">
+                                    <span>Business Registration</span>
+                                    <span class={selectedDealer.businessStatusClass}>{selectedDealer.businessStatus}</span>
+                                </div>
+
+                                <div class="doc-item">
+                                    <span>Address Proof</span>
+                                    <span class={selectedDealer.addressStatusClass}>{selectedDealer.addressStatus}</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </template>
+
+            </div>
+        </template>
+        <template if:true={showCreateModal}>
+            <div class="modal-backdrop">
+                <div class="modal">
+
+                    <div class="modal-header">
+                        <h2 style="font-size:1.5rem;font-weight:bold;">{modalTitle}</h2>
+                        <button class="close-btn" onclick={closeModal}>×</button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <!-- BASIC INFO -->
+                        <div class="section">
+                            <h3>Information</h3>
+
+                            <div class="grid">
+
+                                <template for:each={fieldSetFields} for:item="field">
+
+                                    <!-- LOOKUP -->
+                                    <template if:true={field.isLookupUser}>
+                                        <lightning-combobox key={field.fieldPath} label={field.label}
+                                            name={field.fieldPath} value={field.value} options={userOptions}
+                                            onchange={handleDynamicChange}>
+                                        </lightning-combobox>
+                                    </template>
+
+                                    <!-- PICKLIST -->
+                                    <template if:true={field.isPicklist}>
+                                        <lightning-combobox key={field.fieldPath} label={field.label}
+                                            name={field.fieldPath} value={field.value} options={field.options}
+                                            onchange={handleDynamicChange}>
+                                        </lightning-combobox>
+                                    </template>
+
+                                    <!-- BOOLEAN -->
+                                    <template if:true={field.isBoolean}>
+                                        <lightning-input key={field.fieldPath} type="checkbox" label={field.label}
+                                            name={field.fieldPath} checked={field.checked}
+                                            onchange={handleDynamicChange}>
+                                        </lightning-input>
+                                    </template>
+
+                                    <!-- DATE -->
+                                    <template if:true={field.isDate}>
+                                        <lightning-input key={field.fieldPath} type="date" label={field.label}
+                                            name={field.fieldPath} value={field.value} onchange={handleDynamicChange}>
+                                        </lightning-input>
+                                    </template>
+
+                                    <!-- NUMBER -->
+                                    <template if:true={field.isNumber}>
+                                        <lightning-input key={field.fieldPath} type="number" label={field.label}
+                                            name={field.fieldPath} value={field.value} onchange={handleDynamicChange}>
+                                        </lightning-input>
+                                    </template>
+
+                                    <!-- TEXT -->
+                                    <template if:true={field.isText}>
+                                        <lightning-input key={field.fieldPath} type="text" label={field.label}
+                                            name={field.fieldPath} value={field.value} onchange={handleDynamicChange}>
+                                        </lightning-input>
+                                    </template>
+
+                                </template>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <lightning-button label="Cancel" onclick={closeModal}></lightning-button>
+                        <lightning-button label={modalButtonLabel} variant="brand" onclick={handleCreateDealer}>
+                        </lightning-button>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+        <template if:true={showUploadModal}>
+            <div class="modal-backdrop">
+                <div class="modal" style="overflow:visible;">
+
+                    <div class="modal-header">
+                        <h2>Upload Document</h2>
+                        <button class="close-btn" onclick={closeUploadModal}>×</button>
+                    </div>
+
+                    <div class="modal-body" style="overflow:visible;">
+
+                        <!-- SELECT DOCUMENT -->
+                        <lightning-combobox label="Select Document" options={pendingDocumentOptions}
+                            value={selectedDocumentType} onchange={handleDocumentTypeChange}>
+                        </lightning-combobox>
+
+                        <!-- SHOW ONLY AFTER SELECT -->
+                        <template if:true={selectedDocumentType}>
+                            <div style="margin-top: 1.5rem;">
+                                <lightning-file-upload label="Upload File" record-id={selectedDealer.Id}
+                                    onuploadfinished={handleUploadFinished}>
+                                </lightning-file-upload>
+                            </div>
+                        </template>
+
+                    </div>
+
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

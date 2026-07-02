@@ -1,0 +1,57 @@
+<template>
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">📦</span>
+                <span>D.M.S.</span>
+            </div>
+
+            <ul class="menu">
+                <li class={dashboardClass} onclick={goDashboard}>
+                    <span class="menu-icon">🏠</span>
+                    <span>Dashboard</span>
+                </li>
+
+                <li class={dealersClass} onclick={goDealers}>
+                    <span class="menu-icon">👥</span>
+                    <span>My Dealers</span>
+                </li>
+
+                <li class={ordersClass} onclick={goOrders}>
+                    <span class="menu-icon">📋</span>
+                    <span>Orders</span>
+                </li>
+
+                <li class={inventoryClass} onclick={goInventory}>
+                    <span class="menu-icon">📦</span>
+                    <span>Inventory</span>
+                </li>
+
+                <li class={insightsClass} onclick={goInsights}>
+                    <span class="menu-icon">🤖</span>
+                    <span>AI Insights</span>
+                </li>
+            </ul>
+
+            <!-- FOOTER -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-icon">👤</span>
+                    <span class="user-name">{userName}</span>
+                </div>
+
+                <button class="logout-btn" onclick={handleLogout}>
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- 🔥 DYNAMIC PAGE CONTENT -->
+        <div class="main">
+            <slot></slot>
+        </div>
+
+    </div>
+</template>

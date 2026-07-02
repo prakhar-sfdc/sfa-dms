@@ -1,0 +1,7 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId,force:hasSObjectName,force:lightningQuickAction,lightning:actionOverride"
+                access="global">
+
+    <!-- 🔥 LWC -->
+    <c:orderCreationForm />
+
+</aura:component>
