@@ -1,23 +1,36 @@
 public with sharing class AttendanceLWCController {
 
     @AuraEnabled
-public static Id handleCheckIn(String lat, String lng, String address) {
-    Attendance__c att = new Attendance__c();
-    att.User__c = UserInfo.getUserId();
-    att.Attendance_Date__c = Date.today();
-    att.Check_In_Time__c = System.now();
+    public static Id handleCheckIn(String lat, String lng, String address) {
+        Id userId = UserInfo.getUserId();
+        Date today = Date.today();
 
-    att.Check_In_Address__c = address;
-    att.Check_In_Latitude__c = lat;
-    att.Check_In_Longitude__c = lng;
-    att.Status__c = 'Checked In';
-    Time cutoff = Time.newInstance(9, 30, 0, 0);
-    Time checkInTime = att.Check_In_Time__c.time();
-    att.On_Time__c = (checkInTime <= cutoff);
+        List<Attendance__c> existingAtt = [
+            SELECT Id FROM Attendance__c
+            WHERE User__c = :userId AND Attendance_Date__c = :today
+            LIMIT 1
+        ];
 
-    insert att;
-    return att.Id;
-}
+        if (!existingAtt.isEmpty()) {
+            return existingAtt[0].Id;
+        }
+
+        Attendance__c att = new Attendance__c();
+        att.User__c = userId;
+        att.Attendance_Date__c = today;
+        att.Check_In_Time__c = System.now();
+        att.Check_In_Address__c = address;
+        att.Check_In_Latitude__c = lat;
+        att.Check_In_Longitude__c = lng;
+        att.Status__c = 'Checked In';
+
+        Time cutoff = Time.newInstance(9, 30, 0, 0);
+        Time checkInTime = att.Check_In_Time__c.time();
+        att.On_Time__c = (checkInTime <= cutoff);
+
+        insert att;
+        return att.Id;
+    }
 
 
   @AuraEnabled
