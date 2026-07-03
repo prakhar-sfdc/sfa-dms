@@ -2692,8 +2692,7 @@ button { font-family: var(--font); cursor: pointer; }
     position: fixed;
     bottom: 0;
     left: 0;
-    right: 0;
-    width: 100%;
+    width: 100vw;
     height: 58px;
     background: var(--nav-bg);
     border-top: 1px solid #162236;
@@ -2701,9 +2700,14 @@ button { font-family: var(--font); cursor: pointer; }
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    z-index: 9999;
+    z-index: 10000;
     align-items: stretch;
-    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    /* Ensure fixed positioning works reliably on mobile */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
 }
 .mobile-nav-bar::-webkit-scrollbar { display: none; }
 
@@ -2732,7 +2736,10 @@ button { font-family: var(--font); cursor: pointer; }
 @media (max-width: 1023px) {
     .sidebar { display: none; }
     .mobile-nav-bar { display: flex; }
-    .main-content { padding-bottom: 72px; }
+    .main-content {
+        padding-bottom: 80px;
+        overflow-y: auto;
+    }
 }
 
 /* ================================================================

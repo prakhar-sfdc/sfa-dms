@@ -223,6 +223,18 @@
     box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
 }
 
+.checkin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #E8E8E8;
+    color: #999;
+}
+
+.checkin-btn:disabled:hover {
+    background: #E8E8E8;
+    box-shadow: none;
+}
+
 .button-text {
     font-size: 16px;
     font-weight: 700;
@@ -814,6 +826,20 @@
     .attendance-container {
         padding: 12px;
         gap: 16px;
+        padding-bottom: 100px;
+    }
+
+    .action-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 16px;
+        background: #FFFFFF;
+        border-top: 1px solid var(--border);
+        z-index: 100;
+        display: flex;
+        gap: 12px;
     }
 
     .attendance-header {

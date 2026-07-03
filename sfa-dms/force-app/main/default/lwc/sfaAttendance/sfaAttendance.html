@@ -30,8 +30,9 @@
 
         <!-- Action Button Section -->
         <div class="action-section">
-            <button class={checkinButtonClass} onclick={handleCheckInOut}>
-                <span class="button-text">{checkInOutButtonText}</span>
+            <button class={checkinButtonClass} onclick={handleCheckInOut} disabled={isLoading}>
+                <span class="button-text" if:false={isLoading}>{checkInOutButtonText}</span>
+                <span class="button-text" if:true={isLoading}>Loading...</span>
             </button>
         </div>
 

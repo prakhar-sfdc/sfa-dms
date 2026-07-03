@@ -24,6 +24,7 @@ export default class SfaAttendance extends LightningElement {
     @track isCheckedIn = false;
     @track checkInTime = null;
     @track currentDuration = '00:00:00';
+    @track isLoading = true;
     attendanceRecordId = null;
     isSubmitting = false;
 
@@ -51,10 +52,16 @@ export default class SfaAttendance extends LightningElement {
         this.updateDateTime();
         this.timerInterval = setInterval(() => { this.updateDateTime(); }, 1000);
         this.initializeMap();
-        this.loadTodayAttendance();
-        this.getCurrentLocation();
-        this.loadRecentAttendance();
-        this.loadWeeklyCompliance();
+
+        this.loadTodayAttendance()
+            .then(() => this.getCurrentLocation())
+            .then(() => {
+                this.loadRecentAttendance();
+                this.loadWeeklyCompliance();
+            })
+            .catch(error => {
+                console.error('Error in connectedCallback:', error);
+            });
     }
 
     disconnectedCallback() {
@@ -85,17 +92,51 @@ export default class SfaAttendance extends LightningElement {
     }
 
     loadTodayAttendance() {
-        getTodayAttendance()
-            .then(result => {
-                if (result) {
-                    this.attendanceRecordId = result.Id;
-                    this.checkInTime = result.Check_In_Time__c ? new Date(result.Check_In_Time__c) : null;
-                    const status = result.Status__c;
-                    this.isCheckedIn = status === 'Checked In';
-                    this.attendanceStatus = status || 'Not Checked In';
-                }
-            })
-            .catch(error => console.error('Error loading today attendance:', error));
+        this.isLoading = true;
+        return new Promise((resolve) => {
+            getTodayAttendance()
+                .then(result => {
+                    try {
+                        if (result) {
+                            this.attendanceRecordId = result.Id;
+                            this.checkInTime = result.Check_In_Time__c ? new Date(result.Check_In_Time__c) : null;
+                            const status = result.Status__c || 'Not Checked In';
+                            this.isCheckedIn = status === 'Checked In';
+                            this.attendanceStatus = status;
+                            console.log('✓ Today attendance loaded:', {
+                                recordId: this.attendanceRecordId,
+                                status: this.attendanceStatus,
+                                isCheckedIn: this.isCheckedIn
+                            });
+                        } else {
+                            this.attendanceRecordId = null;
+                            this.isCheckedIn = false;
+                            this.attendanceStatus = 'Not Checked In';
+                            this.checkInTime = null;
+                            console.log('✓ No attendance record for today');
+                        }
+                    } catch (error) {
+                        console.error('Error processing attendance result:', error);
+                        this.resetAttendanceState();
+                    }
+                    resolve();
+                })
+                .catch(error => {
+                    console.error('Error fetching today attendance:', error);
+                    this.resetAttendanceState();
+                    resolve();
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                });
+        });
+    }
+
+    resetAttendanceState() {
+        this.attendanceRecordId = null;
+        this.isCheckedIn = false;
+        this.attendanceStatus = 'Not Checked In';
+        this.checkInTime = null;
     }
 
     toggleMap() {
@@ -150,38 +191,117 @@ export default class SfaAttendance extends LightningElement {
     }
 
     handleLocationError(error) {
-        const msgs = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Request timeout' };
-        this.gpsCoordinates = msgs[error.code] || 'Unknown error';
-        this.currentAddress = 'Failed to get location';
+        const msgs = {
+            1: 'Location permission denied. Please enable location access in browser settings.',
+            2: 'Unable to determine your position. Please check your GPS/location settings.',
+            3: 'Location request timed out. Please try again.',
+            4: 'Unknown location error. Please try again.'
+        };
+        this.gpsCoordinates = msgs[error.code] || msgs[4];
+        this.currentAddress = 'Location unavailable';
+        console.warn('Location error:', this.gpsCoordinates);
     }
 
     async handleCheckInOut() {
-        if (this.isSubmitting) return;
+        if (this.isSubmitting || this.isLoading) {
+            console.log('Button disabled: isSubmitting=' + this.isSubmitting + ', isLoading=' + this.isLoading);
+            return;
+        }
+
         this.isSubmitting = true;
         try {
-            await this.getCurrentLocation();
-            if (!this.isCheckedIn) {
-                const recordId = await handleCheckIn({ lat: this.currentLatitude, lng: this.currentLongitude, address: this.currentAddress });
-                this.attendanceRecordId = recordId;
-                this.isCheckedIn = true;
-                this.attendanceStatus = 'Checked In';
-                this.checkInTime = new Date();
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Checked in successfully', variant: 'success' }));
-            } else {
-                await handleCheckOut({ recordId: this.attendanceRecordId, lat: this.currentLatitude, lng: this.currentLongitude, address: this.currentAddress });
-                this.isCheckedIn = false;
-                this.attendanceStatus = 'Checked Out';
-                this.checkInTime = null;
-                this.currentDuration = '00:00:00';
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Checked out successfully', variant: 'success' }));
+            console.log('Starting check-in/out. Current state: isCheckedIn=' + this.isCheckedIn);
+
+            try {
+                await this.getCurrentLocation();
+                console.log('Location acquired:', this.currentAddress);
+            } catch (locError) {
+                console.error('Location error:', locError);
+                throw new Error('Unable to get your location. ' + this.gpsCoordinates);
             }
+
+            if (!this.isCheckedIn) {
+                console.log('Calling handleCheckIn...');
+                const result = await handleCheckIn({
+                    lat: this.currentLatitude,
+                    lng: this.currentLongitude,
+                    address: this.currentAddress
+                });
+
+                console.log('handleCheckIn result:', result);
+
+                if (result && result.recordId) {
+                    this.attendanceRecordId = result.recordId;
+                    const variant = result.alreadyCheckedIn ? 'info' : 'success';
+                    const title = result.alreadyCheckedIn ? 'Info' : 'Success';
+
+                    this.dispatchEvent(new ShowToastEvent({
+                        title: title,
+                        message: result.message || 'Check-in processed',
+                        variant: variant
+                    }));
+                    console.log('✓ Check-in completed successfully');
+                } else {
+                    throw new Error('Invalid response from check-in: missing recordId');
+                }
+            } else {
+                if (!this.attendanceRecordId) {
+                    throw new Error('No attendance record found. Please reload and try again.');
+                }
+
+                console.log('Calling handleCheckOut with recordId:', this.attendanceRecordId);
+                await handleCheckOut({
+                    recordId: this.attendanceRecordId,
+                    lat: this.currentLatitude,
+                    lng: this.currentLongitude,
+                    address: this.currentAddress
+                });
+
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Checked out successfully',
+                    variant: 'success'
+                }));
+                console.log('✓ Check-out completed successfully');
+            }
+
+            await this.loadTodayAttendance();
+            console.log('State reloaded after action');
+
             this.loadRecentAttendance();
             this.loadWeeklyCompliance();
         } catch (error) {
-            console.error(error);
-            this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: 'Unable to capture location. Please try again.', variant: 'error' }));
+            console.error('Check-in/out error details:', error);
+            let errorMessage = 'Unable to complete action. Please try again.';
+            let errorTitle = 'Error';
+
+            if (error) {
+                if (error.body) {
+                    if (typeof error.body.message === 'string') {
+                        errorMessage = error.body.message;
+                    } else if (error.body.message && error.body.message.length > 0) {
+                        errorMessage = error.body.message[0];
+                    } else if (error.body.faultstring) {
+                        errorMessage = error.body.faultstring;
+                    }
+                } else if (error.message) {
+                    errorMessage = error.message;
+                } else if (typeof error === 'string') {
+                    errorMessage = error;
+                }
+            }
+
+            console.error('Final error message to display:', errorMessage);
+
+            this.dispatchEvent(new ShowToastEvent({
+                title: errorTitle,
+                message: errorMessage,
+                variant: 'error',
+                mode: 'sticky'
+            }));
         } finally {
             this.isSubmitting = false;
+            console.log('Check-in/out action completed');
         }
     }
 
