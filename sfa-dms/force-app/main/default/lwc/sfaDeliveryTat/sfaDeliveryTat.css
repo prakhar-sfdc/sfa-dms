@@ -1,0 +1,189 @@
+/* ================================================================
+   SFA DELIVERY TAT — Field Utility Design System
+   Fork of deliveryTAT: flat wrapper (no box-shadow), solid legend
+   dots (no gradient), keep SVG ring intact (functional visualization)
+   ================================================================ */
+
+:host {
+    --bg-surface: #FFFFFF;
+    --bg-subtle:  #F7F8FA;
+    --border:     #CBD0D9;
+    --text-primary:   #0B192C;
+    --text-secondary: #4A5568;
+    --text-muted:     #718096;
+    --accent:     #1565C0;
+    --font: 'Salesforce Sans', 'Segoe UI', Arial, sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+}
+
+.wrapper {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid var(--border);
+    font-family: var(--font);
+}
+
+.header { margin-bottom: 20px; }
+
+.title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+}
+
+.subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.circle-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.clock-circle {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    flex-shrink: 0;
+}
+
+.progress-ring { width: 100%; height: 100%; }
+
+.progress-ring circle {
+    fill: none;
+    stroke-width: 12;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.6s ease;
+}
+
+.bg { stroke: #E4E7EC; }
+
+/* SVG ring classes — these reference SVG gradient defs (functional) */
+.progress-ring-fill { stroke: url(#ringGradient); }
+.safe-ring     { stroke: url(#safeGradient); }
+.warning-ring  { stroke: url(#warningGradient); }
+.critical-ring { stroke: url(#criticalGradient); }
+.overdue-ring  { stroke: url(#overdueGradient); }
+
+.inner-circle { fill: white; }
+
+.center-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+    padding: 0 18px;
+}
+
+.days-count {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 7px;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+.days-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.completion {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    background: var(--bg-subtle);
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+    border: 1px solid var(--border);
+}
+
+.footer { padding-top: 20px; border-top: 1px solid var(--border); }
+
+.timeline-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 380px;
+    margin: 0 auto;
+}
+
+.timeline-item { text-align: center; flex: 0 0 auto; min-width: 100px; }
+
+.timeline-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.timeline-value {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+.progress-bar-container {
+    flex: 1;
+    position: relative;
+    height: 36px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+.progress-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: var(--bg-surface);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transition: left 0.6s ease;
+    z-index: 2;
+}

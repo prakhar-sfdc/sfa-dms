@@ -1,0 +1,239 @@
+<template>
+    <div class="attendance-container">
+        <!-- Header with Time and Check-In -->
+        <div class="attendance-header">
+            <div class="header-left">
+                <div class="real-time-clock">
+                    <div class="clock-display">
+                        <div class="time">{currentTime}</div>
+                        <div class="date">{currentDate}</div>
+                    </div>
+                </div>
+                <div class="gps-location">
+                    <div class="location-info">
+                        <div class="coordinates">{gpsCoordinates}</div>
+                        <div class="address">{currentAddress}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class={statusIndicatorClass}>
+                    <span class="status-dot"></span>
+                    <span class="status-text">{attendanceStatus}</span>
+                </div>
+                <div class="duration-display" if:true={isCheckedIn}>
+                    <span class="duration-label">Work Duration</span>
+                    <span class="duration-value">{currentDuration}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button Section -->
+        <div class="action-section">
+            <button class={checkinButtonClass} onclick={handleCheckInOut}>
+                <span class="button-text">{checkInOutButtonText}</span>
+            </button>
+        </div>
+
+        <!-- Map Section (collapsible on mobile) -->
+        <div class="map-section">
+            <div class="map-section-header">
+                <h3>Live Location Tracker</h3>
+                <div class="map-header-controls">
+                    <button class="map-toggle-btn" onclick={toggleMap}>
+                        {mapToggleText}
+                    </button>
+                    <button class="map-btn" onclick={getCurrentLocation}>Refresh Location</button>
+                </div>
+            </div>
+            <template if:true={showMap}>
+                <div class="map-wrapper">
+                    <lightning-map map-markers={mapMarkers} zoom-level={zoomLevel} list-view="visible"
+                        show-footer="true" class="salesforce-map">
+                    </lightning-map>
+                </div>
+            </template>
+        </div>
+
+        <!-- Compliance and Recent Attendance -->
+        <div class="attendance-cards">
+            <!-- 7-Day Compliance Card -->
+            <div class="compliance-card">
+                <div class="card-header">
+                    <h3>7-Day Compliance</h3>
+                    <div class="compliance-score">{weeklyCompliance}%</div>
+                </div>
+                <div class="compliance-dots">
+                    <template for:each={weeklyData} for:item="day">
+                        <div key={day.id} class="dot-item">
+                            <div class={day.dotClass}></div>
+                            <div class="dot-label">{day.label}</div>
+                        </div>
+                    </template>
+                </div>
+                <div class="compliance-summary">
+                    <div class="summary-item">
+                        <span class="summary-badge on-time">On Time</span>
+                        <span class="summary-count">{onTimeCount}/7 days</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-badge late">Late</span>
+                        <span class="summary-count">{lateCount} days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Attendance Card -->
+            <div class="recent-attendance-card">
+                <div class="card-header">
+                    <h3>Recent Attendance</h3>
+                    <template if:false={showAllAttendance}>
+                        <button class="view-all-btn" onclick={viewAllAttendance}>View All</button>
+                    </template>
+                    <template if:true={showAllAttendance}>
+                        <button class="view-all-btn" onclick={backToRecentAttendance}>Back</button>
+                    </template>
+                </div>
+
+                <template if:true={isAttendanceLoading}>
+                    <div class="loading-state">Loading attendance...</div>
+                </template>
+
+                <template if:false={showAllAttendance}>
+                    <div class="attendance-list">
+                        <template for:each={recentAttendance} for:item="record">
+                            <div key={record.id} class="attendance-item" data-id={record.id}>
+                                <div class="attendance-date">
+                                    <div class="att-day">{record.day}</div>
+                                    <div class="att-date">{record.date}</div>
+                                </div>
+                                <div class="attendance-times">
+                                    <div class="time-entry">
+                                        <span class="time-label">In:</span>
+                                        <span class="time-value">{record.checkIn}</span>
+                                    </div>
+                                    <div class="time-entry">
+                                        <span class="time-label">Out:</span>
+                                        <span class="time-value">{record.checkOut}</span>
+                                    </div>
+                                </div>
+                                <div class={record.statusClass}>{record.status}</div>
+                                <div class="attendance-action">
+                                    <button class="eye-btn" onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <template if:true={showAllAttendance}>
+                    <div class="attendance-list">
+                        <template for:each={allAttendance} for:item="record">
+                            <div key={record.id} class="attendance-item" data-id={record.id}>
+                                <div class="attendance-date">
+                                    <div class="att-day">{record.day}</div>
+                                    <div class="att-date">{record.date}</div>
+                                </div>
+                                <div class="attendance-times">
+                                    <div class="time-entry">
+                                        <span class="time-label">In:</span>
+                                        <span class="time-value">{record.checkIn}</span>
+                                    </div>
+                                    <div class="time-entry">
+                                        <span class="time-label">Out:</span>
+                                        <span class="time-value">{record.checkOut}</span>
+                                    </div>
+                                </div>
+                                <div class={record.statusClass}>{record.status}</div>
+                                <div class="attendance-action">
+                                    <button class="eye-btn" onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Details Modal -->
+    <template if:true={showAttendanceModal}>
+        <div class="modal-overlay" onclick={closeModal}>
+            <div class="att-modal" onclick={handleModalClick}>
+                <div class="modal-header">
+                    <h2>Attendance Details</h2>
+                    <button class="modal-close" onclick={closeModal} aria-label="Close modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-columns">
+                        <!-- Check-In Column -->
+                        <div class="modal-column">
+                            <div class="column-header checkin-header">
+                                <h3>Check-In</h3>
+                                <div class="time-badge">{selectedAttendance.checkIn}</div>
+                            </div>
+                            <div class="details-card">
+                                <div class="detail-item">
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">{selectedAttendance.fullDate}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Time</span>
+                                    <span class="detail-value">{selectedAttendance.checkIn}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">GPS Coordinates</span>
+                                    <span class="detail-value">{selectedAttendance.checkInCoords}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Location</span>
+                                    <span class="detail-value">{selectedAttendance.checkInLocation}</span>
+                                </div>
+                            </div>
+                            <div class="mini-map-wrap">
+                                <lightning-map map-markers={checkInMapMarkers} zoom-level="15"
+                                    list-view="hidden" show-footer="false" class="small-map">
+                                </lightning-map>
+                            </div>
+                        </div>
+
+                        <!-- Check-Out Column -->
+                        <div class="modal-column">
+                            <div class="column-header checkout-header">
+                                <h3>Check-Out</h3>
+                                <div class="time-badge">{selectedAttendance.checkOut}</div>
+                            </div>
+                            <div class="details-card">
+                                <div class="detail-item">
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">{selectedAttendance.fullDate}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Time</span>
+                                    <span class="detail-value">{selectedAttendance.checkOut}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">GPS Coordinates</span>
+                                    <span class="detail-value">{selectedAttendance.checkOutCoords}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Location</span>
+                                    <span class="detail-value">{selectedAttendance.checkOutLocation}</span>
+                                </div>
+                            </div>
+                            <div class="mini-map-wrap">
+                                <lightning-map map-markers={checkOutMapMarkers} zoom-level="15"
+                                    list-view="hidden" show-footer="false" class="small-map">
+                                </lightning-map>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeModal}>Close</button>
+                    <button class="primary-btn" onclick={downloadAttendance}>Download Report</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

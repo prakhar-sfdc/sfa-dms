@@ -1,0 +1,191 @@
+<template>
+    <div class="account-onboarding-container">
+        <!-- Header Section -->
+        <div class="onboarding-header">
+            <div class="header-content">
+                <h1>Account Onboarding</h1>
+                <p class="subtitle">Add new dealer or customer account</p>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="onboarding-content">
+            <!-- Form Section -->
+            <div class="onboarding-form-section">
+                <div class="form-header">
+                    <h2>Create Account Form</h2>
+                    <p class="form-subtitle">Fill in the details to create a new account</p>
+                </div>
+
+                <!-- Success State -->
+                <template if:true={showSuccessState}>
+                    <div class="success-state">
+                        <div class="success-animation">
+                            <div class="checkmark-container">
+                                <div class="checkmark">✓</div>
+                            </div>
+                            <div class="success-title">Account created successfully!</div>
+                            <div class="success-message">The account is pending approval.</div>
+                            <div class="success-actions">
+                                <button type="button" class="success-action-btn" onclick={createAnotherAccount}>
+                                    Create Another Account
+                                </button>
+                                <button type="button" class="success-action-btn secondary" onclick={goToAccountDashboard}>
+                                    Go to Account Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Form -->
+                <template if:true={showForm}>
+                    <form class="account-form" onsubmit={handleSubmit}>
+                        <!-- Business Information Section -->
+                        <div class="form-section">
+                            <h3 class="section-title">Business Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="businessName">Business Name <span class="required">*</span></label>
+                                    <input type="text" id="businessName" name="businessName" class="form-input"
+                                        placeholder="Enter business name" required value={formData.businessName}
+                                        onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.businessName}>{errors.businessName}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="accountType">Account Type <span class="required">*</span></label>
+                                    <select id="accountType" name="accountType" class="form-select" required
+                                        value={formData.accountType} onchange={handleInputChange}>
+                                        <option value="">Select account type</option>
+                                        <option value="dealer">Dealer</option>
+                                        <option value="customer">Customer</option>
+                                    </select>
+                                    <div class="error-message" if:true={errors.accountType}>{errors.accountType}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gstin">GSTIN</label>
+                                    <input type="text" id="gstin" name="gstin" class="form-input"
+                                        placeholder="22AAAAA0000A1Z5" value={formData.gstin}
+                                        onchange={handleInputChange} />
+                                    <div class="form-hint">(Optional – recommended for dealers)</div>
+                                    <div class="error-message" if:true={errors.gstin}>{errors.gstin}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="form-section">
+                            <h3 class="section-title">Contact Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="contactPerson">Contact Person <span class="required">*</span></label>
+                                    <input type="text" id="contactPerson" name="contactPerson" class="form-input"
+                                        placeholder="Enter contact name" required value={formData.contactPerson}
+                                        onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.contactPerson}>{errors.contactPerson}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phoneNumber">Phone Number <span class="required">*</span></label>
+                                    <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input"
+                                        placeholder="+91-9876543210" required value={formData.phoneNumber}
+                                        onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.phoneNumber}>{errors.phoneNumber}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" class="form-input"
+                                        placeholder="email@example.com" value={formData.email}
+                                        onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.email}>{errors.email}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information Section -->
+                        <div class="form-section">
+                            <h3 class="section-title">Address Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="streetAddress">Street Address <span class="required">*</span></label>
+                                    <textarea id="streetAddress" name="streetAddress" class="form-textarea"
+                                        placeholder="Enter complete address" required value={formData.streetAddress}
+                                        onchange={handleInputChange} rows="3"></textarea>
+                                    <div class="error-message" if:true={errors.streetAddress}>{errors.streetAddress}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="city">City <span class="required">*</span></label>
+                                    <input type="text" id="city" name="city" class="form-input" placeholder="City"
+                                        required value={formData.city} onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.city}>{errors.city}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="state">State <span class="required">*</span></label>
+                                    <input type="text" id="state" name="state" class="form-input" placeholder="State"
+                                        required value={formData.state} onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.state}>{errors.state}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pincode">Pincode <span class="required">*</span></label>
+                                    <input type="text" id="pincode" name="pincode" class="form-input"
+                                        placeholder="110001" required value={formData.pincode}
+                                        onchange={handleInputChange} />
+                                    <div class="error-message" if:true={errors.pincode}>{errors.pincode}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn" disabled={isSubmitting}>
+                                <template if:true={isSubmitting}>
+                                    <span class="spinner"></span>
+                                    Creating Account...
+                                </template>
+                                <template if:false={isSubmitting}>
+                                    Create Account
+                                </template>
+                            </button>
+                        </div>
+                    </form>
+                </template>
+            </div>
+
+            <!-- Tips Sidebar -->
+            <div class="onboarding-tips">
+                <div class="tips-card">
+                    <h3 class="tips-title">Account Onboarding Tips</h3>
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <div class="tip-icon">📋</div>
+                            <div class="tip-content">
+                                <h4>Verify Details</h4>
+                                <p>Verify all contact details before submission</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">🏢</div>
+                            <div class="tip-content">
+                                <h4>GSTIN for Dealers</h4>
+                                <p>GSTIN is optional but recommended for dealers</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">⏳</div>
+                            <div class="tip-content">
+                                <h4>Approval Process</h4>
+                                <p>Account will be pending approval after creation</p>
+                            </div>
+                        </div>
+                        <div class="tip-item">
+                            <div class="tip-icon">✅</div>
+                            <div class="tip-content">
+                                <h4>Required Fields</h4>
+                                <p>Fields marked with * are mandatory</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

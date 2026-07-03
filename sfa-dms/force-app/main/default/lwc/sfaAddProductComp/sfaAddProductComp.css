@@ -1,0 +1,229 @@
+/* ================================================================
+   SFA ADD PRODUCT COMP — Field Utility Design System
+   Fork of addProductComp: system font, 8px radius, no shadows,
+   no gradient button, no hover lift
+   ================================================================ */
+
+:host {
+    display: block;
+    width: 100%;
+    margin: 0;
+    --bg-surface:   #FFFFFF;
+    --bg-subtle:    #F7F8FA;
+    --border:       #CBD0D9;
+    --border-light: #E4E7EC;
+    --text-primary: #0B192C;
+    --text-muted:   #718096;
+    --accent:       #1565C0;
+    --blue-bg:      #E3F2FD;
+    --red-bg:       #FFEBEE;
+    --red:          #C62828;
+    --font: 'Salesforce Sans', 'Segoe UI', Arial, sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --tap: 48px;
+    --slds-c-card-body-spacing-block-start: 0;
+    --slds-c-card-body-spacing-block-end: 0;
+    --slds-c-card-body-spacing-inline-start: 0;
+    --slds-c-card-body-spacing-inline-end: 0;
+}
+
+.full-width-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.inventory-card {
+    width: 100%;
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.inventory-card .slds-card {
+    border-radius: var(--radius-lg);
+    border: none;
+}
+
+.inventory-card .slds-card__header {
+    padding: 1rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-subtle);
+}
+
+.inventory-card .slds-card__header-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.wrapper {
+    padding: 1.25rem 1.5rem 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font);
+}
+
+/* ── STATE BOXES ──────────────────────────────────── */
+.state-box {
+    text-align: center;
+    padding: 2.5rem 1.25rem;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-md);
+    margin: 0.75rem 0;
+}
+
+.loading-box { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+
+.state-text { color: var(--text-muted); font-weight: 500; font-size: 0.9rem; margin: 0; }
+
+.error-box {
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.error-box p { margin: 0; font-weight: 500; }
+
+.empty-state { background: var(--bg-subtle); color: var(--text-muted); font-weight: 500; }
+
+/* ── TABLE ──────────────────────────────────────────── */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+
+.modern-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-family: var(--font); }
+
+.modern-table thead tr {
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+}
+
+.modern-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+}
+
+.modern-table th.quantity-header { text-align: right; }
+
+.modern-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.modern-table tbody tr { transition: background-color 0.15s; }
+.modern-table tbody tr:hover { background: var(--bg-subtle); }
+.modern-table tbody tr:last-child td { border-bottom: none; }
+
+.product-name { font-weight: 500; color: var(--text-primary); }
+
+.stock-badge {
+    display: inline-block;
+    background: var(--blue-bg);
+    color: var(--accent);
+    font-weight: 700;
+    padding: 0.2rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 50px;
+}
+
+.modern-table td:last-child { text-align: right; }
+
+.qty-input { --lwc-borderRadiusMedium: 4px; display: inline-block; width: 100px; }
+.qty-input lightning-input { margin: 0; }
+
+.qty-input .slds-input {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-surface);
+    text-align: center;
+    font-family: var(--font);
+}
+
+.qty-input .slds-input:focus { border-color: var(--accent); outline: none; }
+
+/* ── BUTTON ─────────────────────────────────────────── */
+.btn-row { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+.add-button { --lwc-brandAccessible: #1565C0; --lwc-brandAccessibleActive: #0D47A1; --lwc-borderRadiusMedium: 4px; }
+
+.add-button .slds-button {
+    font-weight: 600;
+    padding: 0 1.5rem;
+    min-height: var(--tap);
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    border: none;
+    color: #FFFFFF;
+    font-family: var(--font);
+}
+
+.add-button .slds-button:hover { background: #0D47A1; }
+
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 768px) {
+    .wrapper { padding: 1rem; }
+
+    .inventory-card .slds-card__header { padding: 0.75rem 1rem 0.5rem; }
+
+    .modern-table thead { display: none; }
+
+    .modern-table tbody tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--bg-surface);
+        padding: 0.5rem;
+    }
+
+    .modern-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-light);
+        text-align: left;
+    }
+
+    .modern-table td:last-child { border-bottom: none; }
+
+    .modern-table td:before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--accent);
+        width: 40%;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .stock-badge { margin-left: auto; }
+    .qty-input { width: 100px; margin-left: auto; }
+
+    .btn-row { justify-content: center; margin-top: 1rem; }
+    .add-button .slds-button { width: 100%; justify-content: center; }
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────── */
+.table-container::-webkit-scrollbar { height: 6px; }
+.table-container::-webkit-scrollbar-track { background: var(--bg-subtle); border-radius: 4px; }
+.table-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.table-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }

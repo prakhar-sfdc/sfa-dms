@@ -1,0 +1,160 @@
+<template>
+    <div class="dashboard">
+        <!-- Welcome Header -->
+        <div class="welcome-header">
+            <div class="welcome-left">
+                <h1>Field Force Dashboard</h1>
+                <p class="subtitle">Welcome back! Here's your activity summary</p>
+            </div>
+            <div class="date-display">📅 {currentDate}</div>
+        </div>
+
+        <!-- Main Metrics Cards -->
+        <div class="metrics-grid">
+            <template for:each={mainMetrics} for:item="metric">
+                <div key={metric.id} class="metric-card" data-priority={metric.priority}>
+                    <div class="metric-header">
+                        <span class="metric-icon">{metric.icon}</span>
+                        <span class="metric-title">{metric.title}</span>
+                    </div>
+                    <div class="metric-value">{metric.value}</div>
+                    <div class="metric-trend">
+                        <span class={metric.trendClass}>{metric.trend}</span>
+                        <span class="metric-subtext">{metric.subtext}</span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Dashboard Sections Row 1 -->
+        <div class="dashboard-sections">
+            <!-- Attendance Compliance -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>📊 Attendance Compliance</h2>
+                    <span class="compliance-rate">{attendanceComplianceSummary.compliancePercent}%</span>
+                </div>
+                <div class="compliance-bar-wrap">
+                    <div class="compliance-bar">
+                        <div class="compliance-bar-fill" style={complianceBarWidth}></div>
+                    </div>
+                </div>
+                <div class="compliance-details">
+                    <div class="compliance-item">
+                        <span class="c-label">Present</span>
+                        <span class="c-value">{attendanceComplianceSummary.presentDays}/{attendanceComplianceSummary.totalDays} days</span>
+                    </div>
+                    <div class="compliance-item">
+                        <span class="c-label">On Time</span>
+                        <span class="c-value">{attendanceComplianceSummary.onTimeDays} days</span>
+                    </div>
+                </div>
+                <button class="quick-link-btn" onclick={handleGoToAttendance}>
+                    Check In Now →
+                </button>
+            </div>
+
+            <!-- Recent Visits -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>📍 Recent Visits</h2>
+                    <button class="view-all" onclick={handleViewAllVisits}>View All →</button>
+                </div>
+                <div class="visits-list">
+                    <template for:each={recentVisits} for:item="visit">
+                        <div key={visit.id} class="visit-item">
+                            <div class="visit-avatar">{visit.accountInitial}</div>
+                            <div class="visit-details">
+                                <div class="visit-account">{visit.account}</div>
+                                <div class="visit-time">{visit.dateDisplay}</div>
+                            </div>
+                            <div class={visit.statusClass}>{visit.status}</div>
+                        </div>
+                    </template>
+                    <template if:false={recentVisits.length}>
+                        <div class="empty-visits">No recent visits. <button onclick={handleGoToVisits} class="link-btn">Schedule one →</button></div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Sections Row 2 -->
+        <div class="dashboard-sections">
+            <!-- Priority Accounts -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>🎯 Priority Accounts</h2>
+                    <div class="count-badge">{priorityAccounts.length}</div>
+                </div>
+                <div class="priority-list">
+                    <template for:each={priorityAccounts} for:item="account">
+                        <div key={account.id} class="priority-item">
+                            <div class={account.priorityClass}></div>
+                            <div class="account-name">{account.name}</div>
+                            <button class="schedule-btn" data-id={account.id} onclick={openScheduleVisitModal}>
+                                Schedule
+                            </button>
+                        </div>
+                    </template>
+                    <template if:false={priorityAccounts.length}>
+                        <div class="empty-visits">No priority accounts found.</div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Target Achievement -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2>🏆 Target Achievement</h2>
+                    <div class="target-badge">78%</div>
+                </div>
+                <div class="target-progress-bar-wrap">
+                    <div class="target-progress-bar">
+                        <div class="target-progress-fill" style="width:78%"></div>
+                    </div>
+                    <div class="target-progress-label">₹7.8L of ₹10.0L</div>
+                </div>
+                <div class="target-details">
+                    <div class="target-item">
+                        <span class="t-label">Achieved</span>
+                        <span class="t-value">₹7.8L</span>
+                    </div>
+                    <div class="target-item">
+                        <span class="t-label">Target</span>
+                        <span class="t-value">₹10.0L</span>
+                    </div>
+                    <div class="target-item">
+                        <span class="t-label">Gap</span>
+                        <span class="t-value gap">₹2.2L</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Visit Modal -->
+        <template if:true={showScheduleVisitModal}>
+            <div class="modal-overlay" onclick={closeScheduleVisitModal}>
+                <div class="modal-box" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h3>📅 Schedule Visit</h3>
+                        <button class="modal-close" onclick={closeScheduleVisitModal}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <lightning-record-edit-form object-api-name="Visit__c" onsuccess={handleVisitSuccess} onerror={handleVisitError}>
+                            <lightning-messages></lightning-messages>
+                            <lightning-input-field field-name="Account__c"></lightning-input-field>
+                            <lightning-input-field field-name="Visit_Date__c"></lightning-input-field>
+                            <lightning-input-field field-name="Planned_Start_Time__c"></lightning-input-field>
+                            <lightning-input-field field-name="Visit_Purpose__c"></lightning-input-field>
+                            <lightning-input-field field-name="Visit_Status__c"></lightning-input-field>
+                            <div class="modal-footer">
+                                <button class="cancel-btn" type="button" onclick={closeScheduleVisitModal}>Cancel</button>
+                                <lightning-button type="submit" label="Create Visit" variant="brand"></lightning-button>
+                            </div>
+                        </lightning-record-edit-form>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

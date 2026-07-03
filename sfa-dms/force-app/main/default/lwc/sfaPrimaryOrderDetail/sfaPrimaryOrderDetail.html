@@ -1,0 +1,317 @@
+<template>
+    <div class="pod-root">
+
+        <!-- COMPACT HEADER -->
+        <div class="pod-compact-header">
+
+            <button class="pod-back-btn" onclick={handleBack}>
+                Back to Orders
+            </button>
+
+            <div class="pod-header-main">
+
+                <div class="pod-header-identity">
+                    <div class="pod-order-badge">
+                        <span class="pod-order-badge__label">ORDER</span>
+                        <span class="pod-order-badge__num">{orderNumber}</span>
+                    </div>
+
+                    <div class="pod-meta-strip">
+                        <div class="pod-meta-chip">
+                            <span class={statusBadgeClass}>{status}</span>
+                        </div>
+                        <div class="pod-meta-chip">
+                            <span class="pod-meta-chip__label">Amount</span>
+                            <span class="pod-meta-chip__value pod-meta-chip__value--highlight">{totalAmount}</span>
+                        </div>
+                        <div class="pod-meta-chip">
+                            <span class="pod-meta-chip__label">Effective</span>
+                            <span class="pod-meta-chip__value">{effectiveDate}</span>
+                        </div>
+                        <div class="pod-meta-chip">
+                            <span class="pod-meta-chip__label">Due Date</span>
+                            <span class="pod-meta-chip__value">{deliveryDate}</span>
+                        </div>
+                        <div class="pod-meta-chip">
+                            <span class="pod-meta-chip__label">Account</span>
+                            <span class="pod-meta-chip__value">{accountName}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pod-header-actions">
+                    <button
+                        class="pod-action-btn pod-action-btn--products"
+                        onclick={handleOpenInventory}
+                        title="Add Products from Inventory">
+                        📦 Add Products
+                    </button>
+
+                    <button
+                        class="pod-action-btn pod-action-btn--suborders"
+                        onclick={handleOpenSubOrders}
+                        title="Create Sub Orders">
+                        📋 Sub Orders
+                    </button>
+
+                    <button
+                        class={editBtnClass}
+                        disabled={isEditDisabled}
+                        onclick={handleEdit}
+                        title={editBtnTitle}>
+                        ✏️ Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS NAV -->
+        <div class="pod-tabs-nav">
+            <template for:each={tabItems} for:item="tab">
+                <button
+                    key={tab.id}
+                    class={tab.tabClass}
+                    data-tab={tab.id}
+                    onclick={handleTabChange}>
+                    {tab.label}
+                    <template if:true={tab.badge}>
+                        <span class="pod-tab-badge">{tab.badge}</span>
+                    </template>
+                </button>
+            </template>
+        </div>
+
+        <!-- MAIN BODY — Two-column: tab panel + TAT sidebar -->
+        <div class="pod-body-layout">
+
+            <!-- Left: Tab Panels -->
+            <div class="pod-body-main">
+
+                <!-- TAB PANEL: DETAILS -->
+                <template if:true={isDetailsTab}>
+                    <div class="pod-tab-panel">
+                        <template if:true={isLoadingFields}>
+                            <div class="pod-panel-loading">
+                                <div class="pod-spinner"></div>
+                                <span>Loading details…</span>
+                            </div>
+                        </template>
+
+                        <template if:false={isLoadingFields}>
+                            <template if:true={hasViewFields}>
+                                <lightning-record-view-form record-id={recordId} object-api-name="Order">
+                                    <div class="pod-fields-grid">
+                                        <template for:each={viewFields} for:item="field">
+                                            <div key={field} class="pod-field-cell">
+                                                <lightning-output-field field-name={field}>
+                                                </lightning-output-field>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </lightning-record-view-form>
+                            </template>
+
+                            <template if:false={hasViewFields}>
+                                <div class="pod-empty-panel">
+                                    <p>No fields configured. Add fields to the <strong>Primary_fieldset</strong>
+                                        fieldset on the Order object.</p>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- TAB PANEL: ORDER PRODUCTS -->
+                <template if:true={isProductsTab}>
+                    <div class="pod-tab-panel">
+                        <template if:true={isLoadingProducts}>
+                            <div class="pod-panel-loading">
+                                <div class="pod-spinner"></div>
+                                <span>Loading products…</span>
+                            </div>
+                        </template>
+
+                        <template if:false={isLoadingProducts}>
+                            <template if:true={hasProducts}>
+                                <div class="pod-data-table">
+                                    <div class="pod-data-table__head">
+                                        <div class="pod-dth pod-pcol--product">Product</div>
+                                        <div class="pod-dth pod-pcol--code">Code</div>
+                                        <div class="pod-dth pod-pcol--qty">Qty</div>
+                                        <div class="pod-dth pod-pcol--list">List Price</div>
+                                        <div class="pod-dth pod-pcol--unit">Unit Price</div>
+                                        <div class="pod-dth pod-pcol--total">Total</div>
+                                        <div class="pod-dth pod-pcol--desc">Description</div>
+                                    </div>
+                                    <div class="pod-data-table__body">
+                                        <template for:each={orderProducts} for:item="p">
+                                            <div key={p.id} class="pod-data-row">
+                                                <div class="pod-dtd pod-pcol--product">
+                                                    <span class="pod-product-name">{p.productName}</span>
+                                                </div>
+                                                <div class="pod-dtd pod-pcol--code">{p.productCode}</div>
+                                                <div class="pod-dtd pod-pcol--qty">{p.quantity}</div>
+                                                <div class="pod-dtd pod-pcol--list">{p.formattedListPrice}</div>
+                                                <div class="pod-dtd pod-pcol--unit">{p.formattedUnitPrice}</div>
+                                                <div class="pod-dtd pod-pcol--total">
+                                                    <span class="pod-total-price">{p.formattedTotalPrice}</span>
+                                                </div>
+                                                <div class="pod-dtd pod-pcol--desc pod-truncate">{p.description}</div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="pod-products-footer">
+                                        <span class="pod-products-footer__label">Grand Total</span>
+                                        <span class="pod-products-footer__value">{productsGrandTotal}</span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template if:true={noProducts}>
+                                <div class="pod-empty-panel">
+                                    <div class="pod-empty-panel__icon">🛒</div>
+                                    <div class="pod-empty-panel__title">No order products</div>
+                                    <div class="pod-empty-panel__sub">No line items are attached to this order yet.</div>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- TAB PANEL: SUB ORDERS -->
+                <template if:true={isSubOrdersTab}>
+                    <div class="pod-tab-panel">
+                        <template if:true={isLoadingSubOrders}>
+                            <div class="pod-panel-loading">
+                                <div class="pod-spinner"></div>
+                                <span>Loading sub orders…</span>
+                            </div>
+                        </template>
+
+                        <template if:false={isLoadingSubOrders}>
+                            <template if:true={hasSubOrders}>
+                                <div class="pod-data-table">
+                                    <div class="pod-data-table__head">
+                                        <div class="pod-dth pod-scol--name">Sub Order Name</div>
+                                        <div class="pod-dth pod-scol--status">Status</div>
+                                        <div class="pod-dth pod-scol--created">Created Date</div>
+                                        <div class="pod-dth pod-scol--modified">Last Modified</div>
+                                    </div>
+                                    <div class="pod-data-table__body">
+                                        <template for:each={subOrders} for:item="so">
+                                            <div key={so.id} class="pod-data-row">
+                                                <div class="pod-dtd pod-scol--name">
+                                                    <span class="pod-suborder-name">{so.name}</span>
+                                                </div>
+                                                <div class="pod-dtd pod-scol--status">
+                                                    <span class={so.statusClass}>{so.status}</span>
+                                                </div>
+                                                <div class="pod-dtd pod-scol--created">{so.createdDate}</div>
+                                                <div class="pod-dtd pod-scol--modified">{so.lastModifiedDate}</div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template if:true={noSubOrders}>
+                                <div class="pod-empty-panel">
+                                    <div class="pod-empty-panel__icon">📋</div>
+                                    <div class="pod-empty-panel__title">No sub orders</div>
+                                    <div class="pod-empty-panel__sub">No sub orders are linked to this order yet.</div>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+            </div><!-- /.pod-body-main -->
+
+            <!-- Right: TAT Clock Sidebar -->
+            <div class="pod-tat-sidebar">
+                <template if:true={tatReady}>
+                    <c-delivery-t-a-t record-id={recordId}></c-delivery-t-a-t>
+                </template>
+            </div>
+
+        </div><!-- /.pod-body-layout -->
+
+        <!-- EDIT MODAL -->
+        <template if:true={showEditModal}>
+            <div class="pod-modal-overlay" onclick={handleCloseEdit}>
+                <div class="pod-modal" onclick={handleModalStop}>
+
+                    <div class="pod-modal__header">
+                        <h2 class="pod-modal__title">✏️ Edit Order — {orderNumber}</h2>
+                        <button class="pod-modal__close" onclick={handleCloseEdit}>×</button>
+                    </div>
+
+                    <div class="pod-modal__body">
+                        <lightning-record-edit-form record-id={recordId} object-api-name="Order"
+                            onsuccess={handleEditSuccess} onerror={handleEditError}>
+
+                            <lightning-messages></lightning-messages>
+
+                            <div class="pod-fields-grid">
+                                <template for:each={editFields} for:item="field">
+                                    <div key={field} class="pod-field-cell">
+                                        <lightning-input-field field-name={field}>
+                                        </lightning-input-field>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="pod-modal__footer">
+                                <button class="pod-btn pod-btn--cancel" onclick={handleCloseEdit}>
+                                    Cancel
+                                </button>
+                                <lightning-button type="submit" label="Save Changes" variant="brand"
+                                    class="pod-save-btn">
+                                </lightning-button>
+                            </div>
+
+                        </lightning-record-edit-form>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+        <!-- ADD PRODUCTS MODAL -->
+        <template if:true={showInventoryModal}>
+            <div class="pod-modal-overlay" onclick={handleCloseInventory}>
+                <div class="pod-modal pod-modal--wide" onclick={handleModalStop}>
+
+                    <div class="pod-modal__header">
+                        <button class="pod-modal__close" onclick={handleCloseInventory}>×</button>
+                    </div>
+
+                    <div class="pod-modal__body pod-modal__body--flush">
+                        <c-sfa-add-product-comp record-id={recordId} onproductsaved={handleInventorySaved}>
+                        </c-sfa-add-product-comp>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+        <!-- CREATE SUB ORDERS MODAL -->
+        <template if:true={showSubOrderModal}>
+            <div class="pod-modal-overlay" onclick={handleCloseSubOrders}>
+                <div class="pod-modal pod-modal--wide" onclick={handleModalStop}>
+
+                    <div class="pod-modal__header">
+                        <button class="pod-modal__close" onclick={handleCloseSubOrders}>×</button>
+                    </div>
+
+                    <div class="pod-modal__body pod-modal__body--flush">
+                        <c-sub-order-manager record-id={recordId} onsuborderscreated={handleSubOrdersCreated}>
+                        </c-sub-order-manager>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

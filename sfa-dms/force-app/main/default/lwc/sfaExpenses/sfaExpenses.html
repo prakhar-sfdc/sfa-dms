@@ -1,0 +1,195 @@
+<template>
+    <div class="expenses-container">
+        <!-- Header -->
+        <div class="expense-header">
+            <div class="header-left">
+                <h1>Expense Management</h1>
+                <p class="subtitle">Track and manage your expenses</p>
+            </div>
+            <div class="header-right">
+                <button class="primary-btn expense-submit-btn" onclick={handleSubmitExpense}>
+                    Submit Expense
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon">💰</div>
+                <div class="summary-content">
+                    <h3>Total Expenses</h3>
+                    <div class="summary-value">₹{expenseSummary.totalAmount}</div>
+                    <div class="summary-trend">All time total</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">✅</div>
+                <div class="summary-content">
+                    <h3>Approved</h3>
+                    <div class="summary-value">{expenseSummary.approvedCount}</div>
+                    <div class="summary-trend">Expenses approved</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">⏳</div>
+                <div class="summary-content">
+                    <h3>Pending</h3>
+                    <div class="summary-value">{expenseSummary.pendingCount}</div>
+                    <div class="summary-trend">Awaiting approval</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon">📋</div>
+                <div class="summary-content">
+                    <h3>Submissions</h3>
+                    <div class="summary-value">{expenseSummary.totalSubmissions}</div>
+                    <div class="summary-trend">Total submitted</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Card -->
+        <div class="budget-card">
+            <div class="card-header">
+                <h3>📊 Budget Compliance</h3>
+                <div class={budgetStatusClass}>{budget.status}</div>
+            </div>
+            <div class="budget-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style={budgetProgressWidth}></div>
+                </div>
+                <div class="progress-label">{budgetPercentageText}</div>
+            </div>
+            <div class="budget-details">
+                <div class="budget-item">
+                    <span class="budget-label">Used</span>
+                    <span class="budget-value">₹{budget.used}</span>
+                </div>
+                <div class="budget-item">
+                    <span class="budget-label">Total</span>
+                    <span class="budget-value">₹{budget.total}</span>
+                </div>
+                <div class="budget-item">
+                    <span class="budget-label">Remaining</span>
+                    <span class="budget-value">₹{budget.remaining}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Type Legend (hidden on mobile, shows legend only) -->
+        <div class="expense-type-legend">
+            <div class="legend-item"><div class="legend-dot travel-color"></div><span>Travel: ₹{travelAmount}</span></div>
+            <div class="legend-item"><div class="legend-dot food-color"></div><span>Food: ₹{foodAmount}</span></div>
+            <div class="legend-item"><div class="legend-dot stay-color"></div><span>Stay: ₹{stayAmount}</span></div>
+            <div class="legend-item"><div class="legend-dot misc-color"></div><span>Misc: ₹{miscAmount}</span></div>
+        </div>
+
+        <!-- Recent Expenses Table -->
+        <div class="recent-expenses-card">
+            <div class="card-header">
+                <h3>📋 Recent Expenses</h3>
+                <button class="view-all-btn" onclick={viewAllExpenses}>View All →</button>
+            </div>
+            <div class="expenses-table">
+                <div class="table-header">
+                    <div class="table-cell">Date</div>
+                    <div class="table-cell">Type</div>
+                    <div class="table-cell">Description</div>
+                    <div class="table-cell">Amount</div>
+                    <div class="table-cell">Status</div>
+                    <div class="table-cell">Action</div>
+                </div>
+                <div class="table-body">
+                    <template for:each={recentExpensesList} for:item="expense">
+                        <div key={expense.id} class="table-row">
+                            <div class="table-cell">{expense.formattedDate}</div>
+                            <div class="table-cell"><span class={expense.typeBadgeClass}>{expense.type}</span></div>
+                            <div class="table-cell">{expense.description}</div>
+                            <div class="table-cell">₹{expense.amount}</div>
+                            <div class="table-cell"><span class={expense.statusClass}>{expense.status}</span></div>
+                            <div class="table-cell">
+                                <button class="action-btn-sm" onclick={handleViewExpenseDetails} data-id={expense.id}>View</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Mobile card layout (hidden on desktop via CSS) -->
+            <div class="expense-cards-mobile">
+                <template for:each={recentExpensesList} for:item="expense">
+                    <div key={expense.id} class="expense-card-mobile">
+                        <div class="expense-card-top">
+                            <span class={expense.typeBadgeClass}>{expense.type}</span>
+                            <span class={expense.statusClass}>{expense.status}</span>
+                        </div>
+                        <div class="expense-card-mid">
+                            <span class="exp-desc">{expense.description}</span>
+                            <span class="exp-amount">₹{expense.amount}</span>
+                        </div>
+                        <div class="expense-card-bot">
+                            <span class="exp-date">{expense.formattedDate}</span>
+                            <button class="action-btn-sm" onclick={handleViewExpenseDetails} data-id={expense.id}>View Details</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Expense Modal -->
+    <template if:true={showExpenseSubmitModal}>
+        <div class="modal-overlay" onclick={closeExpenseSubmitModal}>
+            <div class="expense-modal" onclick={handleModalClick}>
+                <div class="modal-header">
+                    <h2>💰 Submit Expense</h2>
+                    <button class="modal-close" onclick={closeExpenseSubmitModal}>×</button>
+                </div>
+                <div class="modal-body">
+                    <lightning-record-edit-form object-api-name="Expense__c"
+                        onsuccess={handleExpenseSubmitSuccess} onerror={handleExpenseSubmitError}>
+                        <lightning-messages></lightning-messages>
+                        <div class="form-grid">
+                            <div><lightning-input-field field-name="Expense_Date__c"></lightning-input-field></div>
+                            <div><lightning-input-field field-name="Expense_Type__c"></lightning-input-field></div>
+                            <div><lightning-input-field field-name="Amount__c"></lightning-input-field></div>
+                            <div><lightning-input-field field-name="Expense_Source__c"></lightning-input-field></div>
+                            <div><lightning-input-field field-name="Visit__c"></lightning-input-field></div>
+                            <div><lightning-input-field field-name="City__c"></lightning-input-field></div>
+                            <div class="full-col"><lightning-input-field field-name="Description__c"></lightning-input-field></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="secondary-btn" type="button" onclick={closeExpenseSubmitModal}>Cancel</button>
+                            <lightning-button type="submit" label="Submit Expense" variant="brand"></lightning-button>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Expense Details Modal -->
+    <template if:true={showExpenseModal}>
+        <div class="modal-overlay" onclick={closeExpenseModal}>
+            <div class="expense-modal expense-modal--sm" onclick={handleModalClick}>
+                <div class="modal-header">
+                    <h2>📋 Expense Details</h2>
+                    <button class="modal-close" onclick={closeExpenseModal}>×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-list">
+                        <div class="detail-item"><span class="detail-label">Date</span><span class="detail-value">{selectedExpense.formattedDate}</span></div>
+                        <div class="detail-item"><span class="detail-label">Type</span><span class="detail-value">{selectedExpense.type}</span></div>
+                        <div class="detail-item"><span class="detail-label">Amount</span><span class="detail-value">₹{selectedExpense.amount}</span></div>
+                        <div class="detail-item"><span class="detail-label">Status</span><span class={selectedExpense.statusClass}>{selectedExpense.status}</span></div>
+                        <div class="detail-item"><span class="detail-label">Description</span><span class="detail-value">{selectedExpense.description}</span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeExpenseModal}>Close</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

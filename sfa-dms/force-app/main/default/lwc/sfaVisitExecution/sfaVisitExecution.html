@@ -1,0 +1,156 @@
+<template>
+    <div class="visit-execution-container">
+        <!-- Detail View (when activeVisitId is set) -->
+        <template if:true={activeVisitId}>
+            <c-sfa-visit-detail-view visit-id={activeVisitId} check-in-time={activeVisitCheckInTime}
+                check-in-lat={activeVisitLat} check-in-lng={activeVisitLng}
+                check-in-address={activeVisitAddress} onback={handleVisitDetailBack}
+                oncheckout={handleVisitCheckOutEvent}>
+            </c-sfa-visit-detail-view>
+        </template>
+
+        <!-- List View (default) -->
+        <template if:false={activeVisitId}>
+            <div class="ve-wrapper">
+                <!-- Header -->
+                <div class="journey-header">
+                    <div class="header-left">
+                        <h1>Visit Execution</h1>
+                        <p class="subtitle">Check in to your planned visits for today</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="primary-btn" onclick={openCreateVisitFromExecution}>
+                            ➕ Create New Visit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Date Carousel -->
+                <div class="date-carousel">
+                    <button class="carousel-btn" onclick={prevDate}>←</button>
+                    <div class="carousel-dates">
+                        <template for:each={carouselDates} for:item="dateItem">
+                            <div key={dateItem.id} class="carousel-date" data-date={dateItem.id}
+                                onclick={handleExecutionDateClick}>
+                                <div class="carousel-day">{dateItem.dayName}</div>
+                                <div class="carousel-date-num">{dateItem.dateNum}</div>
+                                <div class="carousel-month">{dateItem.month}</div>
+                                <div class="carousel-visits">{dateItem.visits} visits</div>
+                            </div>
+                        </template>
+                    </div>
+                    <button class="carousel-btn" onclick={nextDate}>→</button>
+                </div>
+
+                <!-- Today's Visit List Card -->
+                <div class="ve-visit-list-card">
+                    <div class="ve-list-header">
+                        <div class="ve-list-title">
+                            <span>📅 Visits — {selectedDateDisplay}</span>
+                            <span class="count-badge-sm">{dailyVisits.length}</span>
+                        </div>
+                        <button class="add-btn" onclick={openCreateVisitFromExecution}>+ Add Visit</button>
+                    </div>
+
+                    <!-- No visits state -->
+                    <template if:false={dailyVisits.length}>
+                        <div class="ve-empty">
+                            <div class="ve-empty-icon">📋</div>
+                            <div class="ve-empty-title">No visits planned for this date</div>
+                            <button class="primary-btn" onclick={openCreateVisitFromExecution}>
+                                Schedule a Visit
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Visit rows -->
+                    <template if:true={dailyVisits.length}>
+                        <div class="ve-visit-rows">
+                            <div class="ve-row ve-row--header">
+                                <div class="ve-col ve-col-time">Time</div>
+                                <div class="ve-col ve-col-account">Account</div>
+                                <div class="ve-col ve-col-purpose">Purpose</div>
+                                <div class="ve-col ve-col-status">Status</div>
+                                <div class="ve-col ve-col-action">Action</div>
+                            </div>
+
+                            <template for:each={dailyVisitsWithMeta} for:item="visit">
+                                <div key={visit.id} class="ve-row ve-row--data">
+
+                                    <!-- Time -->
+                                    <div class="ve-col ve-col-time">
+                                        <span class="ve-time">{visit.time}</span>
+                                    </div>
+
+                                    <!-- Account -->
+                                    <div class="ve-col ve-col-account">
+                                        <div class="ve-account-avatar">{visit.accountInitial}</div>
+                                        <div class="ve-account-info">
+                                            <div class="ve-account-name">{visit.account}</div>
+                                            <div class="ve-account-location">{visit.location}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Purpose -->
+                                    <div class="ve-col ve-col-purpose">
+                                        <span class="ve-purpose">{visit.purpose}</span>
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="ve-col ve-col-status">
+                                        <span class={visit.statusClass}>{visit.status}</span>
+                                    </div>
+
+                                    <!-- Action buttons -->
+                                    <div class="ve-col ve-col-action">
+                                        <template if:true={visit.canCheckIn}>
+                                            <button class="ve-checkin-btn" data-id={visit.id} data-account={visit.account}
+                                                onclick={handleVisitCheckIn} disabled={visit.isCheckingIn}>
+                                                <template if:true={visit.isCheckingIn}>
+                                                    <span class="ve-spinner"></span> Locating…
+                                                </template>
+                                                <template if:false={visit.isCheckingIn}>
+                                                    ✓ Check In
+                                                </template>
+                                            </button>
+                                        </template>
+
+                                        <template if:true={visit.isInProgress}>
+                                            <button class="ve-checkin-btn ve-checkin-btn--resume" data-id={visit.id}
+                                                onclick={handleResumeVisit}>
+                                                ▶ Resume
+                                            </button>
+                                        </template>
+
+                                        <template if:true={visit.isCompleted}>
+                                            <span class="ve-done-label">✓ Completed</span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Recent Visit History -->
+                <div class="bottom-card priority-card" style="margin-top:20px;">
+                    <div class="card-header">
+                        <h3>📍 Recent Visit History</h3>
+                        <button class="view-all-btn" onclick={handleViewAllVisits}>View All →</button>
+                    </div>
+                    <div class="priority-list">
+                        <template for:each={recentVisits} for:item="visit">
+                            <div key={visit.id} class="priority-account">
+                                <div class="account-info">
+                                    <div class="account-name">{visit.account}</div>
+                                    <div class="account-location">{visit.time}</div>
+                                </div>
+                                <div class={visit.statusClass}>{visit.status}</div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

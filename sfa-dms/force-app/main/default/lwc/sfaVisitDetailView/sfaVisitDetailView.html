@@ -1,0 +1,664 @@
+<template>
+
+    <!-- ══════════════════════════════════════════════════════════
+         If an Order is selected → render sfaPrimaryOrderDetail inline
+    ══════════════════════════════════════════════════════════════ -->
+    <template if:true={selectedOrderId}>
+        <c-sfa-primary-order-detail
+            record-id={selectedOrderId}
+            onback={handleOrderDetailBack}>
+        </c-sfa-primary-order-detail>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════
+         Main visit-detail view
+    ══════════════════════════════════════════════════════════════ -->
+    <template if:false={selectedOrderId}>
+        <div class="vdv-container">
+
+            <!-- ── COMPACT HEADER ─────────────────────────────── -->
+            <div class="vdv-header">
+                <div class="vdv-header-left">
+                    <button class="vdv-back-btn" onclick={handleBack}>
+                        ← Back to Visits
+                    </button>
+
+                    <template if:true={isLoadingVisit}>
+                        <div class="vdv-header-loading">
+                            <div class="vdv-spinner-sm"></div>
+                            <span>Loading visit…</span>
+                        </div>
+                    </template>
+
+                    <template if:false={isLoadingVisit}>
+                        <div class="vdv-account-row">
+                            <div class="vdv-avatar">{accountInitial}</div>
+                            <div class="vdv-account-info">
+                                <h2 class="vdv-account-name">{visit.account}</h2>
+                                <div class="vdv-meta-row">
+                                    <span class="vdv-meta-item">📅 {visitDateDisplay}</span>
+                                    <span class="vdv-meta-item">🕐 Check-in: {visit.checkInTime}</span>
+                                    <span class="vdv-meta-item">📍 {visit.checkInAddress}</span>
+                                    <span class={visit.statusClass}>{visit.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ── 3 ACTION BUTTONS ──────────────────────── -->
+                <div class="vdv-actions">
+                    <button class="vdv-action-btn vdv-action-order"
+                            onclick={openPunchOrder}
+                            disabled={isCheckedOut}>
+                        <span class="vdv-btn-icon">📦</span>
+                        <span class="vdv-btn-label">Punch Order</span>
+                    </button>
+
+                    <button class="vdv-action-btn vdv-action-competitor"
+                            onclick={openCompetitorForm}
+                            disabled={isCheckedOut}>
+                        <span class="vdv-btn-icon">📊</span>
+                        <span class="vdv-btn-label">Market Analysis</span>
+                    </button>
+
+                    <button class="vdv-action-btn vdv-action-checkout"
+                            onclick={handleCheckOut}
+                            disabled={isCheckedOut}>
+                        <template if:true={isCheckingOut}>
+                            <span class="vdv-spinner"></span>
+                            <span class="vdv-btn-label">Locating…</span>
+                        </template>
+                        <template if:false={isCheckingOut}>
+                            <template if:false={isCheckedOut}>
+                                <span class="vdv-btn-icon">✓</span>
+                                <span class="vdv-btn-label">Check Out</span>
+                            </template>
+                            <template if:true={isCheckedOut}>
+                                <span class="vdv-btn-icon">✓</span>
+                                <span class="vdv-btn-label">Checked Out</span>
+                            </template>
+                        </template>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── TAB BAR ─────────────────────────────────────── -->
+            <div class="vdv-tab-bar">
+                <button class={detailTabClass}     data-tab="detail"      onclick={switchTab}>
+                    📋 Visit Details
+                </button>
+                <button class={ordersTabClass}     data-tab="orders"      onclick={switchTab}>
+                    📦 Orders
+                    <template if:true={orderCount}>
+                        <span class="vdv-tab-badge">{orderCount}</span>
+                    </template>
+                </button>
+                <button class={competitorTabClass} data-tab="competitor"  onclick={switchTab}>
+                    📊 Competitor Analysis
+                    <template if:true={competitorCount}>
+                        <span class="vdv-tab-badge">{competitorCount}</span>
+                    </template>
+                </button>
+            </div>
+
+            <!-- ── TAB CONTENT ─────────────────────────────────── -->
+            <div class="vdv-tab-content">
+
+                <!-- ═══ TAB 1: VISIT DETAILS ═══ -->
+                <template if:true={isDetailTab}>
+
+                    <template if:true={isLoadingVisit}>
+                        <div class="vdv-loading-state">
+                            <div class="vdv-spinner-lg"></div>
+                            <span>Loading visit details…</span>
+                        </div>
+                    </template>
+
+                    <template if:false={isLoadingVisit}>
+                        <div class="vdv-detail-grid">
+
+                            <!-- Visit Information -->
+                            <div class="vdv-detail-card">
+                                <div class="vdv-card-title">📍 Visit Information</div>
+                                <div class="vdv-field-list">
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Account</span>
+                                        <span class="vdv-field-value">{visit.account}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Visit Date</span>
+                                        <span class="vdv-field-value">{visitDateDisplay}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Visit Type</span>
+                                        <span class="vdv-field-value">{visit.visitType}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Purpose</span>
+                                        <span class="vdv-field-value">{visit.purpose}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Status</span>
+                                        <span class={visit.statusClass}>{visit.status}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Priority</span>
+                                        <span class="vdv-field-value">{visit.priority}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Attendance (Check-in / Check-out) -->
+                            <div class="vdv-detail-card">
+                                <div class="vdv-card-title">🕐 Attendance</div>
+                                <div class="vdv-field-list">
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Check-In Time</span>
+                                        <span class="vdv-field-value vdv-highlight-green">{visit.checkInTime}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Check-In Location</span>
+                                        <span class="vdv-field-value">{visit.checkInAddress}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Check-In GPS</span>
+                                        <span class="vdv-field-value vdv-mono">{visit.checkInCoords}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Check-Out Time</span>
+                                        <span class="vdv-field-value vdv-highlight-red">{checkOutTimeDisplay}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Check-Out Location</span>
+                                        <span class="vdv-field-value">{visit.checkOutAddress}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Duration</span>
+                                        <span class="vdv-field-value vdv-highlight-blue">{visitDuration}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Account Details -->
+                            <div class="vdv-detail-card">
+                                <div class="vdv-card-title">🏢 Account Details</div>
+                                <div class="vdv-field-list">
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Account Name</span>
+                                        <span class="vdv-field-value">{visit.account}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Email</span>
+                                        <span class="vdv-field-value">{visit.accountEmail}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Phone</span>
+                                        <span class="vdv-field-value">{visit.phone}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Address</span>
+                                        <span class="vdv-field-value">{visit.address}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Last Order</span>
+                                        <span class="vdv-field-value">{visit.lastOrderDate}</span>
+                                    </div>
+                                    <div class="vdv-field-row">
+                                        <span class="vdv-field-label">Outstanding Amount</span>
+                                        <span class="vdv-field-value">{visit.outstandingAmount}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes & Remarks -->
+                            <div class="vdv-detail-card vdv-card-full">
+                                <div class="vdv-card-title">📝 Notes & Remarks</div>
+                                <div class="vdv-notes-area">
+                                    <template if:false={isEditingNotes}>
+                                        <p class="vdv-notes-text">{notesDisplay}</p>
+                                        <button class="vdv-edit-notes-btn" onclick={toggleEditNotes}
+                                                disabled={isCheckedOut}>
+                                            ✏️ Edit Notes
+                                        </button>
+                                    </template>
+                                    <template if:true={isEditingNotes}>
+                                        <textarea class="vdv-textarea"
+                                                  value={draftNotes}
+                                                  oninput={handleNotesInput}
+                                                  placeholder="Enter visit notes, observations, follow-up actions..."
+                                                  rows="4">
+                                        </textarea>
+                                        <div class="vdv-notes-actions">
+                                            <button class="vdv-save-btn" onclick={saveNotes}>💾 Save</button>
+                                            <button class="vdv-cancel-btn" onclick={toggleEditNotes}>Cancel</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                        </div><!-- end detail-grid -->
+                    </template>
+                </template>
+
+                <!-- ═══ TAB 2: ORDERS ═══ -->
+                <template if:true={isOrdersTab}>
+                    <div class="vdv-orders-section">
+
+                        <template if:true={isLoadingOrders}>
+                            <div class="vdv-loading-state">
+                                <div class="vdv-spinner-lg"></div>
+                                <span>Loading orders…</span>
+                            </div>
+                        </template>
+
+                        <template if:false={isLoadingOrders}>
+
+                            <!-- Empty state -->
+                            <template if:false={hasOrders}>
+                                <div class="vdv-empty-state">
+                                    <div class="vdv-empty-icon">📦</div>
+                                    <div class="vdv-empty-title">No primary orders for this visit</div>
+                                    <button class="vdv-cta-btn" onclick={openPunchOrder}
+                                            disabled={isCheckedOut}>
+                                        + Punch Primary Order
+                                    </button>
+                                </div>
+                            </template>
+
+                            <!-- Orders table -->
+                            <template if:true={hasOrders}>
+                                <div class="vdv-orders-header">
+                                    <span class="vdv-orders-title">Primary Orders ({orderCount})</span>
+                                    <button class="vdv-add-btn" onclick={openPunchOrder}
+                                            disabled={isCheckedOut}>
+                                        + Add Order
+                                    </button>
+                                </div>
+
+                                <div class="vdv-table-wrap">
+                                    <!-- Table header -->
+                                    <div class="vdv-table-head vdv-order-grid">
+                                        <div class="vdv-th">Order #</div>
+                                        <div class="vdv-th">Effective Date</div>
+                                        <div class="vdv-th vdv-align-right">Amount</div>
+                                        <div class="vdv-th">Status</div>
+                                        <div class="vdv-th">Action</div>
+                                    </div>
+
+                                    <!-- Table rows — each row navigates to sfaPrimaryOrderDetail -->
+                                    <template for:each={orders} for:item="order">
+                                        <div key={order.id}
+                                             class="vdv-table-row vdv-order-grid vdv-order-row"
+                                             data-id={order.id}
+                                             onclick={handleOrderRowClick}>
+                                            <div class="vdv-td vdv-order-num">{order.orderNumber}</div>
+                                            <div class="vdv-td">{order.effectiveDate}</div>
+                                            <div class="vdv-td vdv-bold vdv-align-right">
+                                                ₹{order.totalAmount}
+                                            </div>
+                                            <div class="vdv-td">
+                                                <span class={order.statusClass}>{order.status}</span>
+                                            </div>
+                                            <div class="vdv-td">
+                                                <button class="vdv-view-btn"
+                                                        data-id={order.id}
+                                                        onclick={handleOrderRowClick}>
+                                                    View →
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="vdv-orders-footer">
+                                    <span class="vdv-footer-label">Total Order Value</span>
+                                    <span class="vdv-footer-value">₹{totalOrderValue}</span>
+                                </div>
+                            </template>
+
+                        </template>
+                    </div>
+                </template>
+
+                <!-- ═══ TAB 3: COMPETITOR ANALYSIS ═══ -->
+                <template if:true={isCompetitorTab}>
+                    <div class="vdv-competitor-section">
+
+                        <!-- Empty state -->
+                        <template if:false={competitorRecords.length}>
+                            <div class="vdv-empty-state">
+                                <div class="vdv-empty-icon">📊</div>
+                                <div class="vdv-empty-title">No competitor analysis recorded</div>
+                                <button class="vdv-cta-btn" onclick={openCompetitorForm}
+                                        disabled={isCheckedOut}>
+                                    + Add Analysis
+                                </button>
+                            </div>
+                        </template>
+
+                        <template if:true={competitorRecords.length}>
+                            <div class="vdv-orders-header">
+                                <span class="vdv-orders-title">Market Analysis Records ({competitorCount})</span>
+                                <button class="vdv-add-btn" onclick={openCompetitorForm}
+                                        disabled={isCheckedOut}>
+                                    + Add Analysis
+                                </button>
+                            </div>
+
+                            <template for:each={competitorRecords} for:item="rec">
+                                <div key={rec.id} class="vdv-competitor-card">
+                                    <div class="vdv-competitor-header">
+                                        <span class="vdv-competitor-name">{rec.competitorName}</span>
+                                        <span class="vdv-competitor-date">{rec.recordDate}</span>
+                                    </div>
+                                    <div class="vdv-competitor-grid">
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Product</span>
+                                            <span class="vdv-comp-value">{rec.competitorProduct}</span>
+                                        </div>
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Competitor Price</span>
+                                            <span class="vdv-comp-value">₹{rec.competitorPrice}</span>
+                                        </div>
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Our Price</span>
+                                            <span class="vdv-comp-value">₹{rec.ourPrice}</span>
+                                        </div>
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Competitor Stock</span>
+                                            <span class="vdv-comp-value">{rec.competitorStock} units</span>
+                                        </div>
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Our Stock</span>
+                                            <span class="vdv-comp-value">{rec.ourStock} units</span>
+                                        </div>
+                                        <div class="vdv-comp-field">
+                                            <span class="vdv-comp-label">Shelf Share</span>
+                                            <span class="vdv-comp-value">{rec.shelfSharePercent}%</span>
+                                        </div>
+                                    </div>
+                                    <template if:true={rec.remarks}>
+                                        <div class="vdv-comp-remarks">{rec.remarks}</div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+            </div><!-- end tab-content -->
+        </div><!-- end vdv-container -->
+
+        <!-- ══════════════════════════════════════════════════════
+             MODAL: PUNCH PRIMARY ORDER
+        ══════════════════════════════════════════════════════════ -->
+        <template if:true={showOrderModal}>
+            <div class="vdv-modal-overlay" onclick={closeOrderModal}>
+                <div class="vdv-modal" onclick={stopProp}>
+
+                    <div class="vdv-modal-header">
+                        <h3>📦 Punch Primary Order</h3>
+                        <button class="vdv-modal-close" onclick={closeOrderModal}>✕</button>
+                    </div>
+
+                    <div class="vdv-modal-body">
+
+                        <div class="vdv-order-tag-banner">
+                            <span>🔗 Creating order for:</span>
+                            <strong>{visit.account}</strong>
+                        </div>
+
+                        <template if:true={isLoadingCreationFields}>
+                            <div class="vdv-loading-state">
+                                <div class="vdv-spinner-lg"></div>
+                                <span>Loading order form…</span>
+                            </div>
+                        </template>
+
+                        <template if:true={hasNoCreationFields}>
+                            <div class="vdv-empty-state">
+                                <div class="vdv-empty-icon">⚠️</div>
+                                <div class="vdv-empty-title">Fieldset not configured</div>
+                                <p class="vdv-empty-sub">
+                                    Create a fieldset named <strong>Primary_Order_Create</strong>
+                                    on the Order object to define the creation form fields.
+                                </p>
+                            </div>
+                        </template>
+
+                        <template if:true={hasCreationFields}>
+                            <lightning-record-edit-form
+                                object-api-name="Order"
+                                onsuccess={handleOrderSuccess}
+                                onerror={handleOrderFormError}
+                                onsubmit={handleOrderSubmit}>
+
+                                <lightning-messages></lightning-messages>
+
+                                <div class="vdv-form-grid">
+                                    <template for:each={orderCreationFields} for:item="fieldName">
+                                        <div key={fieldName} class="vdv-form-group">
+                                            <lightning-input-field
+                                                field-name={fieldName}>
+                                            </lightning-input-field>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="vdv-modal-footer">
+                                    <button class="vdv-btn-secondary" type="button"
+                                            onclick={closeOrderModal}>
+                                        Cancel
+                                    </button>
+                                    <lightning-button
+                                        type="submit"
+                                        label="Create Primary Order"
+                                        variant="brand">
+                                    </lightning-button>
+                                </div>
+
+                            </lightning-record-edit-form>
+                        </template>
+
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════
+             MODAL: COMPETITOR MARKET ANALYSIS
+        ══════════════════════════════════════════════════════════ -->
+        <template if:true={showCompetitorModal}>
+            <div class="vdv-modal-overlay" onclick={closeCompetitorModal}>
+                <div class="vdv-modal vdv-modal-wide" onclick={stopProp}>
+
+                    <div class="vdv-modal-header">
+                        <h3>📊 Competitor Market Analysis</h3>
+                        <button class="vdv-modal-close" onclick={closeCompetitorModal}>✕</button>
+                    </div>
+
+                    <div class="vdv-modal-body">
+                        <div class="vdv-order-tag-banner">
+                            <span>🔗 Visit:</span>
+                            <strong>{visit.account}</strong>
+                            <span>— {visitDateDisplay}</span>
+                        </div>
+
+                        <div class="vdv-form-grid vdv-form-grid-3">
+
+                            <div class="vdv-form-section-label">Competitor Information</div>
+
+                            <div class="vdv-form-group">
+                                <label>Competitor Name <span class="req">*</span></label>
+                                <select class="vdv-select" name="competitorName"
+                                        value={competitorForm.competitorName}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="">— Select Competitor —</option>
+                                    <option value="ITC">ITC</option>
+                                    <option value="Bilt">Bilt (BPPL)</option>
+                                    <option value="Tamil Nadu Newsprint">Tamil Nadu Newsprint</option>
+                                    <option value="Century Paper">Century Paper</option>
+                                    <option value="Chettinad Paper">Chettinad Paper</option>
+                                    <option value="Star Paper">Star Paper</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <template if:true={competitorErrors.competitorName}>
+                                    <span class="vdv-error">{competitorErrors.competitorName}</span>
+                                </template>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Competitor Product</label>
+                                <input type="text" class="vdv-input" name="competitorProduct"
+                                       value={competitorForm.competitorProduct}
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="e.g. ITC Classmate 75 GSM"/>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Competitor Price (₹)</label>
+                                <input type="number" class="vdv-input" name="competitorPrice"
+                                       value={competitorForm.competitorPrice}
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="price"/>
+                            </div>
+
+                            <div class="vdv-form-section-label">Stock at Dealer</div>
+
+                            <div class="vdv-form-group">
+                                <label>Competitor Stock</label>
+                                <input type="number" class="vdv-input" name="competitorStock"
+                                       value={competitorForm.competitorStock}
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="Number of units"/>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Our Stock</label>
+                                <input type="number" class="vdv-input" name="ourStock"
+                                       value={competitorForm.ourStock}
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="Number of units"/>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Our Price (₹)</label>
+                                <input type="number" class="vdv-input" name="ourPrice"
+                                       value={competitorForm.ourPrice}
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="price"/>
+                            </div>
+
+                            <div class="vdv-form-section-label">Shelf Presence & Visibility</div>
+
+                            <div class="vdv-form-group">
+                                <label>Shelf Share — Our Brand (%)</label>
+                                <input type="number" class="vdv-input" name="shelfSharePercent"
+                                       value={competitorForm.shelfSharePercent}
+                                       min="0" max="100"
+                                       oninput={handleCompetitorFormChange}
+                                       placeholder="0 – 100"/>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Display Visibility</label>
+                                <select class="vdv-select" name="displayVisibility"
+                                        value={competitorForm.displayVisibility}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="">— Select —</option>
+                                    <option value="Excellent">Excellent — Prime shelf, eye level</option>
+                                    <option value="Good">Good — Visible, secondary shelf</option>
+                                    <option value="Average">Average — Low shelf or side</option>
+                                    <option value="Poor">Poor — Not prominently displayed</option>
+                                    <option value="Not Displayed">Not Displayed</option>
+                                </select>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Promo / Scheme Active?</label>
+                                <select class="vdv-select" name="promoActive"
+                                        value={competitorForm.promoActive}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="No">No</option>
+                                    <option value="Yes - Ours">Yes — Our Brand</option>
+                                    <option value="Yes - Competitor">Yes — Competitor</option>
+                                    <option value="Yes - Both">Yes — Both</option>
+                                </select>
+                            </div>
+
+                            <div class="vdv-form-section-label">Market Feedback</div>
+
+                            <div class="vdv-form-group">
+                                <label>Dealer Preference</label>
+                                <select class="vdv-select" name="dealerPreference"
+                                        value={competitorForm.dealerPreference}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="">— Select —</option>
+                                    <option value="Strongly Prefer Ours">Strongly Prefers Our Brand</option>
+                                    <option value="Slightly Prefer Ours">Slightly Prefers Our Brand</option>
+                                    <option value="Neutral">Neutral</option>
+                                    <option value="Slightly Prefer Competitor">Slightly Prefers Competitor</option>
+                                    <option value="Strongly Prefer Competitor">Strongly Prefers Competitor</option>
+                                </select>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Customer Demand Trend</label>
+                                <select class="vdv-select" name="demandTrend"
+                                        value={competitorForm.demandTrend}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="">— Select —</option>
+                                    <option value="Increasing - Ours">Increasing for Our Brand</option>
+                                    <option value="Stable - Ours">Stable for Our Brand</option>
+                                    <option value="Decreasing - Ours">Decreasing for Our Brand</option>
+                                    <option value="Increasing - Competitor">Increasing for Competitor</option>
+                                </select>
+                            </div>
+
+                            <div class="vdv-form-group">
+                                <label>Price Sensitivity</label>
+                                <select class="vdv-select" name="priceSensitivity"
+                                        value={competitorForm.priceSensitivity}
+                                        onchange={handleCompetitorFormChange}>
+                                    <option value="">— Select —</option>
+                                    <option value="High">High — Price is primary driver</option>
+                                    <option value="Medium">Medium — Price matters but not primary</option>
+                                    <option value="Low">Low — Brand / quality driven</option>
+                                </select>
+                            </div>
+
+                            <div class="vdv-form-group vdv-full-col">
+                                <label>Remarks / Observations</label>
+                                <textarea class="vdv-textarea" name="remarks"
+                                          value={competitorForm.remarks}
+                                          oninput={handleCompetitorFormChange}
+                                          placeholder="Any specific feedback, observations, or intelligence from the dealer..."
+                                          rows="3">
+                                </textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="vdv-modal-footer">
+                        <button class="vdv-btn-secondary" onclick={closeCompetitorModal}>Cancel</button>
+                        <button class="vdv-btn-primary vdv-btn-competitor"
+                                onclick={submitCompetitorAnalysis}
+                                disabled={isCompetitorSubmitting}>
+                            <template if:true={isCompetitorSubmitting}>
+                                <span class="vdv-spinner"></span> Saving…
+                            </template>
+                            <template if:false={isCompetitorSubmitting}>
+                                📊 Save Analysis
+                            </template>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+    </template><!-- end if:false={selectedOrderId} -->
+
+</template>

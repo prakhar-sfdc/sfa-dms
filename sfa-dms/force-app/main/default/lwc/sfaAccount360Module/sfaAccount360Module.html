@@ -1,0 +1,625 @@
+<template>
+    <div class="page">
+
+        <!-- HEADER BAR -->
+        <div class="headerBar">
+            <div class="headerLeft">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-icon">◈</span>
+                    Account 360
+                </div>
+                <div class="searchWrapper">
+                    <span class="search-icon">⌕</span>
+                    <input class="searchInput"
+                           type="text"
+                           placeholder="Search accounts..."
+                           value={searchKey}
+                           oninput={handleSearchChange} />
+
+                    <template if:true={showSearchDropdown}>
+                        <div class="dropdown">
+                            <template for:each={searchResults} for:item="acc">
+                                <div key={acc.Id} class="dropdownItem" data-id={acc.Id} onclick={handleAccountSelect}>
+                                    <div class="dropName">{acc.Name}</div>
+                                    <div class="dropMeta">{acc.Type} · {acc.BillingCity}</div>
+                                </div>
+                            </template>
+                            <template if:true={noResults}>
+                                <div class="dropdownEmpty">No accounts found</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="headerRight">
+                <button class="btnOutline" onclick={handleHeaderUploadDocs}>
+                    <span>↑</span> Upload Docs
+                </button>
+                <button class="btnOutline" onclick={handleNewContact}>
+                    <span>+</span> New Contact
+                </button>
+                <button class="btnPrimary" onclick={handleNewVisit}>
+                    <span>+</span> New Visit
+                </button>
+            </div>
+        </div>
+
+        <!-- ACCOUNT IDENTITY ROW -->
+        <div class="identityRow">
+            <div class="identityLeft">
+                <template if:true={selectedAccount}>
+                    <div class="accountAvatar">{accountInitials}</div>
+                    <div class="accountMeta">
+                        <div class="accountName">{selectedAccount.Name}</div>
+                        <div class="accountSub">{selectedAccount.Industry} · {selectedAccount.BillingCity}</div>
+                    </div>
+                    <div class={statusBadgeClass}>{selectedAccount.Account_Status__c}</div>
+                </template>
+                <template if:false={selectedAccount}>
+                    <div class="accountName dim">Select an account to begin</div>
+                </template>
+            </div>
+
+            <div class="quickInfoBar">
+                <div class="infoChip">
+                    <span class="chipLabel">Owner</span>
+                    <span class="chipValue">{ownerName}</span>
+                </div>
+                <div class="infoChip">
+                    <span class="chipLabel">Phone</span>
+                    <span class="chipValue">
+                        <template if:true={selectedAccount}>{selectedAccount.Phone}</template>
+                        <template if:false={selectedAccount}>—</template>
+                    </span>
+                </div>
+                <div class="infoChip">
+                    <span class="chipLabel">Last Visit</span>
+                    <span class="chipValue">
+                        <template if:true={lastVisitDate}>{lastVisitDate}</template>
+                        <template if:false={lastVisitDate}>—</template>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="loadingOverlay">
+                <div class="loadingSpinner"></div>
+                <span>Loading 360 View…</span>
+            </div>
+        </template>
+
+        <!-- KPI STRIP -->
+        <div class="kpiStrip">
+            <div class="kpiCard">
+                <div class="kpiInner">
+                    <div class="kpiNumber">{totalVisits}</div>
+                    <div class="kpiMeta">
+                        <div class="kpiLabel">Total Visits</div>
+                        <div class="kpiTrend neutral">All time</div>
+                    </div>
+                </div>
+                <div class="kpiAccent v1"></div>
+            </div>
+
+            <div class="kpiCard">
+                <div class="kpiInner">
+                    <div class="kpiNumber">{completedVisits}</div>
+                    <div class="kpiMeta">
+                        <div class="kpiLabel">Completed</div>
+                        <div class="kpiTrend up">Visits</div>
+                    </div>
+                </div>
+                <div class="kpiAccent v2"></div>
+            </div>
+
+            <div class="kpiCard">
+                <div class="kpiInner">
+                    <div class="kpiNumber">{pendingVisits}</div>
+                    <div class="kpiMeta">
+                        <div class="kpiLabel">Pending</div>
+                        <div class="kpiTrend warn">Scheduled</div>
+                    </div>
+                </div>
+                <div class="kpiAccent v3"></div>
+            </div>
+
+            <div class="kpiCard">
+                <div class="kpiInner">
+                    <div class="kpiNumber">0</div>
+                    <div class="kpiMeta">
+                        <div class="kpiLabel">Feedback</div>
+                        <div class="kpiTrend neutral">This month</div>
+                    </div>
+                </div>
+                <div class="kpiAccent v4"></div>
+            </div>
+
+            <div class="kpiCard">
+                <div class="kpiInner">
+                    <div class="kpiNumber">{totalOrders}</div>
+                    <div class="kpiMeta">
+                        <div class="kpiLabel">Orders</div>
+                        <div class="kpiTrend neutral">This month</div>
+                    </div>
+                </div>
+                <div class="kpiAccent v5"></div>
+            </div>
+        </div>
+
+        <!-- MAIN BODY -->
+        <div class="mainGrid">
+
+            <!-- LEFT PANEL: fixed info cards -->
+            <div class="leftPanel">
+                <template if:true={selectedAccount}>
+
+                    <!-- ACCOUNT DETAILS CARD -->
+                    <div class="contentCard">
+                        <div class="cardHeader">
+                            <span class="cardIcon">🏢</span>
+                            <div class="cardTitle">Account Details</div>
+                        </div>
+                        <div class="detailsGrid">
+                            <div class="detailField">
+                                <div class="fieldLabel">Account Name</div>
+                                <div class="fieldValue">{selectedAccount.Name}</div>
+                            </div>
+                            <div class="detailField">
+                                <div class="fieldLabel">Phone</div>
+                                <div class="fieldValue">{selectedAccount.Phone}</div>
+                            </div>
+                            <div class="detailField">
+                                <div class="fieldLabel">Email</div>
+                                <div class="fieldValue">{selectedAccount.Email__c}</div>
+                            </div>
+                            <div class="detailField">
+                                <div class="fieldLabel">Type</div>
+                                <div class="fieldValue">{selectedAccount.RecordType.Name}</div>
+                            </div>
+                            <div class="detailField fullWidth">
+                                <div class="fieldLabel">Billing Address</div>
+                                <div class="fieldValue">{billingAddress}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTACTS CARD -->
+                    <div class="contentCard">
+                        <div class="cardHeader">
+                            <span class="cardIcon">👥</span>
+                            <div class="cardTitle">Contacts</div>
+                            <span class="cardCount">{contacts.length}</span>
+                        </div>
+                        <template if:true={hasContacts}>
+                            <div class="listStack">
+                                <template for:each={contacts} for:item="con">
+                                    <div key={con.Id} class="listRow">
+                                        <div class="contactAvatar">{con.initials}</div>
+                                        <div class="rowMain">
+                                            <div class="rowName">{con.Name}</div>
+                                            <div class="rowSub">{con.Phone} · {con.Email}</div>
+                                        </div>
+                                        <div class="rowChevron">›</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasContacts}>
+                            <div class="emptyState">
+                                <div class="emptyIcon">👤</div>
+                                <div>No contacts found</div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- VISITS CARD -->
+                    <div class="contentCard">
+                        <div class="cardHeader">
+                            <span class="cardIcon">📍</span>
+                            <div class="cardTitle">Recent Visits</div>
+                            <span class="cardCount">{visits.length}</span>
+                        </div>
+                        <template if:true={hasVisits}>
+                            <div class="listStack">
+                                <template for:each={visits} for:item="visit">
+                                    <div key={visit.Id} class="listRow">
+                                        <div class="visitDateBadge">
+                                            <span>{visit.Visit_Date__c}</span>
+                                        </div>
+                                        <div class="rowMain">
+                                            <div class="rowName">{visit.Name}</div>
+                                            <div class="rowSub">{visit.Visit_Purpose__c}</div>
+                                        </div>
+                                        <div class={visit.statusClass}>{visit.Visit_Status__c}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasVisits}>
+                            <div class="emptyState">
+                                <div class="emptyIcon">🗺️</div>
+                                <div>No visits recorded</div>
+                            </div>
+                        </template>
+                    </div>
+
+                </template>
+
+                <template if:false={selectedAccount}>
+                    <div class="contentCard emptyCard">
+                        <div class="emptyState large">
+                            <div class="emptyIcon large">◈</div>
+                            <div class="emptyTitle">No Account Selected</div>
+                            <div class="emptyHint">Search and select an account to see its 360° view</div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- RIGHT PANEL: tabbed view -->
+            <div class="rightPanel">
+                <template if:true={selectedAccount}>
+
+                    <!-- TAB NAV -->
+                    <div class="tabNav">
+                        <button class={tabClass_details} data-tab="details" onclick={handleTabSwitch}>Details</button>
+                        <button class={tabClass_contacts} data-tab="contacts" onclick={handleTabSwitch}>Contacts</button>
+                        <button class={tabClass_visits} data-tab="visits" onclick={handleTabSwitch}>Visits</button>
+                        <button class={tabClass_orders} data-tab="orders" onclick={handleTabSwitch}>Orders</button>
+                        <button class={tabClass_adjustments} data-tab="adjustments" onclick={handleTabSwitch}>Adjustments</button>
+                        <button class={tabClass_payments} data-tab="payments" onclick={handleTabSwitch}>Payments</button>
+                        <button class={tabClass_invoices} data-tab="invoices" onclick={handleTabSwitch}>Invoices</button>
+                        <button class={tabClass_documents} data-tab="documents" onclick={handleTabSwitch}>Docs</button>
+                    </div>
+
+                    <!-- TAB: DETAILS -->
+                    <template if:true={showTab_details}>
+                        <div class="tabContent">
+                            <div class="tabSectionTitle">Account Information</div>
+                            <div class="infoTable">
+                                <div class="infoRow">
+                                    <span class="infoKey">Account Name</span>
+                                    <span class="infoVal">{selectedAccount.Name}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Type</span>
+                                    <span class="infoVal">{selectedAccount.RecordType.Name}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Phone</span>
+                                    <span class="infoVal">{selectedAccount.Phone}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">GSTIN</span>
+                                    <span class="infoVal">{selectedAccount.GST_Number__c}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Status</span>
+                                    <span class="infoVal">
+                                        <span class={statusBadgeClass}>{selectedAccount.Dealer_Status__c}</span>
+                                    </span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Owner</span>
+                                    <span class="infoVal">{ownerName}</span>
+                                </div>
+                            </div>
+
+                            <div class="tabSectionTitle" style="margin-top:20px">Address</div>
+                            <div class="infoTable">
+                                <div class="infoRow">
+                                    <span class="infoKey">Street</span>
+                                    <span class="infoVal">{selectedAccount.BillingStreet}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">City</span>
+                                    <span class="infoVal">{selectedAccount.BillingCity}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">State</span>
+                                    <span class="infoVal">{selectedAccount.BillingState}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Postal Code</span>
+                                    <span class="infoVal">{selectedAccount.BillingPostalCode}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Country</span>
+                                    <span class="infoVal">{selectedAccount.BillingCountry}</span>
+                                </div>
+                            </div>
+
+                            <div class="tabSectionTitle" style="margin-top:20px">Visit Summary</div>
+                            <div class="infoTable">
+                                <div class="infoRow">
+                                    <span class="infoKey">Last Visit</span>
+                                    <span class="infoVal">{lastVisitDate}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Next Visit</span>
+                                    <span class="infoVal">{selectedAccount.Next_Visit_Date__c}</span>
+                                </div>
+                                <div class="infoRow">
+                                    <span class="infoKey">Visits This Month</span>
+                                    <span class="infoVal">{selectedAccount.Total_Visits_This_Month__c}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- TAB: CONTACTS -->
+                    <template if:true={showTab_contacts}>
+                        <div class="tabContent">
+                            <div class="tabContentHeader">
+                                <div class="tabSectionTitle">Contacts</div>
+                                <button class="btnMini" onclick={handleNewContact}>+ Add Contact</button>
+                            </div>
+                            <template if:true={hasContacts}>
+                                <div class="contactCardGrid">
+                                    <template for:each={contacts} for:item="con">
+                                        <div key={con.Id} class="contactCard">
+                                            <div class="contactCardAvatar">{con.initials}</div>
+                                            <div class="contactCardName">{con.Name}</div>
+                                            <div class="contactCardTitle">{con.Title}</div>
+                                            <div class="contactCardActions">
+                                                <div class="contactDetail">
+                                                    <span class="detailIcon">📞</span>
+                                                    <span>{con.Phone}</span>
+                                                </div>
+                                                <div class="contactDetail">
+                                                    <span class="detailIcon">✉️</span>
+                                                    <span>{con.Email}</span>
+                                                </div>
+                                                <div class="contactDetail">
+                                                    <span class="detailIcon">📱</span>
+                                                    <span>{con.MobilePhone}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasContacts}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">👤</div>
+                                    <div>No contacts found for this account</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: VISITS -->
+                    <template if:true={showTab_visits}>
+                        <div class="tabContent">
+                            <div class="tabContentHeader">
+                                <div class="tabSectionTitle">Visit History</div>
+                                <button class="btnMini" onclick={handleNewVisit}>+ New Visit</button>
+                            </div>
+                            <template if:true={hasVisits}>
+                                <div class="timelineList">
+                                    <template for:each={visits} for:item="visit">
+                                        <div key={visit.Id} class="timelineItem">
+                                            <div class="timelineDot"></div>
+                                            <div class="timelineCard">
+                                                <div class="timelineTop">
+                                                    <div class="timelineName">{visit.Name}</div>
+                                                    <div class={visit.statusClass}>{visit.Visit_Status__c}</div>
+                                                </div>
+                                                <div class="timelineGrid">
+                                                    <div class="tlField">
+                                                        <span class="tlKey">Date</span>
+                                                        <span class="tlVal">{visit.Visit_Date__c}</span>
+                                                    </div>
+                                                    <div class="tlField">
+                                                        <span class="tlKey">Purpose</span>
+                                                        <span class="tlVal">{visit.Visit_Purpose__c}</span>
+                                                    </div>
+                                                    <div class="tlField">
+                                                        <span class="tlKey">Check In</span>
+                                                        <span class="tlVal">{visit.Check_In_Time__c}</span>
+                                                    </div>
+                                                    <div class="tlField">
+                                                        <span class="tlKey">Check Out</span>
+                                                        <span class="tlVal">{visit.Check_out_Time__c}</span>
+                                                    </div>
+                                                    <div class="tlField">
+                                                        <span class="tlKey">Duration</span>
+                                                        <span class="tlVal">{visit.Actual_Duration__c} mins</span>
+                                                    </div>
+                                                    <div class="tlField fullSpan">
+                                                        <span class="tlKey">Remarks</span>
+                                                        <span class="tlVal">{visit.Remarks__c}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasVisits}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">🗺️</div>
+                                    <div>No visits recorded</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: ORDERS -->
+                    <template if:true={showTab_orders}>
+                        <div class="tabContent">
+                            <div class="tabSectionTitle">Orders</div>
+                            <template if:true={hasOrders}>
+                                <div class="dataTable">
+                                    <div class="tableHead" style="grid-template-columns: 1.2fr 1fr 1fr 1fr;">
+                                        <span>Order #</span>
+                                        <span>Date</span>
+                                        <span>Amount</span>
+                                        <span>Status</span>
+                                    </div>
+                                    <template for:each={orders} for:item="ord">
+                                        <div key={ord.Id} class="tableRow" style="grid-template-columns: 1.2fr 1fr 1fr 1fr;">
+                                            <span class="tdBold">{ord.OrderNumber}</span>
+                                            <span>{ord.EffectiveDate}</span>
+                                            <span class="tdAmount">₹{ord.TotalAmount}</span>
+                                            <span><div class={ord.statusClass}>{ord.Status}</div></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasOrders}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">📦</div>
+                                    <div>No orders found for this account</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: FINANCIAL ADJUSTMENTS -->
+                    <template if:true={showTab_adjustments}>
+                        <div class="tabContent">
+                            <div class="tabSectionTitle">Financial Adjustments</div>
+                            <template if:true={hasAdjustments}>
+                                <div class="dataTable">
+                                    <div class="tableHead">
+                                        <span>Name</span>
+                                        <span>Issue Date</span>
+                                        <span>Amount</span>
+                                        <span>Type</span>
+                                        <span>Status</span>
+                                    </div>
+                                    <template for:each={adjustments} for:item="adj">
+                                        <div key={adj.Id} class="tableRow">
+                                            <span class="tdBold">{adj.Name}</span>
+                                            <span>{adj.Issue_Date__c}</span>
+                                            <span class="tdAmount">₹{adj.Amount__c}</span>
+                                            <span>{adj.Type__c}</span>
+                                            <span><div class={adj.statusClass}>{adj.Status__c}</div></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasAdjustments}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">⚖️</div>
+                                    <div>No financial adjustments found</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: PAYMENTS -->
+                    <template if:true={showTab_payments}>
+                        <div class="tabContent">
+                            <div class="tabSectionTitle">Payments</div>
+                            <template if:true={hasPayments}>
+                                <div class="dataTable">
+                                    <div class="tableHead">
+                                        <span>Payment #</span>
+                                        <span>Date</span>
+                                        <span>Amount</span>
+                                        <span>Method</span>
+                                        <span>Status</span>
+                                    </div>
+                                    <template for:each={payments} for:item="pay">
+                                        <div key={pay.Id} class="tableRow">
+                                            <span class="tdBold">{pay.Name}</span>
+                                            <span>{pay.Payment_Date__c}</span>
+                                            <span class="tdAmount">₹{pay.Amount__c}</span>
+                                            <span>{pay.Payment_Mode__c}</span>
+                                            <span><div class={pay.statusClass}>{pay.Status__c}</div></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasPayments}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">💳</div>
+                                    <div>No payments recorded</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: INVOICES -->
+                    <template if:true={showTab_invoices}>
+                        <div class="tabContent">
+                            <div class="tabSectionTitle">Invoices</div>
+                            <template if:true={hasInvoices}>
+                                <div class="dataTable">
+                                    <div class="tableHead" style="grid-template-columns: 1.2fr 1fr 1fr 0.8fr;">
+                                        <span>Invoice #</span>
+                                        <span>Date</span>
+                                        <span>Amount</span>
+                                        <span>Status</span>
+                                    </div>
+                                    <template for:each={invoices} for:item="inv">
+                                        <div key={inv.Id} class="tableRow" style="grid-template-columns: 1.2fr 1fr 1fr 0.8fr;">
+                                            <span class="tdBold">{inv.Name}</span>
+                                            <span>{inv.Invoice_Date__c}</span>
+                                            <span class="tdAmount">₹{inv.Total_Amount__c}</span>
+                                            <span><div class={inv.statusClass}>{inv.Status__c}</div></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasInvoices}>
+                                <div class="emptyState">
+                                    <div class="emptyIcon">🧾</div>
+                                    <div>No invoices found</div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- TAB: DOCUMENTS -->
+                    <template if:true={showTab_documents}>
+                        <div class="tabContent">
+                            <div class="tabContentHeader">
+                                <div class="tabSectionTitle">Document Checklist</div>
+                                <button class="btnMini" onclick={handleHeaderUploadDocs}>↑ Upload</button>
+                            </div>
+                            <c-acc-doc-checklist account-id={selectedAccount.Id}>
+                            </c-acc-doc-checklist>
+                        </div>
+                    </template>
+
+                </template>
+
+                <template if:false={selectedAccount}>
+                    <div class="contentCard">
+                        <div class="emptyState large">
+                            <div class="emptyIcon large">📂</div>
+                            <div class="emptyTitle">No Account Selected</div>
+                            <div class="emptyHint">Select an account to explore its data</div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+        </div> <!-- END mainGrid -->
+
+    </div> <!-- END page -->
+
+    <!-- UPLOAD MODAL -->
+    <template if:true={isUploadModalOpen}>
+        <div class="modalBackdrop" onclick={closeUploadModal}></div>
+        <div class="modalContainer">
+            <div class="modalHeader">
+                <div class="modalTitle">Upload Documents</div>
+                <button class="modalClose" onclick={closeUploadModal}>✕</button>
+            </div>
+            <div class="modalBody">
+                <c-account-doc-uploader account-id={selectedAccount.Id} onclose={closeUploadModal}>
+                </c-account-doc-uploader>
+            </div>
+            <div class="modalFooter">
+                <button class="btnOutline" onclick={closeUploadModal}>Cancel</button>
+            </div>
+        </div>
+    </template>
+
+</template>

@@ -1,0 +1,82 @@
+<template>
+    <div class="wrapper">
+        <div class="header">
+            <div class="title">Delivery Timeline</div>
+            <div class="subtitle">Turnaround Time Tracking</div>
+        </div>
+
+        <div class="circle-container">
+            <div class="clock-circle">
+                <svg viewBox="0 0 200 200" class="progress-ring">
+                    <!-- Background circle -->
+                    <circle class="bg" cx="100" cy="100" r="85"></circle>
+
+                    <!-- Progress circle (filled based on percentage) -->
+                    <circle class={ringClass}
+                            cx="100"
+                            cy="100"
+                            r="85"
+                            stroke-dasharray="534"
+                            stroke-dashoffset={dashOffset}
+                            stroke-linecap="round">
+                    </circle>
+
+                    <!-- Inner circle for filled look -->
+                    <circle class="inner-circle" cx="100" cy="100" r="75" fill="white"></circle>
+
+                    <!-- Gradient definitions (kept for SVG ring chart) -->
+                    <defs>
+                        <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="var(--gradient-start)" />
+                            <stop offset="100%" stop-color="var(--gradient-end)" />
+                        </linearGradient>
+
+                        <linearGradient id="safeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#2E7D32" />
+                            <stop offset="100%" stop-color="#1b5e20" />
+                        </linearGradient>
+
+                        <linearGradient id="warningGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#E65100" />
+                            <stop offset="100%" stop-color="#bf360c" />
+                        </linearGradient>
+
+                        <linearGradient id="criticalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#C62828" />
+                            <stop offset="100%" stop-color="#b71c1c" />
+                        </linearGradient>
+
+                        <linearGradient id="overdueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#7f1d1d" />
+                            <stop offset="100%" stop-color="#450a0a" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+
+                <div class="center-content">
+                    <div class="days-count">{displayDays}</div>
+                    <div class="days-label">{statusText}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="timeline-info">
+                <div class="timeline-item">
+                    <div class="timeline-label">Start Date</div>
+                    <div class="timeline-value">{formattedCreatedDate}</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style={progressBarStyle}></div>
+                    </div>
+                    <div class="progress-dot" style={progressDotStyle}></div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-label">Due Date</div>
+                    <div class="timeline-value">{formattedScheduleDate}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

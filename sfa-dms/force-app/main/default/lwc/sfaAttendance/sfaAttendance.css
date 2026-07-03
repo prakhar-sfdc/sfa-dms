@@ -1,0 +1,873 @@
+:host {
+    --bg-canvas: #F2F4F7;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #F7F8FA;
+    --border: #CBD0D9;
+    --border-light: #E4E7EC;
+    --text-primary: #0B192C;
+    --text-secondary: #4A5568;
+    --text-muted: #718096;
+    --accent: #1565C0;
+    --accent-dark: #0D47A1;
+    --green: #2E7D32;
+    --green-bg: #E8F5E9;
+    --amber: #E65100;
+    --amber-bg: #FFF3E0;
+    --red: #C62828;
+    --red-bg: #FFEBEE;
+    --neutral: #4A5568;
+    --neutral-bg: #F2F4F7;
+    --tap: 48px;
+    --tap-lg: 56px;
+    --font: 'Salesforce Sans', 'Segoe UI', Arial, sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+}
+
+.attendance-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    font-family: var(--font);
+    padding: 16px;
+}
+
+/* ── Header Section ──────────────────────────────────────── */
+.attendance-header {
+    background: var(--text-primary);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    color: #FFFFFF;
+}
+
+.header-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.real-time-clock {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.clock-display {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.time {
+    font-size: 42px;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Courier New', monospace;
+    line-height: 1.2;
+}
+
+.date {
+    font-size: 13px;
+    color: #B0C4DE;
+    font-weight: 500;
+}
+
+.gps-location {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.location-info {
+    flex: 1;
+}
+
+.coordinates {
+    font-size: 12px;
+    color: #B0C4DE;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.3px;
+}
+
+.address {
+    font-size: 14px;
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.status-indicator.checked-in {
+    border-color: var(--green);
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.status-indicator.checked-out {
+    border-color: var(--neutral);
+    background: var(--neutral-bg);
+    color: var(--neutral);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.status-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.duration-display {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.duration-label {
+    font-size: 11px;
+    color: #B0C4DE;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.duration-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Action Button Section ───────────────────────────────── */
+.action-section {
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+}
+
+.checkin-btn {
+    flex: 1;
+    min-height: var(--tap-lg);
+    padding: 0 24px;
+    background: #FFFFFF;
+    color: var(--text-primary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkin-btn:hover {
+    background: #F5F5F5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.checkin-btn:active {
+    transform: translateY(1px);
+}
+
+.checkin-btn.checked-in {
+    background: var(--red);
+    color: #FFFFFF;
+    border-color: var(--red);
+}
+
+.checkin-btn.checked-in:hover {
+    background: #B71C1C;
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
+}
+
+.button-text {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* ── Map Section ─────────────────────────────────────────── */
+.map-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.map-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 12px;
+}
+
+.map-section-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.map-header-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.map-toggle-btn,
+.map-btn {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s ease;
+}
+
+.map-toggle-btn {
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+}
+
+.map-toggle-btn:hover {
+    background: var(--border-light);
+}
+
+.map-btn {
+    background: var(--accent);
+    color: #FFFFFF;
+    border-color: var(--accent);
+}
+
+.map-btn:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+}
+
+.map-wrapper {
+    height: 300px;
+    background: var(--bg-subtle);
+}
+
+.salesforce-map {
+    width: 100%;
+    height: 100%;
+}
+
+/* ── Compliance & Attendance Cards ───────────────────────── */
+.attendance-cards {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 20px;
+}
+
+.compliance-card,
+.recent-attendance-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 12px;
+}
+
+.card-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.compliance-score {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-bg);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+}
+
+.compliance-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 16px;
+    padding: 12px 0;
+    flex-wrap: wrap;
+}
+
+.dot-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.compliance-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.compliance-dot.on-time {
+    background: var(--green);
+}
+
+.compliance-dot.late {
+    background: var(--amber);
+}
+
+.compliance-dot.absent {
+    background: var(--border);
+}
+
+.dot-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.compliance-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+.summary-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.summary-badge.on-time {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.summary-badge.late {
+    background: var(--amber-bg);
+    color: var(--amber);
+}
+
+.summary-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.view-all-btn {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.view-all-btn:hover {
+    color: var(--accent-dark);
+}
+
+.loading-state {
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+.attendance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.attendance-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    min-height: var(--tap);
+    transition: background 0.2s ease;
+}
+
+.attendance-item:hover {
+    background: var(--border-light);
+}
+
+.attendance-date {
+    flex-shrink: 0;
+    width: 56px;
+    text-align: center;
+}
+
+.att-day {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.att-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.attendance-times {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+}
+
+.time-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.time-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.time-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+.attendance-action {
+    flex-shrink: 0;
+}
+
+.eye-btn {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+}
+
+.eye-btn:hover {
+    background: var(--bg-surface);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status.checked-in {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.status.checked-out {
+    background: var(--neutral-bg);
+    color: var(--neutral);
+}
+
+/* ── Attendance Modal ────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 25, 44, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.att-modal {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font);
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: var(--red);
+}
+
+.modal-body {
+    padding: 24px;
+    flex: 1;
+}
+
+.modal-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.modal-column {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+}
+
+.checkin-header {
+    background: var(--green-bg);
+    border-color: var(--green);
+}
+
+.checkout-header {
+    background: var(--amber-bg);
+    border-color: var(--amber);
+}
+
+.checkin-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green);
+    margin: 0;
+}
+
+.checkout-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--amber);
+    margin: 0;
+}
+
+.time-badge {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 4px 10px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-family: 'Courier New', monospace;
+}
+
+.details-card {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    min-height: 40px;
+    gap: 12px;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    font-family: 'Courier New', monospace;
+}
+
+.mini-map-wrap {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    height: 180px;
+}
+
+.small-map {
+    width: 100%;
+    height: 100%;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-subtle);
+    flex-shrink: 0;
+}
+
+.secondary-btn,
+.primary-btn {
+    min-height: var(--tap);
+    padding: 0 24px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.secondary-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.secondary-btn:hover {
+    background: var(--bg-subtle);
+}
+
+.primary-btn {
+    background: var(--accent);
+    color: #FFFFFF;
+    border: 1px solid var(--accent);
+}
+
+.primary-btn:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+}
+
+/* ── Responsive Design ───────────────────────────────────── */
+@media (max-width: 1023px) {
+    .attendance-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .header-left {
+        order: 1;
+    }
+
+    .header-right {
+        order: 2;
+        align-items: stretch;
+    }
+
+    .action-section {
+        padding: 0 16px;
+    }
+
+    .checkin-btn {
+        min-height: var(--tap-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .attendance-container {
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .attendance-header {
+        padding: 16px 20px;
+    }
+
+    .modal-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .time {
+        font-size: 32px;
+    }
+
+    .map-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .map-header-controls {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .map-toggle-btn,
+    .map-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .compliance-dots {
+        gap: 6px;
+    }
+
+    .compliance-dot {
+        width: 14px;
+        height: 14px;
+    }
+
+    .att-modal {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .secondary-btn,
+    .primary-btn {
+        width: 100%;
+    }
+}

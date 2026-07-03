@@ -1,0 +1,324 @@
+<template>
+    <div class="ai-analytics-container">
+        <template if:true={isAILoading}>
+            <div class="ai-loading-banner">
+                <div class="ai-spinner"></div>
+                <span>Einstein is analysing your field data…</span>
+            </div>
+        </template>
+        <template if:true={aiLoadError}>
+            <div class="ai-error-banner">
+                <span>⚠️ {aiLoadError}</span>
+                <button onclick={refreshAIInsights}>Retry</button>
+            </div>
+        </template>
+
+        <!-- Header -->
+        <div class="ai-header">
+            <div class="header-left">
+                <h1>AI & Analytics</h1>
+                <p class="subtitle">Smart insights and performance metrics</p>
+            </div>
+            <div class="header-right">
+                <div class="ai-status">
+                    <span class="ai-indicator active"></span>
+                    <span class="ai-status-text">AI Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Overview -->
+        <div class="kpi-section">
+            <div class="section-header">
+                <h2>🎯 AI Recommendations – KPI Overview</h2>
+                <button class="refresh-btn" onclick={refreshAIInsights}>🔄 Refresh</button>
+            </div>
+            <div class="kpi-cards-container">
+                <div class="kpi-cards-scroll">
+                    <template for:each={aiData.kpis} for:item="kpi">
+                        <div key={kpi.id} class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-title">{kpi.title}</div>
+                                <div class={kpi.trendClass}>
+                                    <span class="trend-icon">{kpi.trendIcon}</span>
+                                    {kpi.trend}
+                                </div>
+                            </div>
+                            <div class="kpi-value">{kpi.value}</div>
+                            <div class="kpi-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style={kpi.progressStyle}></div>
+                                </div>
+                                <div class="progress-label">
+                                    <span class="target">Target: {kpi.target}</span>
+                                    <span class="achievement">Achievement: {kpi.achievement}</span>
+                                </div>
+                            </div>
+                            <div class="kpi-insight">
+                                <div class="insight-icon">💡</div>
+                                <div class="insight-text">{kpi.insight}</div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI-Powered Insights -->
+        <div class="insights-section">
+            <div class="section-header">
+                <h2>🤖 AI-Powered Insights</h2>
+                <div class="section-subtitle">Personalized recommendations for you</div>
+            </div>
+            <div class="insights-grid">
+                <template for:each={aiData.insights} for:item="insight">
+                    <div key={insight.id} class={insight.cardClass}>
+                        <div class="insight-header">
+                            <div class={insight.priorityBadgeClass}>{insight.priorityLabel}</div>
+                            <div class="insight-title">{insight.title}</div>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-detail">
+                                <span class="detail-label">{insight.metric1Label}</span>
+                                <span class="detail-value">{insight.metric1Value}</span>
+                            </div>
+                            <template if:true={insight.hasMetric2}>
+                                <div class="insight-detail">
+                                    <span class="detail-label">{insight.metric2Label}</span>
+                                    <span class="detail-value">{insight.metric2Value}</span>
+                                </div>
+                            </template>
+                            <div class="ai-recommendation">
+                                <div class="rec-icon">{insight.icon}</div>
+                                <div class="rec-text">{insight.recommendation}</div>
+                            </div>
+                            <div class={insight.impactClass}>
+                                <div class="impact-icon">{insight.impactIcon}</div>
+                                <div class="impact-text">{insight.impact}</div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>📊 Weekly Performance Summary</h3>
+                        <button class="chart-action" onclick={exportWeeklyData}>Export</button>
+                    </div>
+                    <div class="chart-content">
+                        <div class="weekly-table">
+                            <div class="table-header" style="grid-template-columns: 1fr 1fr 1fr;">
+                                <div class="table-cell">Day</div>
+                                <div class="table-cell">Performance</div>
+                                <div class="table-cell">Conversion</div>
+                            </div>
+                            <div class="table-body">
+                                <template for:each={aiData.weeklyPerformance} for:item="day">
+                                    <div key={day.day} class="table-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                                        <div class="table-cell">{day.day}</div>
+                                        <div class="table-cell">{day.summary}</div>
+                                        <div class={day.conversionClass}>{day.conversion}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>🏆 Top Performing Products</h3>
+                        <div class="time-filter">This Month</div>
+                    </div>
+                    <div class="chart-content">
+                        <div class="product-list">
+                            <template for:each={aiData.topProducts} for:item="product">
+                                <div key={product.rank} class="product-item">
+                                    <div class="product-rank">{product.rank}</div>
+                                    <div class="product-info">
+                                        <div class="product-name">{product.name}</div>
+                                        <div class="product-meta">
+                                            <span class="meta-item">Growth: <span class="positive">{product.growth}</span></span>
+                                            <span class="meta-item">Qty: {product.quantity}</span>
+                                        </div>
+                                    </div>
+                                    <div class="product-revenue">{product.revenue}</div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3>📈 Dealer Performance Analysis</h3>
+                    <button class="chart-action" onclick={exportDealerData}>Export Report</button>
+                </div>
+                <div class="chart-content">
+                    <div class="dealer-table">
+                        <div class="table-header" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;">
+                            <div class="table-cell">Dealer Name</div>
+                            <div class="table-cell">Revenue</div>
+                            <div class="table-cell">Visits</div>
+                            <div class="table-cell">Orders</div>
+                            <div class="table-cell">Trend</div>
+                            <div class="table-cell">AI Action</div>
+                        </div>
+                        <div class="table-body">
+                            <template for:each={aiData.dealerPerformance} for:item="dealer">
+                                <div key={dealer.id} class="table-row" onclick={viewDealerRecommendations}
+                                    data-dealer={dealer.name}
+                                    style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;">
+                                    <div class="table-cell">{dealer.name}</div>
+                                    <div class="table-cell">{dealer.revenue}</div>
+                                    <div class="table-cell">{dealer.visits}</div>
+                                    <div class="table-cell">{dealer.orders}</div>
+                                    <div class="table-cell">
+                                        <span class={dealer.trendClass}>{dealer.trendText}</span>
+                                    </div>
+                                    <div class="table-cell">
+                                        <button class={dealer.actionBtnClass}>View Rec.</button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Checklist -->
+        <div class="action-section">
+            <div class="section-header">
+                <h2>🎯 Sales Rep AI Recommendations</h2>
+                <div class="section-subtitle">Your personalized action checklist</div>
+            </div>
+            <div class="action-checklist">
+                <template for:each={aiData.actionItems} for:item="action">
+                    <div key={action.id} class={action.itemClass}>
+                        <div class="action-icon">{action.icon}</div>
+                        <div class="action-content">
+                            <div class="action-title">{action.title}</div>
+                            <div class="action-detail">{action.detail}</div>
+                            <div class="action-suggestion">{action.suggestion}</div>
+                        </div>
+                        <button class={action.buttonClass}
+                            onclick={handleActionDispatch}
+                            data-id={action.id}
+                            data-dealer={action.dealerName}
+                            data-type={action.actionType}>
+                            {action.buttonText}
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Competitor Analysis -->
+        <div class="competitor-section">
+            <div class="section-header">
+                <div>
+                    <h2>🏆 Competitor Market Analysis</h2>
+                    <div class="section-subtitle">AI-powered competitive intelligence from field data</div>
+                </div>
+                <button class="refresh-btn" onclick={refreshAIInsights}>🔄 Refresh</button>
+            </div>
+
+            <template if:true={hasCompetitorData}>
+                <div class="comp-summary-strip">
+                    <div class="comp-summary-item">
+                        <div class="comp-summary-value">{competitorSummary.total}</div>
+                        <div class="comp-summary-label">Records Analysed</div>
+                    </div>
+                    <div class="comp-summary-item threat-high">
+                        <div class="comp-summary-value">{competitorSummary.highThreat}</div>
+                        <div class="comp-summary-label">High Threat</div>
+                    </div>
+                    <div class="comp-summary-item threat-medium">
+                        <div class="comp-summary-value">{competitorSummary.mediumThreat}</div>
+                        <div class="comp-summary-label">Medium Threat</div>
+                    </div>
+                    <div class="comp-summary-item threat-low">
+                        <div class="comp-summary-value">{competitorSummary.lowThreat}</div>
+                        <div class="comp-summary-label">Low Threat</div>
+                    </div>
+                    <div class="comp-summary-item">
+                        <div class="comp-summary-value">{competitorSummary.weCheaper}</div>
+                        <div class="comp-summary-label">Price Advantage</div>
+                    </div>
+                </div>
+                <div class="comp-cards-grid">
+                    <template for:each={aiData.competitorAnalysis} for:item="comp">
+                        <div key={comp.id} class={comp.cardClass}>
+                            <div class="comp-card-header">
+                                <div class="comp-card-title-row">
+                                    <div class="comp-brand-icon">🏢</div>
+                                    <div class="comp-card-titles">
+                                        <div class="comp-competitor-name">{comp.competitorName}</div>
+                                        <div class="comp-account-name">📍 {comp.accountName}</div>
+                                    </div>
+                                    <div class={comp.threatBadgeClass}>{comp.threatLabel}</div>
+                                </div>
+                            </div>
+                            <div class="comp-product-row">
+                                <div class="comp-product-us">
+                                    <div class="comp-product-label">Our Product</div>
+                                    <div class="comp-product-name">{comp.ourProduct}</div>
+                                </div>
+                                <div class="comp-vs-badge">VS</div>
+                                <div class="comp-product-them">
+                                    <div class="comp-product-label">Competitor</div>
+                                    <div class="comp-product-name">{comp.competitorProduct}</div>
+                                </div>
+                            </div>
+                            <div class="comp-metrics-row">
+                                <div class="comp-metric-box">
+                                    <div class="comp-metric-label">Our Price</div>
+                                    <div class="comp-metric-value our-value">{comp.ourPrice}</div>
+                                </div>
+                                <div class="comp-metric-box">
+                                    <div class="comp-metric-label">Their Price</div>
+                                    <div class="comp-metric-value their-value">{comp.competitorPrice}</div>
+                                </div>
+                                <div class="comp-metric-box">
+                                    <div class="comp-metric-label">Difference</div>
+                                    <div class={comp.priceDiffClass}>{comp.priceDifference}</div>
+                                </div>
+                            </div>
+                            <div class="comp-tags-row">
+                                <span class={comp.demandBadgeClass}>📈 {comp.demandTrend}</span>
+                                <span class={comp.prefBadgeClass}>❤️ {comp.dealerPreference}</span>
+                                <span class="comp-tag-neutral">👁 {comp.displayVisibility}</span>
+                                <template if:true={comp.isPromoActive}>
+                                    <span class="comp-tag-promo">🎁 Promo Active</span>
+                                </template>
+                            </div>
+                            <div class="comp-ai-insight">
+                                <div class="comp-insight-icon">🤖</div>
+                                <div class="comp-insight-text">{comp.aiInsight}</div>
+                            </div>
+                            <div class="comp-action-row">
+                                <div class="comp-action-icon">🎯</div>
+                                <div class="comp-action-text">{comp.recommendedAction}</div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={hasCompetitorData}>
+                <div class="comp-empty-state">
+                    <div class="comp-empty-icon">📊</div>
+                    <div class="comp-empty-title">No Competitor Data Available</div>
+                    <div class="comp-empty-subtitle">Competitor market analysis records will appear here once field reps log competitor observations during visits.</div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

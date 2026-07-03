@@ -1,0 +1,154 @@
+<template>
+    <div class="po-root">
+
+        <!-- ══════════════════════════════════════
+             LIST VIEW
+        ══════════════════════════════════════ -->
+        <template if:true={showList}>
+
+            <!-- Page Header -->
+            <div class="po-page-header">
+                <div class="po-page-header__left">
+                    <h1 class="po-page-header__title">Primary Orders</h1>
+                    <p class="po-page-header__sub">All orders with Record Type: Primary</p>
+                </div>
+                <div class="po-page-header__right">
+                    <button class="po-btn po-btn--create" onclick={handleCreateOrder}>
+                        + New Order
+                    </button>
+                    <button class="po-btn po-btn--ghost" onclick={handleRefresh}>
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Strip -->
+            <div class="po-summary-strip">
+                <div class="po-summary-card">
+                    <div class="po-summary-card__icon">📦</div>
+                    <div class="po-summary-card__body">
+                        <span class="po-summary-card__label">Total Orders</span>
+                        <span class="po-summary-card__value">{totalCount}</span>
+                    </div>
+                </div>
+                <div class="po-summary-card po-summary-card--activated">
+                    <div class="po-summary-card__icon">✅</div>
+                    <div class="po-summary-card__body">
+                        <span class="po-summary-card__label">Activated</span>
+                        <span class="po-summary-card__value">{activatedCount}</span>
+                    </div>
+                </div>
+                <div class="po-summary-card po-summary-card--draft">
+                    <div class="po-summary-card__icon">✏️</div>
+                    <div class="po-summary-card__body">
+                        <span class="po-summary-card__label">Draft</span>
+                        <span class="po-summary-card__value">{draftCount}</span>
+                    </div>
+                </div>
+                <div class="po-summary-card po-summary-card--value">
+                    <div class="po-summary-card__icon">💰</div>
+                    <div class="po-summary-card__body">
+                        <span class="po-summary-card__label">Total Value</span>
+                        <span class="po-summary-card__value">{totalValue}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Row -->
+            <div class="po-filters-row">
+                <div class="po-search-wrap">
+                    <span class="po-search-wrap__icon">🔍</span>
+                    <input
+                        type="text"
+                        class="po-search-wrap__input"
+                        placeholder="Search order number or account…"
+                        value={searchTerm}
+                        onkeyup={handleSearch}
+                    />
+                </div>
+                <div class="po-status-pills">
+                    <template for:each={statusPills} for:item="pill">
+                        <button
+                            key={pill.value}
+                            class={pill.pillClass}
+                            data-status={pill.value}
+                            onclick={handleStatusFilter}>
+                            {pill.label}
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="po-table-card">
+                <div class="po-table-head">
+                    <div class="po-th po-col--num">Order #</div>
+                    <div class="po-th po-col--account">Account</div>
+                    <div class="po-th po-col--status">Status</div>
+                    <div class="po-th po-col--amount">Amount</div>
+                    <div class="po-th po-col--date">Effective Date</div>
+                    <div class="po-th po-col--end">End Date</div>
+                    <div class="po-th po-col--owner">Owner</div>
+                    <div class="po-th po-col--action">Action</div>
+                </div>
+
+                <template if:true={isLoading}>
+                    <div class="po-state-box">
+                        <div class="po-spinner"></div>
+                        <span class="po-state-box__text">Loading orders…</span>
+                    </div>
+                </template>
+
+                <template if:true={isEmpty}>
+                    <div class="po-state-box po-state-box--empty">
+                        <div class="po-state-box__icon">📭</div>
+                        <div class="po-state-box__title">No primary orders found</div>
+                        <div class="po-state-box__text">Try adjusting your search or filters</div>
+                    </div>
+                </template>
+
+                <template if:true={hasOrders}>
+                    <div class="po-table-body">
+                        <template for:each={filteredOrders} for:item="order">
+                            <div key={order.id} class="po-table-row">
+                                <div class="po-td po-col--num">
+                                    <span class="po-order-num">{order.orderNumber}</span>
+                                </div>
+                                <div class="po-td po-col--account">{order.accountName}</div>
+                                <div class="po-td po-col--status">
+                                    <span class={order.statusClass}>{order.status}</span>
+                                </div>
+                                <div class="po-td po-col--amount">
+                                    <span class="po-amount">{order.formattedAmount}</span>
+                                </div>
+                                <div class="po-td po-col--date">{order.effectiveDate}</div>
+                                <div class="po-td po-col--end">{order.endDate}</div>
+                                <div class="po-td po-col--owner">{order.ownerName}</div>
+                                <div class="po-td po-col--action">
+                                    <button
+                                        class="po-btn po-btn--view"
+                                        data-id={order.id}
+                                        onclick={handleViewDetail}>
+                                        👁 View
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+        </template>
+
+        <!-- ══════════════════════════════════════
+             DETAIL VIEW
+        ══════════════════════════════════════ -->
+        <template if:true={showDetail}>
+            <c-sfa-primary-order-detail
+                record-id={detailRecordId}
+                onback={handleBackFromDetail}>
+            </c-sfa-primary-order-detail>
+        </template>
+
+    </div>
+</template>

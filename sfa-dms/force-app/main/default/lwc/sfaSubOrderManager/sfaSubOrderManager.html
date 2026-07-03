@@ -1,0 +1,94 @@
+<template>
+    <div class="full-width-container">
+        <lightning-card title="Create Sub Orders" icon-name="standard:orders" class="modern-card">
+
+            <!-- Step 1: Select number of suborders -->
+            <template if:true={step1}>
+                <div class="step1-container">
+                    <div class="step1-card">
+                        <lightning-input type="number"
+                                         label="How many Sub Orders?"
+                                         value={subOrderCount}
+                                         onchange={handleSubOrderCountChange}
+                                         class="input-modern">
+                        </lightning-input>
+                        <div class="button-row step1-buttons">
+                            <lightning-button variant="brand"
+                                              label="Next"
+                                              class="next-btn"
+                                              onclick={goToStep2}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Step 2: Sub Orders Table -->
+            <template if:true={step2}>
+                <div class="table-wrapper">
+                    <template for:each={subOrders} for:item="so">
+                        <div key={so.rowKey} class="suborder-block">
+                            <!-- Suborder Header -->
+                            <div class="suborder-header">
+                                <div class="suborder-label">Sub Order Name</div>
+                                <lightning-input type="text"
+                                                 value={so.name}
+                                                 data-index={so.index}
+                                                 onchange={handleSubOrderNameChange}
+                                                 class="suborder-name-input"
+                                                 variant="label-hidden">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Products Table -->
+                            <div class="table-responsive">
+                                <table class="products-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={so.productSplits} for:item="prod">
+                                            <tr key={prod.rowKey}>
+                                                <td data-label="Product">{prod.productName}</td>
+                                                <td data-label="Quantity">
+                                                    <lightning-input type="number"
+                                                                     value={prod.quantity}
+                                                                     data-so-index={so.index}
+                                                                     data-prod-index={prod.index}
+                                                                     onchange={handleQuantityChange}
+                                                                     variant="label-hidden"
+                                                                     class="compact-input">
+                                                    </lightning-input>
+                                                </td>
+                                                <td data-label="Subtotal" class="subtotal-cell">{prod.subtotal}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Navigation buttons -->
+                <div class="button-row step2-buttons">
+                    <lightning-button variant="neutral"
+                                      label="Back"
+                                      class="back-btn"
+                                      onclick={goBackToStep1}>
+                    </lightning-button>
+                    <lightning-button variant="brand"
+                                      label="Save Sub Orders"
+                                      class="save-btn"
+                                      onclick={handleSave}>
+                    </lightning-button>
+                </div>
+            </template>
+
+        </lightning-card>
+    </div>
+</template>

@@ -1,0 +1,149 @@
+:host {
+    --bg-canvas:      #F2F4F7;
+    --bg-surface:     #FFFFFF;
+    --bg-subtle:      #F7F8FA;
+    --border:         #CBD0D9;
+    --border-light:   #E4E7EC;
+    --text-primary:   #0B192C;
+    --text-secondary: #4A5568;
+    --text-muted:     #718096;
+    --accent:         #1565C0;
+    --green:          #2E7D32; --green-bg: #E8F5E9;
+    --red:            #C62828; --red-bg:   #FFEBEE;
+    --tap:            48px;
+    --tap-lg:         56px;
+    --font: 'Salesforce Sans', 'Segoe UI', Arial, sans-serif;
+    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+}
+
+.account-onboarding-container { padding: 0; font-family: var(--font); }
+
+.onboarding-header {
+    background: var(--text-primary);
+    color: #FFFFFF;
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+.onboarding-header h1 { font-size: 22px; margin: 0 0 4px; font-weight: 700; color: #FFFFFF; }
+.onboarding-header .subtitle { font-size: 13px; margin: 0; color: #9FB3CC; }
+
+.onboarding-content { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+
+.onboarding-form-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+}
+
+.form-header { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light); }
+.form-header h2 { font-size: 16px; color: var(--text-primary); margin: 0 0 4px; font-weight: 700; }
+.form-subtitle { color: var(--text-muted); font-size: 13px; margin: 0; }
+
+.form-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+.form-section:last-of-type { border-bottom: none; margin-bottom: 0; }
+
+.section-title { font-size: 14px; color: var(--text-primary); margin: 0 0 14px; font-weight: 700; }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group.full-width { grid-column: 1 / -1; }
+
+.form-group label { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+.required { color: var(--red); }
+
+.form-input, .form-select, .form-textarea {
+    min-height: var(--tap);
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: var(--font);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    transition: border-color 0.15s;
+}
+
+.form-textarea { min-height: 80px; padding: 10px 12px; resize: vertical; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+
+.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.error-message { font-size: 12px; color: var(--red); margin-top: 3px; min-height: 16px; }
+
+.form-actions { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light); text-align: right; }
+
+.submit-btn {
+    min-height: var(--tap-lg);
+    padding: 0 28px;
+    background: var(--green);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+}
+.submit-btn:hover:not(:disabled) { background: #1b5e20; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success state */
+.success-state { text-align: center; padding: 40px 24px; }
+.checkmark-container {
+    width: 64px; height: 64px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+}
+.checkmark { color: #FFFFFF; font-size: 30px; font-weight: bold; }
+.success-title { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; font-weight: 700; }
+.success-message { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.success-actions { display: flex; gap: 12px; justify-content: center; }
+
+.success-action-btn {
+    min-height: var(--tap);
+    padding: 0 20px;
+    background: var(--accent);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.15s;
+}
+.success-action-btn:hover { background: #0D47A1; }
+.success-action-btn.secondary { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); }
+.success-action-btn.secondary:hover { background: var(--bg-subtle); border-color: var(--accent); }
+
+/* Tips sidebar */
+.onboarding-tips { position: sticky; top: 20px; height: fit-content; }
+.tips-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+.tips-title { font-size: 14px; color: var(--text-primary); margin: 0 0 14px; font-weight: 700; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+.tips-list { display: flex; flex-direction: column; gap: 14px; }
+.tip-item { display: flex; gap: 12px; align-items: flex-start; }
+.tip-icon { font-size: 18px; width: 36px; height: 36px; background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tip-content h4 { font-size: 13px; color: var(--text-primary); margin: 0 0 2px; font-weight: 600; }
+.tip-content p  { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+@media (max-width: 1023px) { .onboarding-content { grid-template-columns: 1fr; } .onboarding-tips { position: static; } }
+@media (max-width: 768px)  { .form-grid { grid-template-columns: 1fr; } .success-actions { flex-direction: column; } .submit-btn { width: 100%; justify-content: center; } .success-action-btn { width: 100%; text-align: center; } }
