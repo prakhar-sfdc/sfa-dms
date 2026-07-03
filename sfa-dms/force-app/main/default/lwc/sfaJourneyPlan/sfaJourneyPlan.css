@@ -202,6 +202,10 @@
 }
 .week-card:hover { border-color: var(--accent); }
 .week-card.today { border-color: var(--accent); border-width: 2px; }
+.week-card.selected { border-color: var(--accent); border-width: 2px; background: var(--blue-bg); }
+
+/* Inline day drill-down panel (week/month) */
+.inline-day { margin-top: 4px; }
 .wk-day { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
 .wk-date { font-size: 20px; font-weight: 700; margin: 2px 0; }
 .wk-visits { font-size: 12px; font-weight: 600; }
@@ -219,6 +223,7 @@
 }
 .month-day:hover { border-color: var(--accent); }
 .month-day.today { border-color: var(--accent); border-width: 2px; }
+.month-day.selected { border-color: var(--accent); border-width: 2px; background: var(--blue-bg); }
 .month-day.blank { background: transparent; border: none; cursor: default; }
 .md-top { display: flex; justify-content: space-between; align-items: center; }
 .md-num { font-size: 13px; font-weight: 700; }

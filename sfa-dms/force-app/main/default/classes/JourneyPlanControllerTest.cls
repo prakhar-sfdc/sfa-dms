@@ -84,6 +84,21 @@ private class JourneyPlanControllerTest {
     }
 
     @isTest
+    static void testUpdateVisitNotes() {
+        String today = String.valueOf(Date.today());
+        String i1 = JourneyPlanController.addVisit(acctId('Acme Distributors'), today, '09:30', 'Product Demo', 'High');
+        JourneyPlanController.saveVisitOutcome(i1, 'Successful', 'first');
+
+        Test.startTest();
+        JourneyPlanController.updateVisitNotes(i1, 'updated note only');
+        Test.stopTest();
+
+        Journey_Plan_Item__c rec = [SELECT Visit_Notes__c, Visit_Outcome__c FROM Journey_Plan_Item__c WHERE Id = :i1];
+        System.assertEquals('updated note only', rec.Visit_Notes__c, 'notes updated');
+        System.assertEquals('Successful', rec.Visit_Outcome__c, 'outcome preserved (not clobbered)');
+    }
+
+    @isTest
     static void testMarketAnalysis() {
         String today = String.valueOf(Date.today());
         String i1 = JourneyPlanController.addVisit(acctId('Acme Distributors'), today, '09:30', 'Product Demo', 'High');

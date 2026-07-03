@@ -488,6 +488,12 @@ public with sharing class JourneyPlanController {
         update new Journey_Plan_Item__c(Id = itemId, Visit_Outcome__c = outcome, Visit_Notes__c = notes);
     }
 
+    // Notes-only update (does not touch Visit_Outcome__c)
+    @AuraEnabled
+    public static void updateVisitNotes(String itemId, String notes) {
+        update new Journey_Plan_Item__c(Id = itemId, Visit_Notes__c = notes);
+    }
+
     // =========================================================================
     // READ — SINGLE ITEM DETAIL
     // =========================================================================

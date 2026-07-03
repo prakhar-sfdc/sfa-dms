@@ -1,13 +1,10 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getDayPlan from '@salesforce/apex/JourneyPlanController.getDayPlan';
 import getWeekPlan from '@salesforce/apex/JourneyPlanController.getWeekPlan';
 import getMonthPlan from '@salesforce/apex/JourneyPlanController.getMonthPlan';
 import getVisitCountsForRange from '@salesforce/apex/JourneyPlanController.getVisitCountsForRange';
 import searchAccounts from '@salesforce/apex/JourneyPlanController.searchAccounts';
 import addVisit from '@salesforce/apex/JourneyPlanController.addVisit';
-import reorderVisits from '@salesforce/apex/JourneyPlanController.reorderVisits';
-import deleteVisit from '@salesforce/apex/JourneyPlanController.deleteVisit';
 import uploadPlanCsv from '@salesforce/apex/JourneyPlanController.uploadPlanCsv';
 
 const PURPOSES = ['Quarterly Review','Product Demo','Contract Renewal','Order Delivery','Stock Check',
@@ -20,18 +17,21 @@ export default class SfaJourneyPlan extends LightningElement {
     @track selectedView = 'day';
     @track selectedDate = new Date();
 
-    // Day
+    // Day (metric strip fed by child's `loaded` event)
     @track plan = {};
-    @track dayItems = [];
-    @track isLoading = false;
 
     // Week
     @track weekDays = [];
     @track weekRange = '';
+    @track weekExpandedISO = null;
 
     // Month
     @track monthCells = [];
     @track calLabel = '';
+    @track monthExpandedISO = null;
+
+    // Add-visit target date (day/week/month selected day)
+    addForDate;
 
     // Calendar popup
     @track showCalendar = false;
@@ -58,8 +58,20 @@ export default class SfaJourneyPlan extends LightningElement {
     purposeOptions = PURPOSES.map(p => ({ label: p, value: p }));
     priorityOptions = PRIORITIES.map(p => ({ label: p, value: p }));
 
-    connectedCallback() {
-        this.loadDay();
+    // Day view child self-loads via plan-date; nothing to preload here.
+
+    // ── Child (sfaDayVisits) event handlers ───────────────────
+    handleDayLoaded(event) { this.plan = event.detail.plan || {}; }
+    handleChildAdd(event) {
+        this.addForDate = (event.detail && event.detail.date) || this.selectedISO;
+        this.openAddVisit();
+    }
+    handleDataChanged() {
+        if (this.isWeekView) this.loadWeek(true);
+        else if (this.isMonthView) this.loadMonth(true);
+    }
+    refreshVisibleChildren() {
+        this.template.querySelectorAll('c-sfa-day-visits').forEach(c => c.refresh());
     }
 
     // ── View state ────────────────────────────────────────────
@@ -73,9 +85,11 @@ export default class SfaJourneyPlan extends LightningElement {
 
     changeView(event) {
         this.selectedView = event.currentTarget.dataset.view;
-        if (this.isDayView) this.loadDay();
-        else if (this.isWeekView) this.loadWeek();
-        else this.loadMonth();
+        this.weekExpandedISO = null;
+        this.monthExpandedISO = null;
+        if (this.isWeekView) this.loadWeek();
+        else if (this.isMonthView) this.loadMonth();
+        // Day view: child renders with plan-date={selectedISO} and self-loads.
     }
 
     // ── ISO helpers ───────────────────────────────────────────
@@ -90,37 +104,7 @@ export default class SfaJourneyPlan extends LightningElement {
         return this.selectedDate.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     }
 
-    // ── DAY ───────────────────────────────────────────────────
-    loadDay() {
-        this.isLoading = true;
-        getDayPlan({ planDate: this.selectedISO })
-            .then(res => {
-                this.plan = res || {};
-                this.dayItems = (res && res.items ? res.items : []).map((it, idx) => this.decorateItem(it, idx));
-            })
-            .catch(err => this.toastError('Load day', err))
-            .finally(() => { this.isLoading = false; });
-    }
-
-    decorateItem(it, idx) {
-        const isCompleted = it.status === 'Completed';
-        const isInProgress = it.status === 'In Progress';
-        return {
-            ...it,
-            seq: idx + 1,
-            priorityClass: `pill priority-${(it.priority || 'Medium').toLowerCase()}`,
-            statusClass: `pill status-${this.slug(it.status)}`,
-            isCompleted,
-            isInProgress,
-            distanceDisplay: (it.distanceFromPrev !== null && it.distanceFromPrev !== undefined)
-                ? `${it.distanceFromPrev} km` : '—',
-            durationDisplay: it.actualDuration ? this.fmtMins(it.actualDuration) : '—',
-            travelDisplay: it.travelFromPrev ? this.fmtMins(it.travelFromPrev) : '—',
-            showRoute: isCompleted
-        };
-    }
-
-    // metric getters (day)
+    // ── DAY metric getters (fed by child's `loaded` event) ────
     get plannedCount() { return this.plan.plannedVisits || 0; }
     get completedCount() { return this.plan.completedVisits || 0; }
     get pendingCount() { return this.plan.pendingVisits || 0; }
@@ -132,48 +116,59 @@ export default class SfaJourneyPlan extends LightningElement {
         const p = this.plannedCount ? Math.round((this.completedCount / this.plannedCount) * 100) : 0;
         return `width:${p}%`;
     }
-    get hasItems() { return this.dayItems.length > 0; }
-
+    // Day nav — child reacts to selectedISO change and self-loads.
     prevDate() { this.shiftDate(-1); }
     nextDate() { this.shiftDate(1); }
     shiftDate(days) {
         const d = new Date(this.selectedDate);
         d.setDate(d.getDate() + days);
         this.selectedDate = d;
-        this.loadDay();
     }
 
     // ── WEEK ──────────────────────────────────────────────────
-    loadWeek() {
+    loadWeek(preserveExpanded) {
+        if (!preserveExpanded) this.weekExpandedISO = null;
         const start = this.startOfWeek(this.selectedDate);
         getWeekPlan({ weekStart: this.toISO(start) })
             .then(res => {
                 this.weekDays = (res || []).map(w => ({
                     ...w,
                     dateLabel: this.dayNumFromISO(w.dateStr),
-                    distanceDisplay: `${(w.distance || 0).toFixed(1)} km`,
-                    cardClass: w.isToday ? 'week-card today' : 'week-card'
+                    distanceDisplay: `${(w.distance || 0).toFixed(1)} km`
                 }));
                 const end = new Date(start); end.setDate(end.getDate() + 6);
                 this.weekRange = `${start.toLocaleDateString('en-IN',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en-IN',{month:'short',day:'numeric'})}`;
             })
             .catch(err => this.toastError('Load week', err));
     }
+    // Overlay the "selected" highlight without reloading
+    get weekDaysView() {
+        return this.weekDays.map(w => ({
+            ...w,
+            cardClass: `week-card${w.isToday ? ' today' : ''}${w.dateStr === this.weekExpandedISO ? ' selected' : ''}`
+        }));
+    }
     get weekPlannedTotal() { return this.weekDays.reduce((s, w) => s + (w.planned || 0), 0); }
     get weekCompletedTotal() { return this.weekDays.reduce((s, w) => s + (w.completed || 0), 0); }
     get weekDistanceTotal() { return `${this.weekDays.reduce((s, w) => s + (w.distance || 0), 0).toFixed(1)} km`; }
+    get expandedDayLabel() {
+        const iso = this.weekExpandedISO || this.monthExpandedISO;
+        if (!iso) return '';
+        return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
 
     prevWeek() { this.shiftDate(-7); this.loadWeek(); }
     nextWeek() { this.shiftDate(7); this.loadWeek(); }
 
+    // Open the day inline below the grid (no navigation); toggle off if same day
     selectWeekDay(event) {
-        this.selectedDate = new Date(event.currentTarget.dataset.date + 'T00:00:00');
-        this.selectedView = 'day';
-        this.loadDay();
+        const iso = event.currentTarget.dataset.date;
+        this.weekExpandedISO = this.weekExpandedISO === iso ? null : iso;
     }
 
     // ── MONTH ─────────────────────────────────────────────────
-    loadMonth() {
+    loadMonth(preserveExpanded) {
+        if (!preserveExpanded) this.monthExpandedISO = null;
         const y = this.selectedDate.getFullYear();
         const m = this.selectedDate.getMonth();
         this.calLabel = `${MONTHS[m]} ${y}`;
@@ -203,6 +198,13 @@ export default class SfaJourneyPlan extends LightningElement {
     }
     get monthPlannedTotal() { return this.monthCells.reduce((s, c) => s + (c.planned || 0), 0); }
     get monthActiveDays() { return this.monthCells.filter(c => c.hasVisits).length; }
+    // Overlay "selected" highlight on the clicked day cell
+    get monthCellsView() {
+        return this.monthCells.map(c => c.blank ? c : ({
+            ...c,
+            cellClass: `month-day${c.isToday ? ' today' : ''}${c.iso === this.monthExpandedISO ? ' selected' : ''}`
+        }));
+    }
 
     prevMonth() { this.shiftMonth(-1); }
     nextMonth() { this.shiftMonth(1); }
@@ -212,12 +214,11 @@ export default class SfaJourneyPlan extends LightningElement {
         this.selectedDate = d;
         this.loadMonth();
     }
+    // Open the day inline below the month grid (no navigation); toggle off if same day
     selectMonthDay(event) {
         const iso = event.currentTarget.dataset.date;
         if (!iso) return;
-        this.selectedDate = new Date(iso + 'T00:00:00');
-        this.selectedView = 'day';
-        this.loadDay();
+        this.monthExpandedISO = this.monthExpandedISO === iso ? null : iso;
     }
 
     // ── Calendar popup (date picker) ──────────────────────────
@@ -261,29 +262,9 @@ export default class SfaJourneyPlan extends LightningElement {
         if (!iso) return;
         this.selectedDate = new Date(iso + 'T00:00:00');
         this.showCalendar = false;
-        if (this.isDayView) this.loadDay();
-        else if (this.isWeekView) this.loadWeek();
-        else this.loadMonth();
-    }
-
-    // ── Reorder / delete ──────────────────────────────────────
-    moveUp(event) { this.move(event.currentTarget.dataset.id, -1); }
-    moveDown(event) { this.move(event.currentTarget.dataset.id, 1); }
-    move(id, delta) {
-        const idx = this.dayItems.findIndex(i => i.id === id);
-        const target = idx + delta;
-        if (idx < 0 || target < 0 || target >= this.dayItems.length) return;
-        const ids = this.dayItems.map(i => i.id);
-        const [moved] = ids.splice(idx, 1);
-        ids.splice(target, 0, moved);
-        reorderVisits({ orderedItemIds: ids })
-            .then(() => this.loadDay())
-            .catch(err => this.toastError('Reorder', err));
-    }
-    removeVisit(event) {
-        deleteVisit({ itemId: event.currentTarget.dataset.id })
-            .then(() => { this.toast('Removed', 'Visit removed from plan', 'success'); this.loadDay(); })
-            .catch(err => this.toastError('Delete', err));
+        if (this.isWeekView) this.loadWeek();
+        else if (this.isMonthView) this.loadMonth();
+        // Day view: child reacts to selectedISO change.
     }
 
     // ── Upload PJP ────────────────────────────────────────────
@@ -300,7 +281,9 @@ export default class SfaJourneyPlan extends LightningElement {
                 .then(res => {
                     this.uploadResult = res;
                     this.toast('Upload complete', `${res.itemsCreated} visits imported, ${res.rowsSkipped} skipped`, 'success');
-                    if (this.isDayView) this.loadDay();
+                    this.refreshVisibleChildren();
+                    if (this.isWeekView) this.loadWeek(true);
+                    else if (this.isMonthView) this.loadMonth(true);
                 })
                 .catch(err => this.toastError('Upload', err))
                 .finally(() => { this.isUploading = false; });
@@ -316,6 +299,7 @@ export default class SfaJourneyPlan extends LightningElement {
 
     // ── Add visit (builder) ───────────────────────────────────
     openAddVisit() {
+        if (!this.addForDate) this.addForDate = this.selectedISO;
         this.showAddVisit = true;
         this.selectedAccount = undefined;
         this.accountResults = [];
@@ -323,7 +307,11 @@ export default class SfaJourneyPlan extends LightningElement {
         this.addPurpose = 'Product Demo';
         this.addPriority = 'Medium';
     }
-    closeAddVisit() { this.showAddVisit = false; }
+    get addForDateLabel() {
+        const iso = this.addForDate || this.selectedISO;
+        return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    closeAddVisit() { this.showAddVisit = false; this.addForDate = undefined; }
 
     handleAccountSearch(event) {
         const key = event.target.value;
@@ -352,7 +340,7 @@ export default class SfaJourneyPlan extends LightningElement {
         this.isSaving = true;
         addVisit({
             accountId: this.selectedAccount.id,
-            planDate: this.selectedISO,
+            planDate: this.addForDate || this.selectedISO,
             plannedTime: this.addTime,
             purpose: this.addPurpose,
             priority: this.addPriority
@@ -360,7 +348,9 @@ export default class SfaJourneyPlan extends LightningElement {
             .then(() => {
                 this.toast('Visit added', `${this.selectedAccount.name} added to plan`, 'success');
                 this.showAddVisit = false;
-                this.loadDay();
+                this.refreshVisibleChildren();
+                if (this.isWeekView) this.loadWeek(true);
+                else if (this.isMonthView) this.loadMonth(true);
             })
             .catch(err => this.toastError('Add visit', err))
             .finally(() => { this.isSaving = false; });
@@ -376,7 +366,6 @@ export default class SfaJourneyPlan extends LightningElement {
         if (h) return `${h}h`;
         return `${m}m`;
     }
-    slug(s) { return (s || '').toLowerCase().replace(/\s+/g, '-'); }
     dayNumFromISO(iso) {
         const d = new Date(iso + 'T00:00:00');
         return d.getDate();

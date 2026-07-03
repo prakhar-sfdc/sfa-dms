@@ -90,61 +90,11 @@
                 <div class="progress-track"><div class="progress-fill" style={progressWidth}></div></div>
             </div>
 
-            <!-- Visit list -->
-            <div class="list-card">
-                <div class="card-header">
-                    <h3>Visits — {selectedDateDisplay}</h3>
-                    <button class="primary-btn" onclick={openAddVisit}>+ Add Visit</button>
-                </div>
-
-                <template if:true={isLoading}>
-                    <div class="loading-state">Loading plan…</div>
-                </template>
-
-                <template if:false={isLoading}>
-                    <template if:false={hasItems}>
-                        <div class="empty-state">
-                            <div class="empty-icon">🗺</div>
-                            <p>No visits planned for this day.</p>
-                            <button class="primary-btn" onclick={openAddVisit}>Schedule a Visit</button>
-                        </div>
-                    </template>
-
-                    <template if:true={hasItems}>
-                        <div class="visit-list">
-                            <template for:each={dayItems} for:item="v">
-                                <div key={v.id} class="visit-row">
-                                    <div class="v-seq">{v.seq}</div>
-                                    <div class="v-main">
-                                        <div class="v-line1">
-                                            <span class="v-account">{v.accountName}</span>
-                                            <span class={v.priorityClass}>{v.priority}</span>
-                                            <span class={v.statusClass}>{v.status}</span>
-                                        </div>
-                                        <div class="v-line2">
-                                            <span class="v-meta">🕐 {v.plannedTime}</span>
-                                            <span class="v-meta">📍 {v.location}</span>
-                                            <span class="v-meta">{v.purpose}</span>
-                                        </div>
-                                        <template if:true={v.showRoute}>
-                                            <div class="v-route">
-                                                <span class="route-chip">Distance {v.distanceDisplay}</span>
-                                                <span class="route-chip">Travel {v.travelDisplay}</span>
-                                                <span class="route-chip">On-site {v.durationDisplay}</span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <div class="v-actions">
-                                        <button class="icon-btn" data-id={v.id} onclick={moveUp} title="Move up">↑</button>
-                                        <button class="icon-btn" data-id={v.id} onclick={moveDown} title="Move down">↓</button>
-                                        <button class="icon-btn danger" data-id={v.id} onclick={removeVisit} title="Remove">✕</button>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
-                </template>
-            </div>
+            <!-- Visit list (reusable child) -->
+            <c-sfa-day-visits plan-date={selectedISO}
+                onaddvisit={handleChildAdd}
+                ondatachanged={handleDataChanged}
+                onloaded={handleDayLoaded}></c-sfa-day-visits>
         </template>
 
         <!-- ══════════════════════ WEEK VIEW ══════════════════════ -->
@@ -163,7 +113,7 @@
                 <div class="wk-stat"><span class="wk-num">{weekDistanceTotal}</span><span class="wk-lbl">Distance</span></div>
             </div>
             <div class="week-grid">
-                <template for:each={weekDays} for:item="w">
+                <template for:each={weekDaysView} for:item="w">
                     <button key={w.dateStr} class={w.cardClass} data-date={w.dateStr} onclick={selectWeekDay}>
                         <div class="wk-day">{w.dayName}</div>
                         <div class="wk-date">{w.dateLabel}</div>
@@ -173,6 +123,15 @@
                     </button>
                 </template>
             </div>
+
+            <!-- Inline day drill-down (below the grid, no navigation) -->
+            <template if:true={weekExpandedISO}>
+                <div class="inline-day">
+                    <c-sfa-day-visits plan-date={weekExpandedISO}
+                        onaddvisit={handleChildAdd}
+                        ondatachanged={handleDataChanged}></c-sfa-day-visits>
+                </div>
+            </template>
         </template>
 
         <!-- ══════════════════════ MONTH VIEW ══════════════════════ -->
@@ -191,7 +150,7 @@
                 </template>
             </div>
             <div class="month-grid">
-                <template for:each={monthCells} for:item="c">
+                <template for:each={monthCellsView} for:item="c">
                     <template if:true={c.blank}>
                         <span key={c.key} class="month-day blank"></span>
                     </template>
@@ -212,6 +171,15 @@
                     </template>
                 </template>
             </div>
+
+            <!-- Inline day drill-down (below the month grid, no navigation) -->
+            <template if:true={monthExpandedISO}>
+                <div class="inline-day">
+                    <c-sfa-day-visits plan-date={monthExpandedISO}
+                        onaddvisit={handleChildAdd}
+                        ondatachanged={handleDataChanged}></c-sfa-day-visits>
+                </div>
+            </template>
         </template>
 
         <!-- ══════════════════════ UPLOAD MODAL ══════════════════════ -->
@@ -260,7 +228,7 @@
             <div class="modal-overlay" onclick={closeAddVisit}>
                 <div class="modal-box" onclick={stopProp}>
                     <div class="modal-header">
-                        <h2>Add Visit — {selectedDateDisplay}</h2>
+                        <h2>Add Visit — {addForDateLabel}</h2>
                         <button class="modal-close" onclick={closeAddVisit}>×</button>
                     </div>
                     <div class="modal-body">
