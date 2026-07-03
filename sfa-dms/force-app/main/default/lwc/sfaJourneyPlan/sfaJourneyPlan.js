@@ -1,298 +1,399 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getVisitCountsByDates from '@salesforce/apex/JourneyPlanController.getVisitCountsByDates';
-import getTodayJourneyPlan from '@salesforce/apex/JourneyPlanController.getTodayJourneyPlan';
-import getDailyPlanItems from '@salesforce/apex/JourneyPlanController.getDailyPlanItems';
-import getWeekJourneyPlans from '@salesforce/apex/JourneyPlanController.getWeekJourneyPlans';
-import getMonthVisitCounts from '@salesforce/apex/JourneyPlanController.getMonthVisitCounts';
-import getPriorityAccountsByDate from '@salesforce/apex/JourneyPlanController.getPriorityAccountsByDate';
-import createVisit from '@salesforce/apex/VisitDayVisitsController.createVisit';
+import getDayPlan from '@salesforce/apex/JourneyPlanController.getDayPlan';
+import getWeekPlan from '@salesforce/apex/JourneyPlanController.getWeekPlan';
+import getMonthPlan from '@salesforce/apex/JourneyPlanController.getMonthPlan';
+import getVisitCountsForRange from '@salesforce/apex/JourneyPlanController.getVisitCountsForRange';
+import searchAccounts from '@salesforce/apex/JourneyPlanController.searchAccounts';
+import addVisit from '@salesforce/apex/JourneyPlanController.addVisit';
+import reorderVisits from '@salesforce/apex/JourneyPlanController.reorderVisits';
+import deleteVisit from '@salesforce/apex/JourneyPlanController.deleteVisit';
+import uploadPlanCsv from '@salesforce/apex/JourneyPlanController.uploadPlanCsv';
+
+const PURPOSES = ['Quarterly Review','Product Demo','Contract Renewal','Order Delivery','Stock Check',
+    'Follow-up Visit','New Account Meeting','Complaint Resolution','Payment Collection','Relationship Building'];
+const PRIORITIES = ['High','Medium','Low'];
+const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 export default class SfaJourneyPlan extends LightningElement {
-
-    @track showCalendar = false;
     @track selectedView = 'day';
     @track selectedDate = new Date();
-    @track calendarMonth = '';
-    @track calendarYear = '';
-    @track calendarDays = [];
-    @track carouselDates = [];
-    @track carouselStartDate = new Date();
-    @track dailyVisits = [];
-    @track dayStats = { plannedVisits: 0, estimatedDuration: '0h', completedToday: 0 };
-    @track todayProgress = { planned: 0, completed: 0, pending: 0, successRate: 0 };
-    @track weekStats = { days: 7, totalVisits: 0, totalHours: 0 };
-    @track monthDays = [];
-    @track monthSummary = { totalDays: 0, totalVisits: 0, totalAccounts: 0 };
-    @track weekSchedule = [];
-    @track weekRangeDisplay = '';
+
+    // Day
+    @track plan = {};
+    @track dayItems = [];
+    @track isLoading = false;
+
+    // Week
     @track weekDays = [];
-    @track priorityAccountsJP = [];
-    @track showScheduleVisitModal = false;
+    @track weekRange = '';
+
+    // Month
+    @track monthCells = [];
+    @track calLabel = '';
+
+    // Calendar popup
+    @track showCalendar = false;
+    @track calMonth = new Date().getMonth();
+    @track calYear = new Date().getFullYear();
+    @track calendarDays = [];
+
+    // Upload modal
+    @track showUpload = false;
+    @track uploadResult;
+    @track isUploading = false;
+
+    // Add-visit modal
+    @track showAddVisit = false;
+    @track accountResults = [];
+    @track selectedAccount;
+    @track addTime = '09:30';
+    @track addPurpose = 'Product Demo';
+    @track addPriority = 'Medium';
+    @track isSaving = false;
+
+    searchTimer;
+    weekdayLabels = WEEKDAYS;
+    purposeOptions = PURPOSES.map(p => ({ label: p, value: p }));
+    priorityOptions = PRIORITIES.map(p => ({ label: p, value: p }));
 
     connectedCallback() {
-        this.initializeCalendar();
-        this.loadCarouselDates();
-        this.loadDayVisits();
-        this.loadTodayProgress();
-        this.loadPriorityAccountsJP();
+        this.loadDay();
     }
 
-    initializeCalendar() {
-        const now = new Date();
-        this.calendarMonth = now.toLocaleString('en-US', { month: 'long' });
-        this.calendarYear = now.getFullYear().toString();
-        this.generateCalendarDays();
-    }
-
-    generateCalendarDays() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-
-        this.calendarDays = [];
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            this.calendarDays.push({ key: `empty-${i}`, day: '', date: null });
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-            this.calendarDays.push({
-                key: `${month}-${day}`,
-                day: day.toString(),
-                date: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-                hasVisits: Math.random() > 0.6,
-                visits: Math.floor(Math.random() * 5) + 1
-            });
-        }
-    }
-
-    loadCarouselDates() {
-        const dates = [];
-        const today = new Date(this.selectedDate);
-        for (let i = -2; i <= 2; i++) {
-            const d = new Date(today);
-            d.setDate(d.getDate() + i);
-            dates.push({
-                id: i,
-                dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-                dateNum: d.getDate().toString(),
-                month: d.toLocaleDateString('en-US', { month: 'short' }),
-                visits: Math.floor(Math.random() * 4) + 1
-            });
-        }
-        this.carouselDates = dates;
-    }
-
-    loadDayVisits() {
-        getDailyPlanItems({ visitDate: this.formatDateForApex(this.selectedDate) })
-            .then(result => {
-                this.dailyVisits = (result || []).map(v => ({
-                    id: v.Id,
-                    time: this.fmtTime(v.Planned_Start_Time__c),
-                    account: v.Account__r?.Name || '—',
-                    accountInitial: (v.Account__r?.Name || '?').charAt(0).toUpperCase(),
-                    location: v.Account__r?.BillingCity || '—',
-                    purpose: v.Visit_Purpose__c || 'Meeting',
-                    status: v.Visit_Status__c || 'Planned',
-                    statusClass: this.getStatusClass(v.Visit_Status__c),
-                    canCheckIn: v.Visit_Status__c === 'Planned',
-                    isInProgress: v.Visit_Status__c === 'In Progress',
-                    isCompleted: v.Visit_Status__c === 'Completed'
-                }));
-                this.updateDayStats();
-            })
-            .catch(error => console.error('Day visits error', error));
-    }
-
-    get dailyVisitsWithMeta() { return this.dailyVisits; }
-
-    updateDayStats() {
-        const planned = this.dailyVisits.length;
-        const completed = this.dailyVisits.filter(v => v.isCompleted).length;
-        const pending = planned - completed;
-        this.dayStats = {
-            plannedVisits: planned,
-            estimatedDuration: '4h 30m',
-            completedToday: completed
-        };
-        this.todayProgress = {
-            planned, completed, pending,
-            successRate: planned > 0 ? Math.round((completed / planned) * 100) : 0
-        };
-    }
-
-    get todayProgressWidth() { return `width:${this.todayProgress.successRate}%`; }
-
-    loadTodayProgress() {
-        getTodayJourneyPlan()
-            .then(result => {
-                if (result) {
-                    this.todayProgress = {
-                        planned: result.plannedVisits || 0,
-                        completed: result.completedVisits || 0,
-                        pending: (result.plannedVisits || 0) - (result.completedVisits || 0),
-                        successRate: result.successRate || 0
-                    };
-                }
-            })
-            .catch(error => console.error('Day plan error', error));
-    }
-
-    loadPriorityAccountsJP() {
-        getPriorityAccountsByDate()
-            .then(result => {
-                this.priorityAccountsJP = (result || []).map(a => ({
-                    id: a.Id,
-                    name: a.Name,
-                    location: a.BillingCity || a.BillingState || '—',
-                    status: a.Account_Status__c || 'Active',
-                    priority: a.Priority__c || 'Medium',
-                    priorityClass: this.getPriorityClass(a.Priority__c)
-                }));
-            })
-            .catch(error => console.error('Priority accounts error', error));
-    }
-
-    getPriorityClass(priority) {
-        const map = { 'High': 'priority-high', 'Medium': 'priority-medium', 'Low': 'priority-low' };
-        return map[priority] || 'priority-medium';
-    }
-
-    getStatusClass(status) {
-        const map = {
-            'Planned': 'status planned',
-            'In Progress': 'status in-progress',
-            'Completed': 'status completed'
-        };
-        return map[status] || 'status';
-    }
-
-    formatDateForApex(date) {
-        if (!date) return null;
-        const d = new Date(date);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
-
-    fmtTime(timeStr) {
-        if (!timeStr) return '—';
-        try { return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
-        catch { return timeStr; }
-    }
-
-    get selectedDateDisplay() {
-        return this.selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    get isDayView()   { return this.selectedView === 'day'; }
-    get isWeekView()  { return this.selectedView === 'week'; }
+    // ── View state ────────────────────────────────────────────
+    get isDayView() { return this.selectedView === 'day'; }
+    get isWeekView() { return this.selectedView === 'week'; }
     get isMonthView() { return this.selectedView === 'month'; }
-
-    toggleCalendar() { this.showCalendar = !this.showCalendar; }
-    prevMonth() { this.selectedDate.setMonth(this.selectedDate.getMonth() - 1); this.initializeCalendar(); }
-    nextMonth() { this.selectedDate.setMonth(this.selectedDate.getMonth() + 1); this.initializeCalendar(); }
-    selectDate(event) { const d = event.currentTarget.dataset.date; if (d) { this.selectedDate = new Date(d); this.showCalendar = false; this.loadDayVisits(); } }
-    prevDate() { this.selectedDate.setDate(this.selectedDate.getDate() - 1); this.loadCarouselDates(); this.loadDayVisits(); }
-    nextDate() { this.selectedDate.setDate(this.selectedDate.getDate() + 1); this.loadCarouselDates(); this.loadDayVisits(); }
+    get dayBtnClass() { return this.tabClass('day'); }
+    get weekBtnClass() { return this.tabClass('week'); }
+    get monthBtnClass() { return this.tabClass('month'); }
+    tabClass(v) { return this.selectedView === v ? 'view-btn active' : 'view-btn'; }
 
     changeView(event) {
-        const view = event.currentTarget.dataset.view;
-        this.selectedView = view;
-        if (view === 'week') this.loadWeekView();
-        if (view === 'month') this.loadMonthView();
+        this.selectedView = event.currentTarget.dataset.view;
+        if (this.isDayView) this.loadDay();
+        else if (this.isWeekView) this.loadWeek();
+        else this.loadMonth();
     }
 
-    loadWeekView() {
-        getWeekJourneyPlans()
-            .then(result => {
-                this.weekSchedule = (result || []).map(v => ({
-                    id: v.Id,
-                    day: new Date(v.Visit_Date__c).toLocaleDateString('en-US', { weekday: 'short' }),
-                    time: this.fmtTime(v.Planned_Start_Time__c),
-                    account: v.Account__r?.Name || '—',
-                    purpose: v.Visit_Purpose__c || '—',
-                    status: v.Visit_Status__c,
-                    statusClass: this.getStatusClass(v.Visit_Status__c)
+    // ── ISO helpers ───────────────────────────────────────────
+    toISO(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+    get selectedISO() { return this.toISO(this.selectedDate); }
+    get selectedDateDisplay() {
+        return this.selectedDate.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // ── DAY ───────────────────────────────────────────────────
+    loadDay() {
+        this.isLoading = true;
+        getDayPlan({ planDate: this.selectedISO })
+            .then(res => {
+                this.plan = res || {};
+                this.dayItems = (res && res.items ? res.items : []).map((it, idx) => this.decorateItem(it, idx));
+            })
+            .catch(err => this.toastError('Load day', err))
+            .finally(() => { this.isLoading = false; });
+    }
+
+    decorateItem(it, idx) {
+        const isCompleted = it.status === 'Completed';
+        const isInProgress = it.status === 'In Progress';
+        return {
+            ...it,
+            seq: idx + 1,
+            priorityClass: `pill priority-${(it.priority || 'Medium').toLowerCase()}`,
+            statusClass: `pill status-${this.slug(it.status)}`,
+            isCompleted,
+            isInProgress,
+            distanceDisplay: (it.distanceFromPrev !== null && it.distanceFromPrev !== undefined)
+                ? `${it.distanceFromPrev} km` : '—',
+            durationDisplay: it.actualDuration ? this.fmtMins(it.actualDuration) : '—',
+            travelDisplay: it.travelFromPrev ? this.fmtMins(it.travelFromPrev) : '—',
+            showRoute: isCompleted
+        };
+    }
+
+    // metric getters (day)
+    get plannedCount() { return this.plan.plannedVisits || 0; }
+    get completedCount() { return this.plan.completedVisits || 0; }
+    get pendingCount() { return this.plan.pendingVisits || 0; }
+    get successRate() { return this.plan.successRate != null ? Math.round(this.plan.successRate) : 0; }
+    get totalDistanceDisplay() { return `${(this.plan.totalDistance || 0).toFixed(1)} km`; }
+    get travelTimeDisplay() { return this.fmtMins(this.plan.totalTravelTime || 0); }
+    get onSiteDisplay() { return this.fmtMins(this.plan.actualDuration || 0); }
+    get progressWidth() {
+        const p = this.plannedCount ? Math.round((this.completedCount / this.plannedCount) * 100) : 0;
+        return `width:${p}%`;
+    }
+    get hasItems() { return this.dayItems.length > 0; }
+
+    prevDate() { this.shiftDate(-1); }
+    nextDate() { this.shiftDate(1); }
+    shiftDate(days) {
+        const d = new Date(this.selectedDate);
+        d.setDate(d.getDate() + days);
+        this.selectedDate = d;
+        this.loadDay();
+    }
+
+    // ── WEEK ──────────────────────────────────────────────────
+    loadWeek() {
+        const start = this.startOfWeek(this.selectedDate);
+        getWeekPlan({ weekStart: this.toISO(start) })
+            .then(res => {
+                this.weekDays = (res || []).map(w => ({
+                    ...w,
+                    dateLabel: this.dayNumFromISO(w.dateStr),
+                    distanceDisplay: `${(w.distance || 0).toFixed(1)} km`,
+                    cardClass: w.isToday ? 'week-card today' : 'week-card'
                 }));
-                this.weekDays = Array.from({ length: 7 }, (_, i) => {
-                    const d = new Date(this.selectedDate);
-                    d.setDate(d.getDate() + (i - d.getDay()));
-                    return {
-                        id: i,
-                        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-                        date: d.getDate().toString(),
-                        visits: Math.floor(Math.random() * 3) + 1
-                    };
-                });
+                const end = new Date(start); end.setDate(end.getDate() + 6);
+                this.weekRange = `${start.toLocaleDateString('en-IN',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en-IN',{month:'short',day:'numeric'})}`;
             })
-            .catch(error => console.error('Week visits error', error));
+            .catch(err => this.toastError('Load week', err));
     }
+    get weekPlannedTotal() { return this.weekDays.reduce((s, w) => s + (w.planned || 0), 0); }
+    get weekCompletedTotal() { return this.weekDays.reduce((s, w) => s + (w.completed || 0), 0); }
+    get weekDistanceTotal() { return `${this.weekDays.reduce((s, w) => s + (w.distance || 0), 0).toFixed(1)} km`; }
 
-    loadMonthView() {
-        getMonthVisitCounts()
-            .then(result => {
-                if (result) {
-                    this.monthSummary = {
-                        totalDays: result.totalDays || 0,
-                        totalVisits: result.totalVisits || 0,
-                        totalAccounts: result.totalAccounts || 0
-                    };
-                }
-                this.generateMonthView();
-            })
-            .catch(error => console.error('Month plan error', error));
-    }
-
-    generateMonthView() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-
-        this.monthDays = [];
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            this.monthDays.push({ key: `empty-${i}`, day: '', date: null });
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-            const hasEvents = Math.random() > 0.7;
-            this.monthDays.push({
-                key: `${month}-${day}`,
-                id: `${month}-${day}`,
-                day: day.toString(),
-                date: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-                hasVisits: hasEvents,
-                visits: hasEvents ? Math.floor(Math.random() * 3) + 1 : 0,
-                events: hasEvents ? [
-                    { id: 1, time: '10:00', account: 'Acme Corp' },
-                    { id: 2, time: '14:00', account: 'Tech Inc' }
-                ] : null
-            });
-        }
-    }
+    prevWeek() { this.shiftDate(-7); this.loadWeek(); }
+    nextWeek() { this.shiftDate(7); this.loadWeek(); }
 
     selectWeekDay(event) {
-        const date = event.currentTarget.dataset.date;
-        if (date) this.selectedDate = new Date(date);
+        this.selectedDate = new Date(event.currentTarget.dataset.date + 'T00:00:00');
+        this.selectedView = 'day';
+        this.loadDay();
     }
 
-    openScheduleVisitModal() { this.showScheduleVisitModal = true; }
-    closeScheduleVisitModal() { this.showScheduleVisitModal = false; }
-    handleModalClick(event) { event.stopPropagation(); }
+    // ── MONTH ─────────────────────────────────────────────────
+    loadMonth() {
+        const y = this.selectedDate.getFullYear();
+        const m = this.selectedDate.getMonth();
+        this.calLabel = `${MONTHS[m]} ${y}`;
+        const todayISO = this.toISO(new Date());
+        getMonthPlan({ year: y, month: m + 1 })
+            .then(res => {
+                const firstDow = new Date(y, m, 1).getDay();
+                const cells = [];
+                for (let i = 0; i < firstDow; i++) cells.push({ key: `b${i}`, blank: true });
+                (res || []).forEach(d => {
+                    const iso = d.dateStr;
+                    cells.push({
+                        key: iso,
+                        iso,
+                        dayNum: d.dayNum,
+                        planned: d.planned,
+                        completed: d.completed,
+                        hasVisits: d.planned > 0,
+                        events: (d.events || []).map((t, i) => ({ key: `${iso}-e${i}`, text: t })),
+                        isToday: iso === todayISO,
+                        cellClass: iso === todayISO ? 'month-day today' : 'month-day'
+                    });
+                });
+                this.monthCells = cells;
+            })
+            .catch(err => this.toastError('Load month', err));
+    }
+    get monthPlannedTotal() { return this.monthCells.reduce((s, c) => s + (c.planned || 0), 0); }
+    get monthActiveDays() { return this.monthCells.filter(c => c.hasVisits).length; }
 
-    handleVisitSuccess() {
-        this.showScheduleVisitModal = false;
-        this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Visit created successfully!', variant: 'success' }));
-        this.loadDayVisits();
-        this.loadCarouselDates();
+    prevMonth() { this.shiftMonth(-1); }
+    nextMonth() { this.shiftMonth(1); }
+    shiftMonth(delta) {
+        const d = new Date(this.selectedDate);
+        d.setMonth(d.getMonth() + delta);
+        this.selectedDate = d;
+        this.loadMonth();
+    }
+    selectMonthDay(event) {
+        const iso = event.currentTarget.dataset.date;
+        if (!iso) return;
+        this.selectedDate = new Date(iso + 'T00:00:00');
+        this.selectedView = 'day';
+        this.loadDay();
     }
 
-    handleVisitError(event) {
-        console.error('Visit error:', event.detail);
-        this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: 'Failed to create visit.', variant: 'error' }));
+    // ── Calendar popup (date picker) ──────────────────────────
+    toggleCalendar() {
+        this.showCalendar = !this.showCalendar;
+        if (this.showCalendar) {
+            this.calMonth = this.selectedDate.getMonth();
+            this.calYear = this.selectedDate.getFullYear();
+            this.buildCalendar();
+        }
+    }
+    get calPopupLabel() { return `${MONTHS[this.calMonth]} ${this.calYear}`; }
+    calPrevMonth() { if (--this.calMonth < 0) { this.calMonth = 11; this.calYear--; } this.buildCalendar(); }
+    calNextMonth() { if (++this.calMonth > 11) { this.calMonth = 0; this.calYear++; } this.buildCalendar(); }
+
+    buildCalendar() {
+        const y = this.calYear, m = this.calMonth;
+        const first = new Date(y, m, 1);
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const startISO = this.toISO(new Date(y, m, 1));
+        const endISO = this.toISO(new Date(y, m, daysInMonth));
+        const selISO = this.selectedISO;
+        getVisitCountsForRange({ startDate: startISO, endDate: endISO })
+            .then(counts => {
+                const cells = [];
+                for (let i = 0; i < first.getDay(); i++) cells.push({ key: `cb${i}`, blank: true });
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const iso = this.toISO(new Date(y, m, d));
+                    const c = counts[iso] || 0;
+                    cells.push({
+                        key: iso, iso, dayNum: d, count: c, hasVisits: c > 0,
+                        cls: iso === selISO ? 'cal-day selected' : 'cal-day'
+                    });
+                }
+                this.calendarDays = cells;
+            })
+            .catch(err => this.toastError('Calendar', err));
+    }
+    selectCalDay(event) {
+        const iso = event.currentTarget.dataset.date;
+        if (!iso) return;
+        this.selectedDate = new Date(iso + 'T00:00:00');
+        this.showCalendar = false;
+        if (this.isDayView) this.loadDay();
+        else if (this.isWeekView) this.loadWeek();
+        else this.loadMonth();
+    }
+
+    // ── Reorder / delete ──────────────────────────────────────
+    moveUp(event) { this.move(event.currentTarget.dataset.id, -1); }
+    moveDown(event) { this.move(event.currentTarget.dataset.id, 1); }
+    move(id, delta) {
+        const idx = this.dayItems.findIndex(i => i.id === id);
+        const target = idx + delta;
+        if (idx < 0 || target < 0 || target >= this.dayItems.length) return;
+        const ids = this.dayItems.map(i => i.id);
+        const [moved] = ids.splice(idx, 1);
+        ids.splice(target, 0, moved);
+        reorderVisits({ orderedItemIds: ids })
+            .then(() => this.loadDay())
+            .catch(err => this.toastError('Reorder', err));
+    }
+    removeVisit(event) {
+        deleteVisit({ itemId: event.currentTarget.dataset.id })
+            .then(() => { this.toast('Removed', 'Visit removed from plan', 'success'); this.loadDay(); })
+            .catch(err => this.toastError('Delete', err));
+    }
+
+    // ── Upload PJP ────────────────────────────────────────────
+    openUpload() { this.showUpload = true; this.uploadResult = undefined; }
+    closeUpload() { this.showUpload = false; }
+    handleFile(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        this.isUploading = true;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result.split(',')[1];
+            uploadPlanCsv({ base64Content: base64 })
+                .then(res => {
+                    this.uploadResult = res;
+                    this.toast('Upload complete', `${res.itemsCreated} visits imported, ${res.rowsSkipped} skipped`, 'success');
+                    if (this.isDayView) this.loadDay();
+                })
+                .catch(err => this.toastError('Upload', err))
+                .finally(() => { this.isUploading = false; });
+        };
+        reader.onerror = () => { this.isUploading = false; this.toast('Upload', 'Could not read file', 'error'); };
+        reader.readAsDataURL(file);
+    }
+    get uploadErrors() {
+        const errs = this.uploadResult && this.uploadResult.errors ? this.uploadResult.errors : [];
+        return errs.map((e, i) => ({ key: `err${i}`, text: e }));
+    }
+    get hasUploadErrors() { return this.uploadErrors.length > 0; }
+
+    // ── Add visit (builder) ───────────────────────────────────
+    openAddVisit() {
+        this.showAddVisit = true;
+        this.selectedAccount = undefined;
+        this.accountResults = [];
+        this.addTime = '09:30';
+        this.addPurpose = 'Product Demo';
+        this.addPriority = 'Medium';
+    }
+    closeAddVisit() { this.showAddVisit = false; }
+
+    handleAccountSearch(event) {
+        const key = event.target.value;
+        window.clearTimeout(this.searchTimer);
+        this.searchTimer = window.setTimeout(() => {
+            if (!key || key.length < 2) { this.accountResults = []; return; }
+            searchAccounts({ searchKey: key })
+                .then(res => { this.accountResults = res || []; })
+                .catch(err => this.toastError('Search', err));
+        }, 300);
+    }
+    selectAccount(event) {
+        const id = event.currentTarget.dataset.id;
+        this.selectedAccount = this.accountResults.find(a => a.id === id);
+        this.accountResults = [];
+    }
+    clearAccount() { this.selectedAccount = undefined; }
+    get hasAccountResults() { return this.accountResults.length > 0; }
+
+    handleTime(event) { this.addTime = event.target.value; }
+    handlePurpose(event) { this.addPurpose = event.detail.value; }
+    handlePriority(event) { this.addPriority = event.detail.value; }
+
+    submitAddVisit() {
+        if (!this.selectedAccount) { this.toast('Add visit', 'Select an account first', 'warning'); return; }
+        this.isSaving = true;
+        addVisit({
+            accountId: this.selectedAccount.id,
+            planDate: this.selectedISO,
+            plannedTime: this.addTime,
+            purpose: this.addPurpose,
+            priority: this.addPriority
+        })
+            .then(() => {
+                this.toast('Visit added', `${this.selectedAccount.name} added to plan`, 'success');
+                this.showAddVisit = false;
+                this.loadDay();
+            })
+            .catch(err => this.toastError('Add visit', err))
+            .finally(() => { this.isSaving = false; });
+    }
+
+    stopProp(event) { event.stopPropagation(); }
+
+    // ── Utils ─────────────────────────────────────────────────
+    fmtMins(mins) {
+        if (!mins) return '0m';
+        const h = Math.floor(mins / 60), m = mins % 60;
+        if (h && m) return `${h}h ${m}m`;
+        if (h) return `${h}h`;
+        return `${m}m`;
+    }
+    slug(s) { return (s || '').toLowerCase().replace(/\s+/g, '-'); }
+    dayNumFromISO(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return d.getDate();
+    }
+    startOfWeek(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+    toast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+    toastError(ctx, err) {
+        const msg = (err && err.body && err.body.message) || (err && err.message) || 'Unexpected error';
+        this.dispatchEvent(new ShowToastEvent({ title: ctx, message: msg, variant: 'error' }));
     }
 }

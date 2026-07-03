@@ -1,256 +1,314 @@
 <template>
-    <div class="journey-plan-container">
-        <!-- Header -->
-        <div class="journey-header">
+    <div class="jp-container">
+
+        <!-- ── Header ─────────────────────────────────────────── -->
+        <div class="jp-header">
             <div class="header-left">
-                <h1>Journey Planning (PJP)</h1>
-                <p class="subtitle">Plan and optimize your daily route</p>
+                <h1>Journey Plan (PJP)</h1>
+                <p class="subtitle">Plan, upload and execute your route</p>
             </div>
             <div class="header-right">
                 <div class="date-picker">
-                    <button class="date-btn" onclick={toggleCalendar}>📅 {selectedDateDisplay}</button>
+                    <button class="date-btn" onclick={toggleCalendar}>
+                        <span class="cal-icon">🗓</span> {selectedDateDisplay}
+                    </button>
                     <template if:true={showCalendar}>
-                        <div class="calendar-popup">
-                            <div class="calendar-header">
-                                <button class="calendar-nav" onclick={prevMonth}>←</button>
-                                <span class="calendar-title">{calendarMonth} {calendarYear}</span>
-                                <button class="calendar-nav" onclick={nextMonth}>→</button>
+                        <div class="cal-popup" onclick={stopProp}>
+                            <div class="cal-popup-header">
+                                <button class="cal-nav" onclick={calPrevMonth}>‹</button>
+                                <span class="cal-popup-title">{calPopupLabel}</span>
+                                <button class="cal-nav" onclick={calNextMonth}>›</button>
                             </div>
-                            <div class="calendar-grid">
-                                <div class="calendar-weekdays">
-                                    <div class="weekday">Sun</div><div class="weekday">Mon</div>
-                                    <div class="weekday">Tue</div><div class="weekday">Wed</div>
-                                    <div class="weekday">Thu</div><div class="weekday">Fri</div>
-                                    <div class="weekday">Sat</div>
-                                </div>
-                                <template for:each={calendarDays} for:item="day">
-                                    <div key={day.key} class="cal-day" onclick={selectDate} data-date={day.date}>
-                                        <span class="day-number">{day.day}</span>
-                                        <template if:true={day.hasVisits}>
-                                            <span class="visit-count">{day.visits}</span>
-                                        </template>
-                                    </div>
+                            <div class="cal-weekdays">
+                                <template for:each={weekdayLabels} for:item="w">
+                                    <span key={w} class="cal-wd">{w}</span>
+                                </template>
+                            </div>
+                            <div class="cal-grid">
+                                <template for:each={calendarDays} for:item="c">
+                                    <template if:true={c.blank}>
+                                        <span key={c.key} class="cal-day blank"></span>
+                                    </template>
+                                    <template if:false={c.blank}>
+                                        <button key={c.key} class={c.cls} data-date={c.iso} onclick={selectCalDay}>
+                                            <span class="cal-num">{c.dayNum}</span>
+                                            <template if:true={c.hasVisits}>
+                                                <span class="cal-badge">{c.count}</span>
+                                            </template>
+                                        </button>
+                                    </template>
                                 </template>
                             </div>
                         </div>
                     </template>
                 </div>
-                <div class="view-options">
-                    <button class="view-btn" onclick={changeView} data-view="day">Day</button>
-                    <button class="view-btn" onclick={changeView} data-view="week">Week</button>
-                    <button class="view-btn" onclick={changeView} data-view="month">Month</button>
+                <button class="secondary-btn" onclick={openUpload}>⤓ Upload PJP</button>
+                <div class="view-switch">
+                    <button class={dayBtnClass} data-view="day" onclick={changeView}>Day</button>
+                    <button class={weekBtnClass} data-view="week" onclick={changeView}>Week</button>
+                    <button class={monthBtnClass} data-view="month" onclick={changeView}>Month</button>
                 </div>
             </div>
         </div>
 
-        <!-- Date Carousel -->
-        <div class="date-carousel">
-            <button class="carousel-btn" onclick={prevDate}>←</button>
-            <div class="carousel-dates">
-                <template for:each={carouselDates} for:item="dateItem">
-                    <div key={dateItem.id} class="carousel-date">
-                        <div class="carousel-day">{dateItem.dayName}</div>
-                        <div class="carousel-date-num">{dateItem.dateNum}</div>
-                        <div class="carousel-month">{dateItem.month}</div>
-                        <div class="carousel-visits">{dateItem.visits} visits</div>
-                    </div>
-                </template>
-            </div>
-            <button class="carousel-btn" onclick={nextDate}>→</button>
-        </div>
-
-        <!-- DAY VIEW -->
+        <!-- ══════════════════════ DAY VIEW ══════════════════════ -->
         <template if:true={isDayView}>
-            <div class="day-view">
-                <div class="progress-card">
-                    <h3>📊 Today's Progress</h3>
-                    <div class="progress-stats">
-                        <div class="stat-item"><div class="stat-value">{todayProgress.planned}</div><div class="stat-label">Planned</div></div>
-                        <div class="stat-item"><div class="stat-value">{todayProgress.completed}</div><div class="stat-label">Completed</div></div>
-                        <div class="stat-item"><div class="stat-value">{todayProgress.pending}</div><div class="stat-label">Pending</div></div>
-                        <div class="stat-item"><div class="stat-value">{todayProgress.successRate}%</div><div class="stat-label">Success Rate</div></div>
-                    </div>
-                    <div class="jp-progress-bar"><div class="jp-progress-fill" style={todayProgressWidth}></div></div>
+            <!-- Metric strip -->
+            <div class="metrics-grid">
+                <div class="metric-card m-planned">
+                    <div class="metric-title">Planned</div>
+                    <div class="metric-value">{plannedCount}</div>
+                </div>
+                <div class="metric-card m-completed">
+                    <div class="metric-title">Completed</div>
+                    <div class="metric-value">{completedCount}</div>
+                </div>
+                <div class="metric-card m-pending">
+                    <div class="metric-title">Pending</div>
+                    <div class="metric-value">{pendingCount}</div>
+                </div>
+                <div class="metric-card m-success">
+                    <div class="metric-title">Success Rate</div>
+                    <div class="metric-value">{successRate}%</div>
+                </div>
+                <div class="metric-card m-distance">
+                    <div class="metric-title">Route Distance</div>
+                    <div class="metric-value sm">{totalDistanceDisplay}</div>
+                </div>
+                <div class="metric-card m-onsite">
+                    <div class="metric-title">On-site / Travel</div>
+                    <div class="metric-value sm">{onSiteDisplay} · {travelTimeDisplay}</div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-card">
+                <div class="progress-head">
+                    <span class="progress-label">Route Progress</span>
+                    <span class="progress-count">{completedCount}/{plannedCount} visits</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" style={progressWidth}></div></div>
+            </div>
+
+            <!-- Visit list -->
+            <div class="list-card">
+                <div class="card-header">
+                    <h3>Visits — {selectedDateDisplay}</h3>
+                    <button class="primary-btn" onclick={openAddVisit}>+ Add Visit</button>
                 </div>
 
-                <div class="middle-cards">
-                    <div class="middle-card"><div class="card-icon">📍</div><div class="card-content"><h4>Planned Visits</h4><div class="card-value">{dayStats.plannedVisits}</div></div></div>
-                    <div class="middle-card"><div class="card-icon">⏱️</div><div class="card-content"><h4>Est. Duration</h4><div class="card-value">{dayStats.estimatedDuration}</div></div></div>
-                    <div class="middle-card"><div class="card-icon">✅</div><div class="card-content"><h4>Completed</h4><div class="card-value">{dayStats.completedToday}</div></div></div>
-                </div>
+                <template if:true={isLoading}>
+                    <div class="loading-state">Loading plan…</div>
+                </template>
 
-                <div class="bottom-cards">
-                    <div class="bottom-card priority-card">
-                        <div class="card-header">
-                            <h3>🎯 Priority Accounts</h3>
-                            <span class="count-badge">{priorityAccountsJP.length}</span>
+                <template if:false={isLoading}>
+                    <template if:false={hasItems}>
+                        <div class="empty-state">
+                            <div class="empty-icon">🗺</div>
+                            <p>No visits planned for this day.</p>
+                            <button class="primary-btn" onclick={openAddVisit}>Schedule a Visit</button>
                         </div>
-                        <div class="priority-list">
-                            <template for:each={priorityAccountsJP} for:item="account">
-                                <div key={account.id} class="priority-account">
-                                    <div class={account.priorityClass}></div>
-                                    <div class="account-info">
-                                        <div class="account-name">{account.name}</div>
-                                        <div class="account-location">{account.location}</div>
+                    </template>
+
+                    <template if:true={hasItems}>
+                        <div class="visit-list">
+                            <template for:each={dayItems} for:item="v">
+                                <div key={v.id} class="visit-row">
+                                    <div class="v-seq">{v.seq}</div>
+                                    <div class="v-main">
+                                        <div class="v-line1">
+                                            <span class="v-account">{v.accountName}</span>
+                                            <span class={v.priorityClass}>{v.priority}</span>
+                                            <span class={v.statusClass}>{v.status}</span>
+                                        </div>
+                                        <div class="v-line2">
+                                            <span class="v-meta">🕐 {v.plannedTime}</span>
+                                            <span class="v-meta">📍 {v.location}</span>
+                                            <span class="v-meta">{v.purpose}</span>
+                                        </div>
+                                        <template if:true={v.showRoute}>
+                                            <div class="v-route">
+                                                <span class="route-chip">Distance {v.distanceDisplay}</span>
+                                                <span class="route-chip">Travel {v.travelDisplay}</span>
+                                                <span class="route-chip">On-site {v.durationDisplay}</span>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <div class="account-status">{account.status}</div>
+                                    <div class="v-actions">
+                                        <button class="icon-btn" data-id={v.id} onclick={moveUp} title="Move up">↑</button>
+                                        <button class="icon-btn" data-id={v.id} onclick={moveDown} title="Move down">↓</button>
+                                        <button class="icon-btn danger" data-id={v.id} onclick={removeVisit} title="Remove">✕</button>
+                                    </div>
                                 </div>
                             </template>
                         </div>
-                    </div>
-
-                    <div class="bottom-card plan-card">
-                        <div class="card-header">
-                            <h3>📅 Visits — {selectedDateDisplay}</h3>
-                            <div class="card-header-actions">
-                                <button class="add-btn" onclick={openScheduleVisitModal}>Add Visit</button>
-                            </div>
-                        </div>
-                        <template if:false={dailyVisits.length}>
-                            <div class="ve-empty">
-                                <div class="ve-empty-icon">📋</div>
-                                <div class="ve-empty-title">No visits planned for {selectedDateDisplay}</div>
-                                <button class="jp-cta-btn" onclick={openScheduleVisitModal}>➕ Schedule a Visit</button>
-                            </div>
-                        </template>
-                        <template if:true={dailyVisits.length}>
-                            <div class="ve-visit-rows">
-                                <div class="ve-row ve-row--header">
-                                    <div class="ve-col ve-col-time">Time</div>
-                                    <div class="ve-col ve-col-account">Account</div>
-                                    <div class="ve-col ve-col-purpose">Purpose</div>
-                                    <div class="ve-col ve-col-status">Status</div>
-                                    <div class="ve-col ve-col-action">Action</div>
-                                </div>
-                                <template for:each={dailyVisitsWithMeta} for:item="visit">
-                                    <div key={visit.id} class="ve-row ve-row--data">
-                                        <div class="ve-col ve-col-time"><span class="ve-time">{visit.time}</span></div>
-                                        <div class="ve-col ve-col-account">
-                                            <div class="ve-account-avatar">{visit.accountInitial}</div>
-                                            <div class="ve-account-info">
-                                                <div class="ve-account-name">{visit.account}</div>
-                                                <div class="ve-account-location">{visit.location}</div>
-                                            </div>
-                                        </div>
-                                        <div class="ve-col ve-col-purpose"><span class="ve-purpose">{visit.purpose}</span></div>
-                                        <div class="ve-col ve-col-status"><span class={visit.statusClass}>{visit.status}</span></div>
-                                        <div class="ve-col ve-col-action">
-                                            <template if:true={visit.canCheckIn}>
-                                                <span class="ve-done-label jp-pending">Scheduled</span>
-                                            </template>
-                                            <template if:true={visit.isInProgress}>
-                                                <span class="ve-done-label jp-inprogress">⏳ In Progress</span>
-                                            </template>
-                                            <template if:true={visit.isCompleted}>
-                                                <span class="ve-done-label jp-done">✓ Done</span>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-                </div>
+                    </template>
+                </template>
             </div>
         </template>
 
-        <!-- WEEK VIEW -->
+        <!-- ══════════════════════ WEEK VIEW ══════════════════════ -->
         <template if:true={isWeekView}>
-            <div class="week-view">
-                <div class="week-header">
-                    <h3>Week Overview: {weekRangeDisplay}</h3>
-                    <div class="week-stats">
-                        <span class="stat">📅 {weekStats.days} days</span>
-                        <span class="stat">📍 {weekStats.totalVisits} visits</span>
-                        <span class="stat">⏱️ {weekStats.totalHours} hours</span>
-                    </div>
+            <div class="week-header">
+                <button class="nav-btn" onclick={prevWeek}>‹</button>
+                <div class="week-title">
+                    <h3>Week Overview</h3>
+                    <span class="week-range">{weekRange}</span>
                 </div>
-                <div class="week-cards">
-                    <template for:each={weekDays} for:item="day">
-                        <div key={day.id} class="week-card" onclick={selectWeekDay} data-date={day.date}>
-                            <div class="week-day">{day.dayName}</div>
-                            <div class="week-date">{day.date}</div>
-                            <div class="week-visits"><span class="visit-count-lg">{day.visits}</span><span class="visit-label"> visits</span></div>
-                        </div>
-                    </template>
-                </div>
-                <div class="week-schedule">
-                    <template for:each={weekSchedule} for:item="visit">
-                        <div key={visit.id} class="schedule-item">
-                            <div class="schedule-day">{visit.day}</div>
-                            <div class="schedule-time">{visit.time}</div>
-                            <div class="schedule-account">{visit.account}</div>
-                            <div class="schedule-purpose">{visit.purpose}</div>
-                            <div class={visit.statusClass}>{visit.status}</div>
-                        </div>
-                    </template>
-                </div>
+                <button class="nav-btn" onclick={nextWeek}>›</button>
+            </div>
+            <div class="week-stats">
+                <div class="wk-stat"><span class="wk-num">{weekPlannedTotal}</span><span class="wk-lbl">Planned</span></div>
+                <div class="wk-stat"><span class="wk-num">{weekCompletedTotal}</span><span class="wk-lbl">Completed</span></div>
+                <div class="wk-stat"><span class="wk-num">{weekDistanceTotal}</span><span class="wk-lbl">Distance</span></div>
+            </div>
+            <div class="week-grid">
+                <template for:each={weekDays} for:item="w">
+                    <button key={w.dateStr} class={w.cardClass} data-date={w.dateStr} onclick={selectWeekDay}>
+                        <div class="wk-day">{w.dayName}</div>
+                        <div class="wk-date">{w.dateLabel}</div>
+                        <div class="wk-visits">{w.planned} visits</div>
+                        <div class="wk-done">{w.completed} done</div>
+                        <div class="wk-dist">{w.distanceDisplay}</div>
+                    </button>
+                </template>
             </div>
         </template>
 
-        <!-- MONTH VIEW -->
+        <!-- ══════════════════════ MONTH VIEW ══════════════════════ -->
         <template if:true={isMonthView}>
-            <div class="month-view">
-                <div class="month-header">
-                    <h3>{calendarMonth} {calendarYear}</h3>
-                    <div class="month-stats">
-                        <span class="stat">📅 {monthSummary.totalDays} days</span>
-                        <span class="stat">📍 {monthSummary.totalVisits} visits</span>
-                        <span class="stat">🏢 {monthSummary.totalAccounts} accounts</span>
-                    </div>
+            <div class="month-header">
+                <button class="nav-btn" onclick={prevMonth}>‹</button>
+                <div class="month-title">
+                    <h3>{calLabel}</h3>
+                    <span class="month-sub">{monthPlannedTotal} visits · {monthActiveDays} active days</span>
                 </div>
-                <div class="month-grid">
-                    <div class="month-weekdays">
-                        <div class="weekday">Sun</div><div class="weekday">Mon</div>
-                        <div class="weekday">Tue</div><div class="weekday">Wed</div>
-                        <div class="weekday">Thu</div><div class="weekday">Fri</div>
-                        <div class="weekday">Sat</div>
-                    </div>
-                    <template for:each={monthDays} for:item="day">
-                        <div key={day.id} class="month-day" data-date={day.date}>
-                            <div class="day-header">
-                                <span class="day-number">{day.day}</span>
-                                <template if:true={day.hasVisits}>
-                                    <span class="day-visits">{day.visits}</span>
+                <button class="nav-btn" onclick={nextMonth}>›</button>
+            </div>
+            <div class="month-weekdays">
+                <template for:each={weekdayLabels} for:item="w">
+                    <span key={w} class="mwd">{w}</span>
+                </template>
+            </div>
+            <div class="month-grid">
+                <template for:each={monthCells} for:item="c">
+                    <template if:true={c.blank}>
+                        <span key={c.key} class="month-day blank"></span>
+                    </template>
+                    <template if:false={c.blank}>
+                        <button key={c.key} class={c.cellClass} data-date={c.iso} onclick={selectMonthDay}>
+                            <div class="md-top">
+                                <span class="md-num">{c.dayNum}</span>
+                                <template if:true={c.hasVisits}>
+                                    <span class="md-badge">{c.planned}</span>
                                 </template>
                             </div>
-                            <template if:true={day.events}>
-                                <div class="day-events">
-                                    <template for:each={day.events} for:item="event">
-                                        <div key={event.id} class="day-event">{event.time} - {event.account}</div>
+                            <div class="md-events">
+                                <template for:each={c.events} for:item="ev">
+                                    <span key={ev.key} class="md-event">{ev.text}</span>
+                                </template>
+                            </div>
+                        </button>
+                    </template>
+                </template>
+            </div>
+        </template>
+
+        <!-- ══════════════════════ UPLOAD MODAL ══════════════════════ -->
+        <template if:true={showUpload}>
+            <div class="modal-overlay" onclick={closeUpload}>
+                <div class="modal-box" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2>Upload PJP Plan</h2>
+                        <button class="modal-close" onclick={closeUpload}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="upload-help">Upload a CSV with columns:
+                            <code>Account, Date, Time, Purpose, Priority</code>.
+                            Dates as <code>YYYY-MM-DD</code>, times as <code>HH:mm</code>. Accounts are matched by name.</p>
+                        <label class="file-drop">
+                            <input type="file" accept=".csv" onchange={handleFile} />
+                            <span class="file-drop-text">Click to choose a .csv file</span>
+                        </label>
+                        <template if:true={isUploading}>
+                            <div class="loading-state">Importing…</div>
+                        </template>
+                        <template if:true={uploadResult}>
+                            <div class="upload-summary">
+                                <div class="us-item"><span class="us-num">{uploadResult.itemsCreated}</span><span class="us-lbl">Imported</span></div>
+                                <div class="us-item"><span class="us-num">{uploadResult.plansCreated}</span><span class="us-lbl">Plans</span></div>
+                                <div class="us-item"><span class="us-num">{uploadResult.rowsSkipped}</span><span class="us-lbl">Skipped</span></div>
+                            </div>
+                            <template if:true={hasUploadErrors}>
+                                <div class="upload-errors">
+                                    <template for:each={uploadErrors} for:item="er">
+                                        <div key={er.key} class="err-line">{er.text}</div>
                                     </template>
                                 </div>
                             </template>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="secondary-btn" onclick={closeUpload}>Close</button>
+                    </div>
                 </div>
             </div>
         </template>
-    </div>
 
-    <!-- Schedule Visit Modal -->
-    <template if:true={showScheduleVisitModal}>
-        <div class="modal-overlay" onclick={closeScheduleVisitModal}>
-            <div class="jp-modal" onclick={handleModalClick}>
-                <div class="modal-header">
-                    <h2>📅 Schedule Visit</h2>
-                    <button class="modal-close" onclick={closeScheduleVisitModal}>×</button>
-                </div>
-                <div class="modal-body">
-                    <lightning-record-edit-form object-api-name="Visit__c" onsuccess={handleVisitSuccess} onerror={handleVisitError}>
-                        <lightning-messages></lightning-messages>
-                        <lightning-input-field field-name="Account__c"></lightning-input-field>
-                        <lightning-input-field field-name="Visit_Date__c"></lightning-input-field>
-                        <lightning-input-field field-name="Planned_Start_Time__c"></lightning-input-field>
-                        <lightning-input-field field-name="Visit_Purpose__c"></lightning-input-field>
-                        <lightning-input-field field-name="Visit_Status__c"></lightning-input-field>
-                        <div class="modal-footer">
-                            <button class="secondary-btn" type="button" onclick={closeScheduleVisitModal}>Cancel</button>
-                            <lightning-button type="submit" label="Create Visit" variant="brand"></lightning-button>
+        <!-- ══════════════════════ ADD VISIT MODAL (builder) ══════════════════════ -->
+        <template if:true={showAddVisit}>
+            <div class="modal-overlay" onclick={closeAddVisit}>
+                <div class="modal-box" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2>Add Visit — {selectedDateDisplay}</h2>
+                        <button class="modal-close" onclick={closeAddVisit}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="field">
+                            <label class="field-label">Account</label>
+                            <template if:false={selectedAccount}>
+                                <input type="text" class="text-input" placeholder="Search accounts…" oninput={handleAccountSearch} />
+                                <template if:true={hasAccountResults}>
+                                    <div class="account-results">
+                                        <template for:each={accountResults} for:item="a">
+                                            <button key={a.id} class="account-option" data-id={a.id} onclick={selectAccount}>
+                                                <span class="ao-name">{a.name}</span>
+                                                <span class="ao-loc">{a.location}</span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </template>
+                            <template if:true={selectedAccount}>
+                                <div class="selected-account">
+                                    <span>{selectedAccount.name}</span>
+                                    <button class="link-btn" onclick={clearAccount}>Change</button>
+                                </div>
+                            </template>
                         </div>
-                    </lightning-record-edit-form>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label class="field-label">Planned Time</label>
+                                <input type="time" class="text-input" value={addTime} onchange={handleTime} />
+                            </div>
+                            <div class="field">
+                                <lightning-combobox label="Priority" value={addPriority}
+                                    options={priorityOptions} onchange={handlePriority}></lightning-combobox>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <lightning-combobox label="Purpose" value={addPurpose}
+                                options={purposeOptions} onchange={handlePurpose}></lightning-combobox>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="secondary-btn" onclick={closeAddVisit}>Cancel</button>
+                        <button class="primary-btn" onclick={submitAddVisit} disabled={isSaving}>Add to Plan</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </template>
+        </template>
+
+    </div>
 </template>

@@ -1,156 +1,292 @@
 <template>
-    <div class="visit-execution-container">
-        <!-- Detail View (when activeVisitId is set) -->
-        <template if:true={activeVisitId}>
-            <c-sfa-visit-detail-view visit-id={activeVisitId} check-in-time={activeVisitCheckInTime}
-                check-in-lat={activeVisitLat} check-in-lng={activeVisitLng}
-                check-in-address={activeVisitAddress} onback={handleVisitDetailBack}
-                oncheckout={handleVisitCheckOutEvent}>
-            </c-sfa-visit-detail-view>
+    <div class="ve-container">
+
+        <!-- ── Header ─────────────────────────────────────────── -->
+        <div class="ve-header">
+            <div class="header-left">
+                <h1>Visit Execution</h1>
+                <p class="subtitle">Check in on-site — distance &amp; duration auto-tracked</p>
+            </div>
+            <div class="date-nav">
+                <button class="nav-btn" onclick={prevDate}>‹</button>
+                <span class="date-label">{dateDisplay}</span>
+                <button class="nav-btn" onclick={nextDate}>›</button>
+            </div>
+        </div>
+
+        <!-- ── Route metrics ──────────────────────────────────── -->
+        <div class="metrics-grid">
+            <div class="metric-card m-planned">
+                <div class="metric-title">Planned</div>
+                <div class="metric-value">{plannedCount}</div>
+            </div>
+            <div class="metric-card m-completed">
+                <div class="metric-title">Completed</div>
+                <div class="metric-value">{completedCount}</div>
+            </div>
+            <div class="metric-card m-pending">
+                <div class="metric-title">Pending</div>
+                <div class="metric-value">{pendingCount}</div>
+            </div>
+            <div class="metric-card m-distance">
+                <div class="metric-title">Route Distance</div>
+                <div class="metric-value sm">{totalDistanceDisplay}</div>
+            </div>
+            <div class="metric-card m-travel">
+                <div class="metric-title">Travel Time</div>
+                <div class="metric-value sm">{travelTimeDisplay}</div>
+            </div>
+            <div class="metric-card m-onsite">
+                <div class="metric-title">On-site Time</div>
+                <div class="metric-value sm">{onSiteDisplay}</div>
+            </div>
+        </div>
+
+        <template if:true={gpsStatus}>
+            <div class="gps-banner">📍 {gpsStatus}</div>
         </template>
 
-        <!-- List View (default) -->
-        <template if:false={activeVisitId}>
-            <div class="ve-wrapper">
-                <!-- Header -->
-                <div class="journey-header">
-                    <div class="header-left">
-                        <h1>Visit Execution</h1>
-                        <p class="subtitle">Check in to your planned visits for today</p>
+        <!-- ── Visit list ─────────────────────────────────────── -->
+        <div class="list-card">
+            <div class="card-header">
+                <h3>Today's Route</h3>
+                <span class="count-badge">{completedCount}/{plannedCount} done</span>
+            </div>
+
+            <template if:true={isLoading}>
+                <div class="loading-state">Loading route…</div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:false={hasItems}>
+                    <div class="empty-state">
+                        <div class="empty-icon">🧭</div>
+                        <p>No planned visits for this day. Add them in Journey Plan.</p>
                     </div>
-                    <div class="header-right">
-                        <button class="primary-btn" onclick={openCreateVisitFromExecution}>
-                            ➕ Create New Visit
-                        </button>
-                    </div>
-                </div>
+                </template>
 
-                <!-- Date Carousel -->
-                <div class="date-carousel">
-                    <button class="carousel-btn" onclick={prevDate}>←</button>
-                    <div class="carousel-dates">
-                        <template for:each={carouselDates} for:item="dateItem">
-                            <div key={dateItem.id} class="carousel-date" data-date={dateItem.id}
-                                onclick={handleExecutionDateClick}>
-                                <div class="carousel-day">{dateItem.dayName}</div>
-                                <div class="carousel-date-num">{dateItem.dateNum}</div>
-                                <div class="carousel-month">{dateItem.month}</div>
-                                <div class="carousel-visits">{dateItem.visits} visits</div>
-                            </div>
-                        </template>
-                    </div>
-                    <button class="carousel-btn" onclick={nextDate}>→</button>
-                </div>
-
-                <!-- Today's Visit List Card -->
-                <div class="ve-visit-list-card">
-                    <div class="ve-list-header">
-                        <div class="ve-list-title">
-                            <span>📅 Visits — {selectedDateDisplay}</span>
-                            <span class="count-badge-sm">{dailyVisits.length}</span>
-                        </div>
-                        <button class="add-btn" onclick={openCreateVisitFromExecution}>+ Add Visit</button>
-                    </div>
-
-                    <!-- No visits state -->
-                    <template if:false={dailyVisits.length}>
-                        <div class="ve-empty">
-                            <div class="ve-empty-icon">📋</div>
-                            <div class="ve-empty-title">No visits planned for this date</div>
-                            <button class="primary-btn" onclick={openCreateVisitFromExecution}>
-                                Schedule a Visit
-                            </button>
-                        </div>
-                    </template>
-
-                    <!-- Visit rows -->
-                    <template if:true={dailyVisits.length}>
-                        <div class="ve-visit-rows">
-                            <div class="ve-row ve-row--header">
-                                <div class="ve-col ve-col-time">Time</div>
-                                <div class="ve-col ve-col-account">Account</div>
-                                <div class="ve-col ve-col-purpose">Purpose</div>
-                                <div class="ve-col ve-col-status">Status</div>
-                                <div class="ve-col ve-col-action">Action</div>
-                            </div>
-
-                            <template for:each={dailyVisitsWithMeta} for:item="visit">
-                                <div key={visit.id} class="ve-row ve-row--data">
-
-                                    <!-- Time -->
-                                    <div class="ve-col ve-col-time">
-                                        <span class="ve-time">{visit.time}</span>
+                <template if:true={hasItems}>
+                    <div class="visit-list">
+                        <template for:each={items} for:item="v">
+                            <div key={v.id} class="visit-row">
+                                <div class="v-seq">{v.seq}</div>
+                                <div class="v-main" data-id={v.id} onclick={openDetail}>
+                                    <div class="v-line1">
+                                        <span class="v-account">{v.accountName}</span>
+                                        <span class={v.statusClass}>{v.status}</span>
                                     </div>
-
-                                    <!-- Account -->
-                                    <div class="ve-col ve-col-account">
-                                        <div class="ve-account-avatar">{visit.accountInitial}</div>
-                                        <div class="ve-account-info">
-                                            <div class="ve-account-name">{visit.account}</div>
-                                            <div class="ve-account-location">{visit.location}</div>
+                                    <div class="v-line2">
+                                        <span class="v-meta">🕐 {v.plannedTime}</span>
+                                        <span class="v-meta">📍 {v.location}</span>
+                                        <span class="v-meta">{v.purpose}</span>
+                                    </div>
+                                    <template if:true={v.isCompleted}>
+                                        <div class="v-route">
+                                            <span class="route-chip">Distance {v.distanceDisplay}</span>
+                                            <span class="route-chip">Travel {v.travelDisplay}</span>
+                                            <span class="route-chip">On-site {v.durationDisplay}</span>
                                         </div>
-                                    </div>
-
-                                    <!-- Purpose -->
-                                    <div class="ve-col ve-col-purpose">
-                                        <span class="ve-purpose">{visit.purpose}</span>
-                                    </div>
-
-                                    <!-- Status -->
-                                    <div class="ve-col ve-col-status">
-                                        <span class={visit.statusClass}>{visit.status}</span>
-                                    </div>
-
-                                    <!-- Action buttons -->
-                                    <div class="ve-col ve-col-action">
-                                        <template if:true={visit.canCheckIn}>
-                                            <button class="ve-checkin-btn" data-id={visit.id} data-account={visit.account}
-                                                onclick={handleVisitCheckIn} disabled={visit.isCheckingIn}>
-                                                <template if:true={visit.isCheckingIn}>
-                                                    <span class="ve-spinner"></span> Locating…
-                                                </template>
-                                                <template if:false={visit.isCheckingIn}>
-                                                    ✓ Check In
-                                                </template>
-                                            </button>
-                                        </template>
-
-                                        <template if:true={visit.isInProgress}>
-                                            <button class="ve-checkin-btn ve-checkin-btn--resume" data-id={visit.id}
-                                                onclick={handleResumeVisit}>
-                                                ▶ Resume
-                                            </button>
-                                        </template>
-
-                                        <template if:true={visit.isCompleted}>
-                                            <span class="ve-done-label">✓ Completed</span>
-                                        </template>
-                                    </div>
+                                    </template>
                                 </div>
-                            </template>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Recent Visit History -->
-                <div class="bottom-card priority-card" style="margin-top:20px;">
-                    <div class="card-header">
-                        <h3>📍 Recent Visit History</h3>
-                        <button class="view-all-btn" onclick={handleViewAllVisits}>View All →</button>
-                    </div>
-                    <div class="priority-list">
-                        <template for:each={recentVisits} for:item="visit">
-                            <div key={visit.id} class="priority-account">
-                                <div class="account-info">
-                                    <div class="account-name">{visit.account}</div>
-                                    <div class="account-location">{visit.time}</div>
+                                <div class="v-action">
+                                    <template if:true={v.canCheckIn}>
+                                        <button class="checkin-btn" data-id={v.id} onclick={handleCheckIn} disabled={v.busy}>
+                                            ✓ Check In
+                                        </button>
+                                    </template>
+                                    <template if:true={v.isInProgress}>
+                                        <button class="checkout-btn" data-id={v.id} data-account={v.accountName} onclick={openCheckout}>
+                                            ■ Check Out
+                                        </button>
+                                    </template>
+                                    <template if:true={v.isCompleted}>
+                                        <span class="done-label">✓ Done</span>
+                                    </template>
                                 </div>
-                                <div class={visit.statusClass}>{visit.status}</div>
                             </div>
                         </template>
+                    </div>
+                </template>
+            </template>
+        </div>
+
+        <!-- ── Check-out modal ────────────────────────────────── -->
+        <template if:true={showCheckout}>
+            <div class="modal-overlay" onclick={closeCheckout}>
+                <div class="modal-box" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2>Check Out — {checkoutAccount}</h2>
+                        <button class="modal-close" onclick={closeCheckout}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="co-help">Your current GPS location will be captured and the on-site duration &amp; distance calculated automatically.</p>
+                        <lightning-combobox label="Visit Outcome" value={outcome} options={outcomeOptions} onchange={handleOutcome}></lightning-combobox>
+                        <div class="field">
+                            <label class="field-label">Notes</label>
+                            <textarea class="notes-input" rows="3" onchange={handleNotes} placeholder="Visit notes…"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="secondary-btn" onclick={closeCheckout}>Cancel</button>
+                        <button class="primary-btn" onclick={confirmCheckout} disabled={isCheckingOut}>Confirm Check Out</button>
                     </div>
                 </div>
             </div>
         </template>
+
+        <!-- ── Detail modal (tabbed visit-execution view) ─────── -->
+        <template if:true={showDetail}>
+            <div class="modal-overlay" onclick={closeDetail}>
+                <div class="modal-box modal-wide" onclick={stopProp}>
+                    <div class="modal-header">
+                        <div>
+                            <h2>{detail.accountName}</h2>
+                            <span class={detail.statusPill}>{detail.status}</span>
+                        </div>
+                        <button class="modal-close" onclick={closeDetail}>×</button>
+                    </div>
+
+                    <div class="tab-bar">
+                        <button class={infoTabClass} onclick={showInfo}>📍 Visit Information</button>
+                        <button class={analysisTabClass} onclick={showAnalysis}>📊 Market Analysis ({analysisCount})</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- ============ INFO TAB ============ -->
+                        <template if:true={isInfoTab}>
+                            <div class="section-title">Visit</div>
+                            <div class="detail-grid">
+                                <div class="d-item"><span class="d-label">Account</span><span class="d-value">{detail.accountName}</span></div>
+                                <div class="d-item"><span class="d-label">Status</span><span class="d-value">{detail.status}</span></div>
+                                <div class="d-item"><span class="d-label">Purpose</span><span class="d-value">{detail.purposeDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Priority</span><span class="d-value">{detail.priorityDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Planned Time</span><span class="d-value">{detail.plannedTimeDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Location</span><span class="d-value">{detail.locationDisplay}</span></div>
+                            </div>
+
+                            <div class="section-title">Check-In</div>
+                            <div class="detail-grid">
+                                <div class="d-item"><span class="d-label">Check-In Time</span><span class="d-value">{detail.checkInTimeDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Check-In GPS</span><span class="d-value">{detail.checkInCoords}</span></div>
+                                <div class="d-item d-wide"><span class="d-label">Check-In Address</span><span class="d-value">{detail.checkInAddressDisplay}</span></div>
+                            </div>
+
+                            <div class="section-title">Check-Out</div>
+                            <div class="detail-grid">
+                                <div class="d-item"><span class="d-label">Check-Out Time</span><span class="d-value">{detail.checkOutTimeDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Check-Out GPS</span><span class="d-value">{detail.checkOutCoords}</span></div>
+                                <div class="d-item d-wide"><span class="d-label">Check-Out Address</span><span class="d-value">{detail.checkOutAddressDisplay}</span></div>
+                                <div class="d-item"><span class="d-label">Outcome</span><span class="d-value">{detail.outcomeDisplay}</span></div>
+                            </div>
+
+                            <div class="section-title">Route &amp; Duration</div>
+                            <div class="route-summary">
+                                <div class="rs-item"><span class="rs-num">{detail.distanceDisplay}</span><span class="rs-lbl">Distance from prev</span></div>
+                                <div class="rs-item"><span class="rs-num">{detail.travelDisplay}</span><span class="rs-lbl">Travel time</span></div>
+                                <div class="rs-item"><span class="rs-num">{detail.durationDisplay}</span><span class="rs-lbl">Total on-site</span></div>
+                            </div>
+
+                            <div class="section-title">Remarks &amp; Notes</div>
+                            <div class="notes-box">
+                                <template if:true={detail.notesDisplay}>{detail.notesDisplay}</template>
+                                <template if:false={detail.notesDisplay}><span class="muted">No notes recorded.</span></template>
+                            </div>
+                        </template>
+
+                        <!-- ============ ANALYSIS TAB ============ -->
+                        <template if:true={isAnalysisTab}>
+                            <div class="analysis-head">
+                                <span class="section-title no-mt">Competitor / Market Analysis</span>
+                                <button class="primary-btn sm" onclick={toggleAnalysisForm}>+ Add Analysis</button>
+                            </div>
+
+                            <template if:true={showAnalysisForm}>
+                                <div class="analysis-form">
+                                    <div class="field-row">
+                                        <div class="field"><label class="field-label">Competitor Name *</label>
+                                            <input type="text" class="text-input" name="competitorName" oninput={afText} /></div>
+                                        <div class="field"><label class="field-label">Competitor Product</label>
+                                            <input type="text" class="text-input" name="competitorProduct" oninput={afText} /></div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field"><label class="field-label">Our Product</label>
+                                            <input type="text" class="text-input" name="ourProduct" oninput={afText} /></div>
+                                        <div class="field"><label class="field-label">Shelf Share %</label>
+                                            <input type="number" class="text-input" name="shelfShare" oninput={afNum} /></div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field"><label class="field-label">Competitor Price ₹</label>
+                                            <input type="number" class="text-input" name="competitorPrice" oninput={afNum} /></div>
+                                        <div class="field"><label class="field-label">Our Price ₹</label>
+                                            <input type="number" class="text-input" name="ourPrice" oninput={afNum} /></div>
+                                    </div>
+                                    <div class="field-row">
+                                        <div class="field"><label class="field-label">Competitor Stock</label>
+                                            <input type="number" class="text-input" name="competitorStock" oninput={afNum} /></div>
+                                        <div class="field"><label class="field-label">Our Stock</label>
+                                            <input type="number" class="text-input" name="ourStock" oninput={afNum} /></div>
+                                    </div>
+                                    <div class="field-row">
+                                        <lightning-combobox data-field="displayVisibility" label="Display Visibility"
+                                            value={af.displayVisibility} options={visibilityOptions} onchange={afPick}></lightning-combobox>
+                                        <lightning-combobox data-field="promoActive" label="Promo Scheme Active"
+                                            value={af.promoActive} options={promoOptions} onchange={afPick}></lightning-combobox>
+                                    </div>
+                                    <div class="field-row">
+                                        <lightning-combobox data-field="dealerPreference" label="Dealer Preference"
+                                            value={af.dealerPreference} options={dealerPrefOptions} onchange={afPick}></lightning-combobox>
+                                        <lightning-combobox data-field="demandTrend" label="Demand Trend"
+                                            value={af.demandTrend} options={demandOptions} onchange={afPick}></lightning-combobox>
+                                    </div>
+                                    <div class="field-row">
+                                        <lightning-combobox data-field="priceSensitivity" label="Price Sensitivity"
+                                            value={af.priceSensitivity} options={sensitivityOptions} onchange={afPick}></lightning-combobox>
+                                        <div class="field"></div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button class="secondary-btn" onclick={toggleAnalysisForm}>Cancel</button>
+                                        <button class="primary-btn" onclick={saveAnalysis} disabled={isSavingAnalysis}>Save Analysis</button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template if:false={hasAnalyses}>
+                                <div class="empty-analysis">No competitor analysis captured for this visit yet.</div>
+                            </template>
+
+                            <div class="analysis-list">
+                                <template for:each={analyses} for:item="a">
+                                    <div key={a.id} class="analysis-card">
+                                        <div class="ac-head">
+                                            <span class="ac-name">{a.competitorName}</span>
+                                            <span class="ac-date">{a.analysisDate}</span>
+                                        </div>
+                                        <div class="ac-grid">
+                                            <div class="ac-item"><span class="ac-lbl">Competitor Product</span><span class="ac-val">{a.competitorProduct}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Our Product</span><span class="ac-val">{a.ourProduct}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Comp. Price</span><span class="ac-val">{a.competitorPriceD}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Our Price</span><span class="ac-val">{a.ourPriceD}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Price Diff</span><span class="ac-val">{a.priceDiffD}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Shelf Share</span><span class="ac-val">{a.shelfShareD}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Our / Comp Stock</span><span class="ac-val">{a.stockD}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Visibility</span><span class="ac-val">{a.displayVisibility}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Dealer Pref.</span><span class="ac-val">{a.dealerPreference}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Demand Trend</span><span class="ac-val">{a.demandTrend}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Price Sensitivity</span><span class="ac-val">{a.priceSensitivity}</span></div>
+                                            <div class="ac-item"><span class="ac-lbl">Promo Active</span><span class="ac-val">{a.promoActive}</span></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="secondary-btn" onclick={closeDetail}>Close</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
     </div>
 </template>

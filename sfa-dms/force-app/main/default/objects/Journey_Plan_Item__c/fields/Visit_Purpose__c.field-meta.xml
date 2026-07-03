@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Visit_Purpose__c</fullName>
+    <label>Visit Purpose</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Quarterly Review</fullName>
+                <default>false</default>
+                <label>Quarterly Review</label>
+            </value>
+            <value>
+                <fullName>Product Demo</fullName>
+                <default>false</default>
+                <label>Product Demo</label>
+            </value>
+            <value>
+                <fullName>Contract Renewal</fullName>
+                <default>false</default>
+                <label>Contract Renewal</label>
+            </value>
+            <value>
+                <fullName>Order Delivery</fullName>
+                <default>false</default>
+                <label>Order Delivery</label>
+            </value>
+            <value>
+                <fullName>Stock Check</fullName>
+                <default>false</default>
+                <label>Stock Check</label>
+            </value>
+            <value>
+                <fullName>Follow-up Visit</fullName>
+                <default>false</default>
+                <label>Follow-up Visit</label>
+            </value>
+            <value>
+                <fullName>New Account Meeting</fullName>
+                <default>false</default>
+                <label>New Account Meeting</label>
+            </value>
+            <value>
+                <fullName>Complaint Resolution</fullName>
+                <default>false</default>
+                <label>Complaint Resolution</label>
+            </value>
+            <value>
+                <fullName>Payment Collection</fullName>
+                <default>false</default>
+                <label>Payment Collection</label>
+            </value>
+            <value>
+                <fullName>Relationship Building</fullName>
+                <default>false</default>
+                <label>Relationship Building</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

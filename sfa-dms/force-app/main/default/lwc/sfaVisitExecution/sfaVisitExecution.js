@@ -1,202 +1,294 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getDayVisits from '@salesforce/apex/VisitDayVisitsController.getDayVisits';
-import getLast14DaysVisits from '@salesforce/apex/VisitDayVisitsController.getLast14DaysVisits';
-import checkInVisit from '@salesforce/apex/VisitDayVisitsController.checkInVisit';
-import createVisit from '@salesforce/apex/VisitDayVisitsController.createVisit';
+import getDayPlan from '@salesforce/apex/JourneyPlanController.getDayPlan';
+import checkInItem from '@salesforce/apex/JourneyPlanController.checkInItem';
+import checkOutItem from '@salesforce/apex/JourneyPlanController.checkOutItem';
+import getItemDetail from '@salesforce/apex/JourneyPlanController.getItemDetail';
+import getItemAnalyses from '@salesforce/apex/JourneyPlanController.getItemAnalyses';
+import saveMarketAnalysis from '@salesforce/apex/JourneyPlanController.saveMarketAnalysis';
+
+const OUTCOMES = ['Successful','Partially Successful','Postponed','Cancelled','No Show'];
+const VISIBILITY = ['Excellent','Good','Average','Poor','Not Displayed'];
+const PROMO = ['No / Yes - Ours','Yes - Competitor','Yes - Both'];
+const DEALER_PREF = ['Strongly','Slightly Prefer Ours','Neutral','Slightly','Strongly Prefer Competitor'];
+const DEMAND = ['Increasing','Stable','Decreasing - Ours','Increasing - Competitor'];
+const SENSITIVITY = ['High','Medium','Low'];
 
 export default class SfaVisitExecution extends LightningElement {
-
-    // ── Detail View Ownership ────────────────────────────
-    @track activeVisitId = null;
-    @track activeVisitCheckInTime = null;
-    @track activeVisitLat = null;
-    @track activeVisitLng = null;
-    @track activeVisitAddress = null;
-
-    // ── List View State ──────────────────────────────────
     @track selectedDate = new Date();
-    @track dailyVisits = [];
-    @track recentVisits = [];
-    @track allVisits = [];
-    @track carouselDates = [];
-    @track showVisitHistoryModal = false;
-    @track checkingInVisitId = null;
+    @track plan = {};
+    @track items = [];
+    @track isLoading = false;
+
+    // GPS
+    @track gpsStatus = '';
+    busyItemId = null;
+
+    // Detail modal
+    @track showDetail = false;
+    @track detail;
+    @track detailTab = 'info';
+    @track analyses = [];
+
+    // Analysis form
+    @track showAnalysisForm = false;
+    @track af = {};
+    @track isSavingAnalysis = false;
+
+    // Checkout modal
+    @track showCheckout = false;
+    @track checkoutItemId;
+    @track checkoutAccount = '';
+    @track outcome = 'Successful';
+    @track notes = '';
+    @track isCheckingOut = false;
+
+    outcomeOptions = OUTCOMES.map(o => ({ label: o, value: o }));
+    visibilityOptions = VISIBILITY.map(o => ({ label: o, value: o }));
+    promoOptions = PROMO.map(o => ({ label: o, value: o }));
+    dealerPrefOptions = DEALER_PREF.map(o => ({ label: o, value: o }));
+    demandOptions = DEMAND.map(o => ({ label: o, value: o }));
+    sensitivityOptions = SENSITIVITY.map(o => ({ label: o, value: o }));
 
     connectedCallback() {
-        this.loadCarouselDates();
-        this.loadDayVisits();
-        this.loadRecentVisits();
+        this.loadDay();
     }
 
-    loadCarouselDates() {
-        const dates = [];
-        const today = new Date(this.selectedDate);
-        for (let i = -2; i <= 2; i++) {
-            const d = new Date(today);
-            d.setDate(d.getDate() + i);
-            dates.push({
-                id: i,
-                dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-                dateNum: d.getDate().toString(),
-                month: d.toLocaleDateString('en-US', { month: 'short' }),
-                visits: Math.floor(Math.random() * 4) + 1
-            });
-        }
-        this.carouselDates = dates;
+    // ── Date ──────────────────────────────────────────────────
+    toISO(d) {
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
+    get selectedISO() { return this.toISO(this.selectedDate); }
+    get dateDisplay() {
+        return this.selectedDate.toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+    prevDate() { this.shift(-1); }
+    nextDate() { this.shift(1); }
+    shift(n) { const d = new Date(this.selectedDate); d.setDate(d.getDate()+n); this.selectedDate = d; this.loadDay(); }
 
-    loadDayVisits() {
-        getDayVisits({ visitDate: this.formatDateForApex(this.selectedDate) })
-            .then(result => {
-                this.dailyVisits = (result || []).map(v => ({
-                    id: v.Id,
-                    time: this.fmtTime(v.Planned_Start_Time__c),
-                    account: v.Account__r?.Name || '—',
-                    accountInitial: (v.Account__r?.Name || '?').charAt(0).toUpperCase(),
-                    location: v.Account__r?.BillingCity || '—',
-                    purpose: v.Visit_Purpose__c || 'Meeting',
-                    status: v.Visit_Status__c || 'Planned',
-                    statusClass: this.getStatusClass(v.Visit_Status__c),
-                    canCheckIn: v.Visit_Status__c === 'Planned',
-                    isInProgress: v.Visit_Status__c === 'In Progress',
-                    isCompleted: v.Visit_Status__c === 'Completed',
-                    isCheckingIn: false,
-                    checkInLat: v.Check_In_Latitude__c,
-                    checkInLng: v.Check_In_Longitude__c,
-                    checkInTime: v.Check_In_Time__c,
-                    checkInAddress: v.Check_In_Address__c
-                }));
+    // ── Load ──────────────────────────────────────────────────
+    loadDay() {
+        this.isLoading = true;
+        getDayPlan({ planDate: this.selectedISO })
+            .then(res => {
+                this.plan = res || {};
+                this.items = (res && res.items ? res.items : []).map((it, idx) => this.decorate(it, idx));
             })
-            .catch(error => console.error('Day visits error', error));
+            .catch(err => this.toastError('Load', err))
+            .finally(() => { this.isLoading = false; });
     }
 
-    get dailyVisitsWithMeta() { return this.dailyVisits; }
-
-    loadRecentVisits() {
-        getLast14DaysVisits()
-            .then(result => {
-                this.recentVisits = (result || []).slice(0, 5).map(v => ({
-                    id: v.Id,
-                    account: v.Account__r?.Name || '—',
-                    time: this.fmtTime(v.Check_In_Time__c) || this.fmtTime(v.Planned_Start_Time__c),
-                    status: v.Visit_Status__c,
-                    statusClass: this.getStatusClass(v.Visit_Status__c)
-                }));
-                this.allVisits = result || [];
-            })
-            .catch(error => console.error('Recent visits error', error));
-    }
-
-    getStatusClass(status) {
-        const map = {
-            'Planned': 'status planned',
-            'In Progress': 'status in-progress',
-            'Completed': 'status completed'
+    decorate(it, idx) {
+        const isCompleted = it.status === 'Completed';
+        const isInProgress = it.status === 'In Progress';
+        const canCheckIn = it.status === 'Scheduled';
+        return {
+            ...it,
+            seq: idx + 1,
+            statusClass: `pill status-${(it.status||'').toLowerCase().replace(/\s+/g,'-')}`,
+            canCheckIn,
+            isInProgress,
+            isCompleted,
+            busy: this.busyItemId === it.id,
+            distanceDisplay: (it.distanceFromPrev !== null && it.distanceFromPrev !== undefined) ? `${it.distanceFromPrev} km` : '—',
+            travelDisplay: it.travelFromPrev ? this.fmtMins(it.travelFromPrev) : '—',
+            durationDisplay: it.actualDuration ? this.fmtMins(it.actualDuration) : '—'
         };
-        return map[status] || 'status';
     }
 
-    fmtTime(timeStr) {
-        if (!timeStr) return '—';
-        try { return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
-        catch { return timeStr; }
+    // ── Route metrics ─────────────────────────────────────────
+    get plannedCount() { return this.plan.plannedVisits || 0; }
+    get completedCount() { return this.plan.completedVisits || 0; }
+    get pendingCount() { return this.plan.pendingVisits || 0; }
+    get totalDistanceDisplay() { return `${(this.plan.totalDistance || 0).toFixed(1)} km`; }
+    get travelTimeDisplay() { return this.fmtMins(this.plan.totalTravelTime || 0); }
+    get onSiteDisplay() { return this.fmtMins(this.plan.actualDuration || 0); }
+    get hasItems() { return this.items.length > 0; }
+
+    // ── GPS ───────────────────────────────────────────────────
+    getGPS() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) { reject(new Error('Geolocation not supported')); return; }
+            this.gpsStatus = 'Locating…';
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    this.gpsStatus = '';
+                    resolve({
+                        lat: Number(pos.coords.latitude.toFixed(6)),
+                        lng: Number(pos.coords.longitude.toFixed(6)),
+                        address: ''
+                    });
+                },
+                err => { this.gpsStatus = ''; reject(new Error(this.gpsErr(err))); },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+    gpsErr(err) {
+        const m = { 1: 'Location permission denied', 2: 'Position unavailable', 3: 'Location request timed out' };
+        return m[err.code] || 'Unable to get location';
     }
 
-    formatDateForApex(date) {
-        if (!date) return null;
-        const d = new Date(date);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // ── Check-in ──────────────────────────────────────────────
+    handleCheckIn(event) {
+        const id = event.currentTarget.dataset.id;
+        this.busyItemId = id;
+        this.refreshBusy();
+        this.getGPS()
+            .then(gps => checkInItem({ itemId: id, lat: gps.lat, lng: gps.lng, address: gps.address }))
+            .then(() => { this.toast('Checked in', 'Location captured', 'success'); this.loadDay(); })
+            .catch(err => this.toastError('Check-in', err))
+            .finally(() => { this.busyItemId = null; });
     }
 
-    get selectedDateDisplay() {
-        return this.selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    // ── Check-out (with outcome) ──────────────────────────────
+    openCheckout(event) {
+        this.checkoutItemId = event.currentTarget.dataset.id;
+        this.checkoutAccount = event.currentTarget.dataset.account || '';
+        this.outcome = 'Successful';
+        this.notes = '';
+        this.showCheckout = true;
+    }
+    closeCheckout() { this.showCheckout = false; }
+    handleOutcome(e) { this.outcome = e.detail.value; }
+    handleNotes(e) { this.notes = e.target.value; }
+
+    confirmCheckout() {
+        this.isCheckingOut = true;
+        this.getGPS()
+            .then(gps => checkOutItem({
+                itemId: this.checkoutItemId, lat: gps.lat, lng: gps.lng,
+                address: gps.address, outcome: this.outcome, notes: this.notes
+            }))
+            .then(res => {
+                this.showCheckout = false;
+                const dur = res && res.actualDuration ? this.fmtMins(res.actualDuration) : '';
+                this.toast('Checked out', dur ? `On-site time: ${dur}` : 'Visit completed', 'success');
+                this.loadDay();
+            })
+            .catch(err => this.toastError('Check-out', err))
+            .finally(() => { this.isCheckingOut = false; });
     }
 
-    prevDate() {
-        this.selectedDate.setDate(this.selectedDate.getDate() - 1);
-        this.loadCarouselDates();
-        this.loadDayVisits();
+    // ── Detail ────────────────────────────────────────────────
+    openDetail(event) {
+        const id = event.currentTarget.dataset.id;
+        this.detailTab = 'info';
+        this.showAnalysisForm = false;
+        getItemDetail({ itemId: id })
+            .then(res => {
+                this.detail = this.decorateDetail(res);
+                this.showDetail = true;
+                return this.loadAnalyses(id);
+            })
+            .catch(err => this.toastError('Detail', err));
     }
-
-    nextDate() {
-        this.selectedDate.setDate(this.selectedDate.getDate() + 1);
-        this.loadCarouselDates();
-        this.loadDayVisits();
+    decorateDetail(res) {
+        return {
+            ...res,
+            statusPill: `pill status-${(res.status||'').toLowerCase().replace(/\s+/g,'-')}`,
+            checkInCoords: (res.checkInLat != null && res.checkInLng != null) ? `${res.checkInLat}, ${res.checkInLng}` : '—',
+            checkOutCoords: (res.checkOutLat != null && res.checkOutLng != null) ? `${res.checkOutLat}, ${res.checkOutLng}` : '—',
+            checkInTimeDisplay: res.checkInTime || '—',
+            checkOutTimeDisplay: res.checkOutTime || '—',
+            checkInAddressDisplay: res.checkInAddress || '—',
+            checkOutAddressDisplay: res.checkOutAddress || '—',
+            plannedTimeDisplay: res.plannedTime || '—',
+            purposeDisplay: res.purpose || '—',
+            priorityDisplay: res.priority || '—',
+            outcomeDisplay: res.outcome || '—',
+            locationDisplay: res.location || '—',
+            distanceDisplay: (res.distanceFromPrev != null) ? `${res.distanceFromPrev} km` : '—',
+            travelDisplay: res.travelFromPrev ? this.fmtMins(res.travelFromPrev) : '—',
+            durationDisplay: res.actualDuration ? this.fmtMins(res.actualDuration) : '—',
+            notesDisplay: res.notes || ''
+        };
     }
-
-    handleExecutionDateClick(event) {
-        const dateOffset = parseInt(event.currentTarget.dataset.date);
-        const d = new Date(this.selectedDate);
-        d.setDate(d.getDate() + dateOffset);
-        this.selectedDate = d;
-        this.loadDayVisits();
-        this.loadCarouselDates();
+    loadAnalyses(itemId) {
+        return getItemAnalyses({ itemId })
+            .then(res => { this.analyses = (res || []).map(a => this.decorateAnalysis(a)); })
+            .catch(err => this.toastError('Analyses', err));
     }
+    decorateAnalysis(a) {
+        return {
+            ...a,
+            competitorPriceD: a.competitorPrice != null ? `₹${a.competitorPrice}` : '—',
+            ourPriceD: a.ourPrice != null ? `₹${a.ourPrice}` : '—',
+            priceDiffD: a.priceDifference != null ? `₹${a.priceDifference}` : '—',
+            shelfShareD: a.shelfShare != null ? `${a.shelfShare}%` : '—',
+            stockD: `${a.ourStock == null ? 0 : a.ourStock} / ${a.competitorStock == null ? 0 : a.competitorStock}`
+        };
+    }
+    closeDetail() { this.showDetail = false; }
+    stopProp(e) { e.stopPropagation(); }
 
-    async handleVisitCheckIn(event) {
-        const visitId = event.currentTarget.dataset.id;
-        const account = event.currentTarget.dataset.account;
-        this.checkingInVisitId = visitId;
+    // Tabs
+    get isInfoTab() { return this.detailTab === 'info'; }
+    get isAnalysisTab() { return this.detailTab === 'analysis'; }
+    get infoTabClass() { return this.detailTab === 'info' ? 'tab active' : 'tab'; }
+    get analysisTabClass() { return this.detailTab === 'analysis' ? 'tab active' : 'tab'; }
+    showInfo() { this.detailTab = 'info'; }
+    showAnalysis() { this.detailTab = 'analysis'; }
+    get analysisCount() { return this.analyses.length; }
+    get hasAnalyses() { return this.analyses.length > 0; }
 
-        const visit = this.dailyVisits.find(v => v.id === visitId);
-        if (visit) visit.isCheckingIn = true;
-
-        try {
-            const result = await checkInVisit({ visitId });
-            if (result) {
-                this.activeVisitId = visitId;
-                this.activeVisitCheckInTime = new Date().toLocaleTimeString();
-                this.activeVisitLat = result.latitude;
-                this.activeVisitLng = result.longitude;
-                this.activeVisitAddress = result.address;
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Visit checked in', variant: 'success' }));
-            }
-        } catch (error) {
-            console.error('Check-in error:', error);
-            this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: 'Failed to check in visit', variant: 'error' }));
-        } finally {
-            this.checkingInVisitId = null;
-            if (visit) visit.isCheckingIn = false;
+    // ── Analysis form ─────────────────────────────────────────
+    toggleAnalysisForm() {
+        this.showAnalysisForm = !this.showAnalysisForm;
+        if (this.showAnalysisForm) {
+            this.af = {
+                displayVisibility: 'Good', promoActive: 'No / Yes - Ours',
+                dealerPreference: 'Neutral', demandTrend: 'Stable', priceSensitivity: 'Medium'
+            };
         }
     }
+    afText(e) { this.af = { ...this.af, [e.target.name]: e.target.value }; }
+    afNum(e) { this.af = { ...this.af, [e.target.name]: e.target.value === '' ? null : Number(e.target.value) }; }
+    afPick(e) { this.af = { ...this.af, [e.target.dataset.field]: e.detail.value }; }
 
-    handleResumeVisit(event) {
-        const visitId = event.currentTarget.dataset.id;
-        const visit = this.dailyVisits.find(v => v.id === visitId);
-        if (visit && visit.isInProgress) {
-            this.activeVisitId = visitId;
-            this.activeVisitCheckInTime = visit.checkInTime;
-            this.activeVisitLat = visit.checkInLat;
-            this.activeVisitLng = visit.checkInLng;
-            this.activeVisitAddress = visit.checkInAddress;
-        }
+    saveAnalysis() {
+        if (!this.af.competitorName) { this.toast('Analysis', 'Competitor name is required', 'warning'); return; }
+        this.isSavingAnalysis = true;
+        saveMarketAnalysis({
+            itemId: this.detail.id,
+            competitorName: this.af.competitorName,
+            competitorProduct: this.af.competitorProduct,
+            ourProduct: this.af.ourProduct,
+            competitorPrice: this.af.competitorPrice,
+            ourPrice: this.af.ourPrice,
+            competitorStock: this.af.competitorStock,
+            ourStock: this.af.ourStock,
+            shelfShare: this.af.shelfShare,
+            displayVisibility: this.af.displayVisibility,
+            promoActive: this.af.promoActive,
+            dealerPreference: this.af.dealerPreference,
+            demandTrend: this.af.demandTrend,
+            priceSensitivity: this.af.priceSensitivity
+        })
+            .then(() => {
+                this.toast('Saved', 'Market analysis recorded', 'success');
+                this.showAnalysisForm = false;
+                return this.loadAnalyses(this.detail.id);
+            })
+            .catch(err => this.toastError('Save analysis', err))
+            .finally(() => { this.isSavingAnalysis = false; });
     }
 
-    handleVisitDetailBack() {
-        this.activeVisitId = null;
-        this.activeVisitCheckInTime = null;
-        this.activeVisitLat = null;
-        this.activeVisitLng = null;
-        this.activeVisitAddress = null;
-        this.loadDayVisits();
-        this.loadRecentVisits();
+    refreshBusy() {
+        this.items = this.items.map(i => ({ ...i, busy: this.busyItemId === i.id }));
     }
 
-    handleVisitCheckOutEvent() {
-        this.handleVisitDetailBack();
-        this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Visit checked out', variant: 'success' }));
+    // ── Utils ─────────────────────────────────────────────────
+    fmtMins(mins) {
+        if (!mins) return '0m';
+        const h = Math.floor(mins/60), m = mins % 60;
+        if (h && m) return `${h}h ${m}m`;
+        if (h) return `${h}h`;
+        return `${m}m`;
     }
-
-    openCreateVisitFromExecution() {
-        this.dispatchEvent(new ShowToastEvent({ title: 'Feature', message: 'Create visit form would open here', variant: 'info' }));
-    }
-
-    handleViewAllVisits() {
-        this.showVisitHistoryModal = true;
-    }
-
-    handleModalClick(event) {
-        event.stopPropagation();
+    toast(title, message, variant) { this.dispatchEvent(new ShowToastEvent({ title, message, variant })); }
+    toastError(ctx, err) {
+        const msg = (err && err.body && err.body.message) || (err && err.message) || 'Unexpected error';
+        this.dispatchEvent(new ShowToastEvent({ title: ctx, message: msg, variant: 'error' }));
     }
 }
