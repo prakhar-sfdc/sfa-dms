@@ -2742,22 +2742,36 @@ button { font-family: var(--font); cursor: pointer; }
 .mnav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap; }
 
 @media (max-width: 1023px) {
+    /* Fixed-height flex column so the bottom nav is pinned by layout,
+       not position:fixed. This stays reliable inside Lightning's
+       transformed scroll regions (where position:fixed drifts). */
+    .container {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh; /* accounts for mobile browser chrome */
+        min-height: 0;
+        overflow: hidden;
+    }
     .sidebar { display: none; }
+
+    .main-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 16px;
+    }
+
     .mobile-nav-bar {
         display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        position: static; /* normal flex child, held at bottom of the column */
+        order: 999;
+        flex-shrink: 0;
         width: 100%;
         height: 58px;
-        will-change: transform;
+        transform: none;
+        will-change: auto;
         z-index: 10000;
-    }
-    .main-content {
-        padding-bottom: 80px;
-        overflow-y: auto;
-        height: calc(100vh - 58px);
     }
 }
 
