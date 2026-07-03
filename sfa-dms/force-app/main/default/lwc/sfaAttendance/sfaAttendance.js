@@ -6,6 +6,7 @@ import getTodayAttendance      from '@salesforce/apex/AttendanceLWCController.ge
 import getRecentAttendance    from '@salesforce/apex/AttendanceLWCController.getRecentAttendance';
 import getLast7DayCompliance  from '@salesforce/apex/AttendanceLWCController.getLast7DayCompliance';
 import getAttendanceLast14Days from '@salesforce/apex/AttendanceLWCController.getAttendanceLast14Days';
+import getDashboardAttendanceCompliance from '@salesforce/apex/AttendanceLWCController.getDashboardAttendanceCompliance';
 
 export default class SfaAttendance extends LightningElement {
 
@@ -27,6 +28,16 @@ export default class SfaAttendance extends LightningElement {
     @track isLoading = true;
     attendanceRecordId = null;
     isSubmitting = false;
+
+    // ── Work-time metrics ────────────────────────────────────────
+    @track todayWorkedMinutes = null;   // final total after checkout
+    @track todayLiveMinutes = 0;        // live elapsed while checked in
+    @track todayCheckInDisplay = '';    // check-in time label for sub-line
+    @track todayOnTime = null;
+    @track weekTotalMinutes = 0;
+    @track weekDaysCount = 0;
+    @track presentDays = 0;
+    @track onTimeDays = 0;
 
     // ── Map ──────────────────────────────────────────────────────
     @track mapMarkers = [];
@@ -58,6 +69,8 @@ export default class SfaAttendance extends LightningElement {
             .then(() => {
                 this.loadRecentAttendance();
                 this.loadWeeklyCompliance();
+                this.loadWeekSummary();
+                this.loadMonthCompliance();
             })
             .catch(error => {
                 console.error('Error in connectedCallback:', error);
@@ -82,6 +95,18 @@ export default class SfaAttendance extends LightningElement {
         const m = Math.floor((diffSecs % 3600) / 60);
         const s = diffSecs % 60;
         this.currentDuration = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        this.todayLiveMinutes = Math.floor(diffSecs / 60);
+    }
+
+    // Format a minutes value into a friendly "Hh Mm" string
+    formatMinutes(mins) {
+        if (mins === null || mins === undefined || isNaN(mins)) return '—';
+        const total = Math.max(0, Math.round(mins));
+        const h = Math.floor(total / 60);
+        const m = total % 60;
+        if (h > 0 && m > 0) return `${h}h ${m}m`;
+        if (h > 0) return `${h}h`;
+        return `${m}m`;
     }
 
     initializeMap() {
@@ -103,6 +128,10 @@ export default class SfaAttendance extends LightningElement {
                             const status = result.Status__c || 'Not Checked In';
                             this.isCheckedIn = status === 'Checked In';
                             this.attendanceStatus = status;
+                            this.todayOnTime = result.On_Time__c;
+                            this.todayWorkedMinutes = (result.Work_Duration__c !== null && result.Work_Duration__c !== undefined)
+                                ? result.Work_Duration__c : null;
+                            this.todayCheckInDisplay = this.fmtDateTime(result.Check_In_Time__c);
                             console.log('✓ Today attendance loaded:', {
                                 recordId: this.attendanceRecordId,
                                 status: this.attendanceStatus,
@@ -113,6 +142,10 @@ export default class SfaAttendance extends LightningElement {
                             this.isCheckedIn = false;
                             this.attendanceStatus = 'Not Checked In';
                             this.checkInTime = null;
+                            this.todayOnTime = null;
+                            this.todayWorkedMinutes = null;
+                            this.todayLiveMinutes = 0;
+                            this.todayCheckInDisplay = '';
                             console.log('✓ No attendance record for today');
                         }
                     } catch (error) {
@@ -144,7 +177,7 @@ export default class SfaAttendance extends LightningElement {
     }
 
     get mapToggleText() {
-        return this.showMap ? 'Hide Map ▲' : 'Show Map ▼';
+        return this.showMap ? 'Hide Map' : 'Show Map';
     }
 
     getCurrentLocation() {
@@ -270,6 +303,8 @@ export default class SfaAttendance extends LightningElement {
 
             this.loadRecentAttendance();
             this.loadWeeklyCompliance();
+            this.loadWeekSummary();
+            this.loadMonthCompliance();
         } catch (error) {
             console.error('Check-in/out error details:', error);
             let errorMessage = 'Unable to complete action. Please try again.';
@@ -324,15 +359,56 @@ export default class SfaAttendance extends LightningElement {
     loadWeeklyCompliance() {
         getLast7DayCompliance()
             .then(result => {
+                // Apex returns keys: dayLabel, status ('On Time'|'Late'|'Absent'), value, date
                 this.weeklyData = result.map((day, index) => ({
                     id: index + 1,
-                    label: day.label,
+                    label: day.dayLabel,
                     value: day.value,
-                    onTime: day.onTime,
-                    dotClass: day.value >= 90 ? 'compliance-dot on-time' : day.value >= 50 ? 'compliance-dot late' : 'compliance-dot absent'
+                    onTime: day.status === 'On Time',
+                    dotClass: day.status === 'On Time' ? 'compliance-dot on-time'
+                        : day.status === 'Late' ? 'compliance-dot late'
+                        : 'compliance-dot absent'
                 }));
             })
             .catch(error => console.error('Weekly compliance error', error));
+    }
+
+    // Aggregate worked minutes over the current rolling week (last 7 days incl. today)
+    loadWeekSummary() {
+        getAttendanceLast14Days()
+            .then(result => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const weekStart = new Date(today);
+                weekStart.setDate(weekStart.getDate() - 6);
+
+                let totalMinutes = 0;
+                let daysWithWork = 0;
+                (result || []).forEach(att => {
+                    if (!att.Attendance_Date__c) return;
+                    const attDate = new Date(att.Attendance_Date__c + 'T00:00:00');
+                    if (attDate < weekStart || attDate > today) return;
+                    const mins = att.Work_Duration__c;
+                    if (mins !== null && mins !== undefined && mins > 0) {
+                        totalMinutes += mins;
+                        daysWithWork += 1;
+                    }
+                });
+                this.weekTotalMinutes = totalMinutes;
+                this.weekDaysCount = daysWithWork;
+            })
+            .catch(error => console.error('Week summary error', error));
+    }
+
+    // Current-month present/on-time counts (reuses existing cacheable Apex)
+    loadMonthCompliance() {
+        getDashboardAttendanceCompliance()
+            .then(result => {
+                if (!result) return;
+                this.presentDays = result.presentDays || 0;
+                this.onTimeDays = result.onTimeDays || 0;
+            })
+            .catch(error => console.error('Month compliance error', error));
     }
 
     viewAllAttendance() {
@@ -364,6 +440,10 @@ export default class SfaAttendance extends LightningElement {
             checkOutLat: att.Check_Out_Latitude__c,
             checkOutLng: att.Check_Out_Longitude__c,
             duration: att.Work_Duration__c,
+            durationDisplay: this.formatMinutes(att.Work_Duration__c),
+            onTime: att.On_Time__c === true,
+            onTimeBadgeClass: att.On_Time__c === true ? 'ot-badge on-time' : 'ot-badge late',
+            onTimeLabel: att.On_Time__c === true ? 'On Time' : 'Late',
             status: att.Status__c,
             statusClass: att.Status__c === 'Checked In' ? 'status checked-in' : 'status checked-out'
         };
@@ -381,6 +461,32 @@ export default class SfaAttendance extends LightningElement {
     }
     get onTimeCount() { return this.weeklyData ? this.weeklyData.filter(d => d.value >= 90).length : 0; }
     get lateCount()   { return this.weeklyData ? this.weeklyData.filter(d => d.value < 90).length : 0; }
+
+    // ── Metric-strip getters ─────────────────────────────────────
+    get todayWorkedDisplay() {
+        if (this.isCheckedIn) return this.formatMinutes(this.todayLiveMinutes);
+        if (this.todayWorkedMinutes !== null && this.todayWorkedMinutes !== undefined) {
+            return this.formatMinutes(this.todayWorkedMinutes);
+        }
+        return '—';
+    }
+    get todaySubline() {
+        if (this.isCheckedIn) return `Since ${this.todayCheckInDisplay}`;
+        if (this.attendanceStatus === 'Checked Out') return `Checked in ${this.todayCheckInDisplay}`;
+        return 'Not checked in';
+    }
+    get weekTotalDisplay() { return this.formatMinutes(this.weekTotalMinutes); }
+    get weekAvgDisplay() {
+        if (!this.weekDaysCount) return 'No days worked';
+        const avg = this.weekTotalMinutes / this.weekDaysCount;
+        return `${this.formatMinutes(avg)} avg · ${this.weekDaysCount} day${this.weekDaysCount === 1 ? '' : 's'}`;
+    }
+    get onTimeDisplay() { return `${this.onTimeDays}/${this.presentDays}`; }
+    get statusSubline() {
+        if (this.todayOnTime === true) return 'On time today';
+        if (this.todayOnTime === false && this.attendanceStatus !== 'Not Checked In') return 'Late today';
+        return 'This month';
+    }
 
     handleEyeClick(event) {
         event.stopPropagation();
