@@ -1,44 +1,65 @@
 <template>
     <div class="attendance-container">
-        <!-- Header with Time and Check-In -->
+        <!-- Page Header -->
         <div class="attendance-header">
             <div class="header-left">
-                <div class="real-time-clock">
-                    <div class="clock-display">
-                        <div class="time">{currentTime}</div>
-                        <div class="date">{currentDate}</div>
-                    </div>
-                </div>
-                <div class="gps-location">
-                    <div class="location-info">
-                        <div class="coordinates">{gpsCoordinates}</div>
-                        <div class="address">{currentAddress}</div>
-                    </div>
-                </div>
+                <h1>Attendance</h1>
+                <p class="subtitle">{currentDate} &middot; {currentTime}</p>
             </div>
             <div class="header-right">
                 <div class={statusIndicatorClass}>
                     <span class="status-dot"></span>
                     <span class="status-text">{attendanceStatus}</span>
                 </div>
-                <div class="duration-display" if:true={isCheckedIn}>
-                    <span class="duration-label">Work Duration</span>
-                    <span class="duration-value">{currentDuration}</span>
-                </div>
+                <button class={checkinButtonClass} onclick={handleCheckInOut} disabled={isLoading}>
+                    <span class="button-text" if:false={isLoading}>{checkInOutButtonText}</span>
+                    <span class="button-text" if:true={isLoading}>Loading...</span>
+                </button>
             </div>
         </div>
 
-        <!-- Action Button Section -->
-        <div class="action-section">
-            <button class={checkinButtonClass} onclick={handleCheckInOut}>
-                <span class="button-text">{checkInOutButtonText}</span>
-            </button>
+        <!-- Metric Strip -->
+        <div class="summary-cards">
+            <div class="summary-card metric-today">
+                <div class="summary-content">
+                    <h3>Today Worked</h3>
+                    <div class="summary-value">{todayWorkedDisplay}</div>
+                    <div class="summary-trend">{todaySubline}</div>
+                </div>
+            </div>
+            <div class="summary-card metric-week">
+                <div class="summary-content">
+                    <h3>This Week</h3>
+                    <div class="summary-value">{weekTotalDisplay}</div>
+                    <div class="summary-trend">{weekAvgDisplay}</div>
+                </div>
+            </div>
+            <div class="summary-card metric-ontime">
+                <div class="summary-content">
+                    <h3>On-Time Days</h3>
+                    <div class="summary-value">{onTimeDisplay}</div>
+                    <div class="summary-trend">Present this month</div>
+                </div>
+            </div>
+            <div class="summary-card metric-status">
+                <div class="summary-content">
+                    <h3>Status</h3>
+                    <div class="summary-value status-value">{attendanceStatus}</div>
+                    <div class="summary-trend">{statusSubline}</div>
+                </div>
+            </div>
         </div>
 
         <!-- Map Section (collapsible on mobile) -->
         <div class="map-section">
             <div class="map-section-header">
-                <h3>Live Location Tracker</h3>
+                <div class="map-title-group">
+                    <h3>Live Location</h3>
+                    <div class="map-location">
+                        <span class="map-address">{currentAddress}</span>
+                        <span class="map-coords">{gpsCoordinates}</span>
+                    </div>
+                </div>
                 <div class="map-header-controls">
                     <button class="map-toggle-btn" onclick={toggleMap}>
                         {mapToggleText}
@@ -109,17 +130,24 @@
                                 </div>
                                 <div class="attendance-times">
                                     <div class="time-entry">
-                                        <span class="time-label">In:</span>
+                                        <span class="time-label">In</span>
                                         <span class="time-value">{record.checkIn}</span>
                                     </div>
                                     <div class="time-entry">
-                                        <span class="time-label">Out:</span>
+                                        <span class="time-label">Out</span>
                                         <span class="time-value">{record.checkOut}</span>
                                     </div>
                                 </div>
-                                <div class={record.statusClass}>{record.status}</div>
+                                <div class="attendance-duration">
+                                    <span class="dur-label">Worked</span>
+                                    <span class="dur-value">{record.durationDisplay}</span>
+                                </div>
+                                <div class="attendance-badges">
+                                    <span class={record.onTimeBadgeClass}>{record.onTimeLabel}</span>
+                                    <span class={record.statusClass}>{record.status}</span>
+                                </div>
                                 <div class="attendance-action">
-                                    <button class="eye-btn" onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                    <button class="view-btn" onclick={handleEyeClick} data-id={record.id}>View</button>
                                 </div>
                             </div>
                         </template>
@@ -136,17 +164,24 @@
                                 </div>
                                 <div class="attendance-times">
                                     <div class="time-entry">
-                                        <span class="time-label">In:</span>
+                                        <span class="time-label">In</span>
                                         <span class="time-value">{record.checkIn}</span>
                                     </div>
                                     <div class="time-entry">
-                                        <span class="time-label">Out:</span>
+                                        <span class="time-label">Out</span>
                                         <span class="time-value">{record.checkOut}</span>
                                     </div>
                                 </div>
-                                <div class={record.statusClass}>{record.status}</div>
+                                <div class="attendance-duration">
+                                    <span class="dur-label">Worked</span>
+                                    <span class="dur-value">{record.durationDisplay}</span>
+                                </div>
+                                <div class="attendance-badges">
+                                    <span class={record.onTimeBadgeClass}>{record.onTimeLabel}</span>
+                                    <span class={record.statusClass}>{record.status}</span>
+                                </div>
                                 <div class="attendance-action">
-                                    <button class="eye-btn" onclick={handleEyeClick} data-id={record.id}>👁</button>
+                                    <button class="view-btn" onclick={handleEyeClick} data-id={record.id}>View</button>
                                 </div>
                             </div>
                         </template>
@@ -165,6 +200,16 @@
                     <button class="modal-close" onclick={closeModal} aria-label="Close modal">×</button>
                 </div>
                 <div class="modal-body">
+                    <div class="modal-summary">
+                        <div class="modal-summary-item">
+                            <span class="ms-label">Worked Duration</span>
+                            <span class="ms-value">{selectedAttendance.durationDisplay}</span>
+                        </div>
+                        <div class="modal-summary-item">
+                            <span class="ms-label">Punctuality</span>
+                            <span class={selectedAttendance.onTimeBadgeClass}>{selectedAttendance.onTimeLabel}</span>
+                        </div>
+                    </div>
                     <div class="modal-columns">
                         <!-- Check-In Column -->
                         <div class="modal-column">

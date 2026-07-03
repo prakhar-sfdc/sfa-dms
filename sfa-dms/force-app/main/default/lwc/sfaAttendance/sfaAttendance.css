@@ -33,93 +33,56 @@
     padding: 16px;
 }
 
-/* ── Header Section ──────────────────────────────────────── */
+/* ── Page Header ─────────────────────────────────────────── */
 .attendance-header {
-    background: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 24px 28px;
+    padding: 18px 22px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 32px;
-    color: #FFFFFF;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .header-left {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 3px;
+}
+
+.header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
 }
 
 .header-right {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 12px;
-    align-items: flex-end;
-}
-
-.real-time-clock {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.clock-display {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.time {
-    font-size: 42px;
-    font-weight: 700;
-    color: #FFFFFF;
-    font-variant-numeric: tabular-nums;
-    font-family: 'Courier New', monospace;
-    line-height: 1.2;
-}
-
-.date {
-    font-size: 13px;
-    color: #B0C4DE;
-    font-weight: 500;
-}
-
-.gps-location {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.location-info {
-    flex: 1;
-}
-
-.coordinates {
-    font-size: 12px;
-    color: #B0C4DE;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.3px;
-}
-
-.address {
-    font-size: 14px;
-    color: #FFFFFF;
-    font-weight: 500;
+    flex-wrap: wrap;
 }
 
 .status-indicator {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 6px 12px;
+    background: var(--neutral-bg);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
 }
 
 .status-indicator.checked-in {
@@ -135,97 +98,112 @@
 }
 
 .status-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: currentColor;
     flex-shrink: 0;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
 }
 
 .status-text {
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.duration-display {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: flex-end;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-sm);
-}
-
-.duration-label {
-    font-size: 11px;
-    color: #B0C4DE;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.duration-value {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
-    color: #FFFFFF;
-    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-/* ── Action Button Section ───────────────────────────────── */
-.action-section {
-    display: flex;
-    gap: 12px;
-    padding: 0 16px;
-}
-
+/* Primary Check-In / Check-Out button (lives in the header) */
 .checkin-btn {
-    flex: 1;
     min-height: var(--tap-lg);
+    min-width: 150px;
     padding: 0 24px;
-    background: #FFFFFF;
-    color: var(--text-primary);
-    border: 2px solid transparent;
+    background: var(--accent);
+    color: #FFFFFF;
+    border: none;
     border-radius: var(--radius-md);
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     font-family: var(--font);
-    transition: all 0.2s ease;
+    transition: background 0.15s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .checkin-btn:hover {
-    background: #F5F5F5;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.checkin-btn:active {
-    transform: translateY(1px);
+    background: var(--accent-dark);
 }
 
 .checkin-btn.checked-in {
     background: var(--red);
     color: #FFFFFF;
-    border-color: var(--red);
 }
 
 .checkin-btn.checked-in:hover {
     background: #B71C1C;
-    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
+}
+
+.checkin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #E8E8E8;
+    color: #999;
+}
+
+.checkin-btn:disabled:hover {
+    background: #E8E8E8;
 }
 
 .button-text {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
+}
+
+/* ── Metric Strip ────────────────────────────────────────── */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.summary-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+}
+
+.summary-card.metric-today  { border-left-color: var(--accent); }
+.summary-card.metric-week   { border-left-color: var(--green); }
+.summary-card.metric-ontime { border-left-color: var(--amber); }
+.summary-card.metric-status { border-left-color: var(--neutral); }
+
+.summary-content h3 {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin: 0 0 6px 0;
+}
+
+.summary-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.summary-value.status-value {
+    font-size: 18px;
+}
+
+.summary-trend {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
 }
 
 /* ── Map Section ─────────────────────────────────────────── */
@@ -250,6 +228,30 @@
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+}
+
+.map-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.map-location {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.map-address {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.map-coords {
+    font-size: 11px;
+    color: var(--text-muted);
 }
 
 .map-header-controls {
@@ -455,9 +457,11 @@
 }
 
 .attendance-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 52px minmax(110px, 1.3fr) auto 1fr 74px;
+    grid-template-areas: "date times dur badges action";
     align-items: center;
-    gap: 12px;
+    gap: 10px 14px;
     padding: 12px 14px;
     background: var(--bg-subtle);
     border-radius: var(--radius-sm);
@@ -471,8 +475,7 @@
 }
 
 .attendance-date {
-    flex-shrink: 0;
-    width: 56px;
+    grid-area: date;
     text-align: center;
 }
 
@@ -491,7 +494,7 @@
 }
 
 .attendance-times {
-    flex: 1;
+    grid-area: times;
     display: flex;
     gap: 16px;
 }
@@ -513,32 +516,84 @@
     font-size: 13px;
     color: var(--text-primary);
     font-weight: 600;
-    font-family: 'Courier New', monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Worked-duration cell */
+.attendance-duration {
+    grid-area: dur;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    white-space: nowrap;
+}
+
+.dur-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.dur-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* On-time + status badges */
+.attendance-badges {
+    grid-area: badges;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.ot-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ot-badge.on-time {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.ot-badge.late {
+    background: var(--amber-bg);
+    color: var(--amber);
 }
 
 .attendance-action {
-    flex-shrink: 0;
+    grid-area: action;
+    justify-self: end;
 }
 
-.eye-btn {
-    background: none;
+.view-btn {
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     cursor: pointer;
-    font-size: 16px;
-    padding: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 14px;
     border-radius: var(--radius-sm);
-    min-width: 40px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    color: var(--text-muted);
+    min-width: 64px;
+    min-height: 36px;
+    color: var(--accent);
+    font-family: var(--font);
+    transition: all 0.15s ease;
 }
 
-.eye-btn:hover {
-    background: var(--bg-surface);
-    color: var(--accent);
+.view-btn:hover {
+    background: var(--blue-bg, #E3F2FD);
     border-color: var(--accent);
 }
 
@@ -582,7 +637,6 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
@@ -683,7 +737,39 @@
     background: var(--bg-surface);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    font-family: 'Courier New', monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Modal worked-duration / punctuality summary */
+.modal-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.modal-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+}
+
+.ms-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ms-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .details-card {
@@ -719,7 +805,7 @@
     font-weight: 500;
     text-align: right;
     max-width: 60%;
-    font-family: 'Courier New', monospace;
+    word-break: break-word;
 }
 
 .mini-map-wrap {
@@ -781,32 +867,37 @@
 }
 
 /* ── Responsive Design ───────────────────────────────────── */
+
+/* Tablet / small laptop: cards stack, metric strip to 2 columns */
 @media (max-width: 1023px) {
     .attendance-cards {
         grid-template-columns: 1fr;
     }
 
-    .attendance-header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: stretch;
+    .summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Attendance rows reflow to two lines below the desktop grid width so
+   the compliance card and recent-attendance list stay aligned. */
+@media (max-width: 860px) {
+    .attendance-item {
+        grid-template-columns: 48px 1fr auto 74px;
+        grid-template-areas:
+            "date times  times  action"
+            "date dur    badges action";
+        row-gap: 8px;
     }
 
-    .header-left {
-        order: 1;
+    .attendance-duration {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 6px;
     }
 
-    .header-right {
-        order: 2;
-        align-items: stretch;
-    }
-
-    .action-section {
-        padding: 0 16px;
-    }
-
-    .checkin-btn {
-        min-height: var(--tap-lg);
+    .attendance-badges {
+        justify-content: flex-start;
     }
 }
 
@@ -814,18 +905,24 @@
     .attendance-container {
         padding: 12px;
         gap: 16px;
+        padding-bottom: 24px;
     }
 
     .attendance-header {
-        padding: 16px 20px;
+        padding: 16px 18px;
+    }
+
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .checkin-btn {
+        flex: 1;
     }
 
     .modal-columns {
         grid-template-columns: 1fr;
-    }
-
-    .time {
-        font-size: 32px;
     }
 
     .map-section-header {
@@ -862,12 +959,45 @@
         padding: 16px;
     }
 
+    .modal-summary {
+        grid-template-columns: 1fr;
+    }
+
     .modal-footer {
         flex-direction: column;
     }
 
     .secondary-btn,
     .primary-btn {
+        width: 100%;
+    }
+}
+
+/* Small phones: single-column metric strip, compact attendance rows */
+@media (max-width: 480px) {
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-item {
+        grid-template-columns: 44px 1fr;
+        grid-template-areas:
+            "date times"
+            "date dur"
+            "date badges"
+            "action action";
+        row-gap: 8px;
+    }
+
+    .attendance-badges {
+        justify-content: flex-start;
+    }
+
+    .attendance-action {
+        justify-self: stretch;
+    }
+
+    .view-btn {
         width: 100%;
     }
 }

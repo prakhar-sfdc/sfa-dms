@@ -1,53 +1,99 @@
 public with sharing class AttendanceLWCController {
 
     @AuraEnabled
-public static Id handleCheckIn(String lat, String lng, String address) {
-    Attendance__c att = new Attendance__c();
-    att.User__c = UserInfo.getUserId();
-    att.Attendance_Date__c = Date.today();
-    att.Check_In_Time__c = System.now();
+    public static Map<String, Object> handleCheckIn(String lat, String lng, String address) {
+        Id userId = UserInfo.getUserId();
+        Date today = Date.today();
 
-    att.Check_In_Address__c = address;
-    att.Check_In_Latitude__c = lat;
-    att.Check_In_Longitude__c = lng;
-    att.Status__c = 'Checked In';
-    Time cutoff = Time.newInstance(9, 30, 0, 0);
-    Time checkInTime = att.Check_In_Time__c.time();
-    att.On_Time__c = (checkInTime <= cutoff);
+        List<Attendance__c> existingAtt = [
+            SELECT Id, Status__c, Check_In_Time__c
+            FROM Attendance__c
+            WHERE User__c = :userId
+            AND Attendance_Date__c = :today
+            LIMIT 1
+        ];
 
-    insert att;
-    return att.Id;
-}
+        if (!existingAtt.isEmpty()) {
+            Attendance__c existing = existingAtt[0];
+            if (existing.Status__c == 'Checked In') {
+                return new Map<String, Object>{
+                    'success' => true,
+                    'recordId' => existing.Id,
+                    'message' => 'Already checked in for today',
+                    'alreadyCheckedIn' => true,
+                    'status' => 'Checked In'
+                };
+            }
+            if (existing.Status__c == 'Checked Out') {
+                throw new AuraHandledException('You have already checked out today. Attendance record cannot be modified.');
+            }
+            throw new AuraHandledException('An attendance record already exists for today.');
+        }
 
+        Attendance__c att = new Attendance__c();
+        att.User__c = userId;
+        att.Attendance_Date__c = today;
+        att.Check_In_Time__c = System.now();
+        att.Check_In_Address__c = address;
+        att.Check_In_Latitude__c = lat;
+        att.Check_In_Longitude__c = lng;
+        att.Status__c = 'Checked In';
 
-  @AuraEnabled
-public static void handleCheckOut(Id recordId, String lat, String lng, String address) {
-    Attendance__c att = [
-        SELECT Id, Check_In_Time__c
-        FROM Attendance__c
-        WHERE Id = :recordId
-        LIMIT 1
-    ];
+        Time cutoff = Time.newInstance(9, 30, 0, 0);
+        Time checkInTime = att.Check_In_Time__c.time();
+        att.On_Time__c = (checkInTime <= cutoff);
 
-    // ✅ FIX: store real DateTime
-    att.Check_Out_Time__c = System.now();
-
-    att.Check_Out_Address__c = address;
-    att.Check_Out_Latitude__c = lat;
-    att.Check_Out_Longitude__c = lng;
-    att.Status__c = 'Checked Out';
-
-    if (att.Check_In_Time__c != null) {
-        Long diffMs = att.Check_Out_Time__c.getTime() - att.Check_In_Time__c.getTime();
-        Decimal mins = diffMs / (1000 * 60);
-        att.Work_Duration__c = mins.setScale(2);
+        insert att;
+        return new Map<String, Object>{
+            'success' => true,
+            'recordId' => att.Id,
+            'message' => 'Checked in successfully',
+            'alreadyCheckedIn' => false,
+            'status' => 'Checked In'
+        };
     }
 
-    update att;
-}
+
+    @AuraEnabled
+    public static void handleCheckOut(Id recordId, String lat, String lng, String address) {
+        List<Attendance__c> attList = [
+            SELECT Id, Check_In_Time__c, Status__c
+            FROM Attendance__c
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+
+        if (attList.isEmpty()) {
+            throw new AuraHandledException('Attendance record not found. Please check in first.');
+        }
+
+        Attendance__c att = attList[0];
+
+        if (att.Status__c == 'Checked Out') {
+            throw new AuraHandledException('Already checked out today. Your work shift has ended.');
+        }
+
+        if (att.Status__c != 'Checked In') {
+            throw new AuraHandledException('Cannot check out. Please check in first.');
+        }
+
+        att.Check_Out_Time__c = System.now();
+        att.Check_Out_Address__c = address;
+        att.Check_Out_Latitude__c = lat;
+        att.Check_Out_Longitude__c = lng;
+        att.Status__c = 'Checked Out';
+
+        if (att.Check_In_Time__c != null) {
+            Long diffMs = att.Check_Out_Time__c.getTime() - att.Check_In_Time__c.getTime();
+            Decimal mins = diffMs / (1000 * 60);
+            att.Work_Duration__c = mins.setScale(2);
+        }
+
+        update att;
+    }
 
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static Attendance__c getTodayAttendance() {
         List<Attendance__c> attList = [
             SELECT Id, Check_In_Time__c, Check_Out_Time__c, Check_In_Address__c, Check_Out_Address__c,
@@ -61,7 +107,7 @@ public static void handleCheckOut(Id recordId, String lat, String lng, String ad
         return attList.isEmpty() ? null : attList[0];
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<Attendance__c> getRecentAttendance() {
         return [
             SELECT Id, Attendance_Date__c, Check_In_Time__c, Check_Out_Time__c,
@@ -77,11 +123,10 @@ public static void handleCheckOut(Id recordId, String lat, String lng, String ad
     }
 
 @AuraEnabled
-public static List<Map<String, Object>> getLast7DayCompliance() {
-
-    Id userId = UserInfo.getUserId();
-    Date today = Date.today();
-    Date startDate = today.addDays(-6);
+    public static List<Map<String, Object>> getLast7DayCompliance() {
+        Id userId = UserInfo.getUserId();
+        Date today = Date.today();
+        Date startDate = today.addDays(-6);
 
     List<Attendance__c> records = [
         SELECT Attendance_Date__c,
@@ -129,8 +174,8 @@ public static List<Map<String, Object>> getLast7DayCompliance() {
 }
 
 
-    @AuraEnabled(cacheable=true)
-public static List<Attendance__c> getAttendanceLast14Days() {
+    @AuraEnabled
+    public static List<Attendance__c> getAttendanceLast14Days() {
 
     Date today = Date.today();
     Date startDate = today.addDays(-13); // last 14 days including today

@@ -6,6 +6,7 @@ import getTodayAttendance      from '@salesforce/apex/AttendanceLWCController.ge
 import getRecentAttendance    from '@salesforce/apex/AttendanceLWCController.getRecentAttendance';
 import getLast7DayCompliance  from '@salesforce/apex/AttendanceLWCController.getLast7DayCompliance';
 import getAttendanceLast14Days from '@salesforce/apex/AttendanceLWCController.getAttendanceLast14Days';
+import getDashboardAttendanceCompliance from '@salesforce/apex/AttendanceLWCController.getDashboardAttendanceCompliance';
 
 export default class SfaAttendance extends LightningElement {
 
@@ -24,8 +25,19 @@ export default class SfaAttendance extends LightningElement {
     @track isCheckedIn = false;
     @track checkInTime = null;
     @track currentDuration = '00:00:00';
+    @track isLoading = true;
     attendanceRecordId = null;
     isSubmitting = false;
+
+    // ── Work-time metrics ────────────────────────────────────────
+    @track todayWorkedMinutes = null;   // final total after checkout
+    @track todayLiveMinutes = 0;        // live elapsed while checked in
+    @track todayCheckInDisplay = '';    // check-in time label for sub-line
+    @track todayOnTime = null;
+    @track weekTotalMinutes = 0;
+    @track weekDaysCount = 0;
+    @track presentDays = 0;
+    @track onTimeDays = 0;
 
     // ── Map ──────────────────────────────────────────────────────
     @track mapMarkers = [];
@@ -51,10 +63,18 @@ export default class SfaAttendance extends LightningElement {
         this.updateDateTime();
         this.timerInterval = setInterval(() => { this.updateDateTime(); }, 1000);
         this.initializeMap();
-        this.loadTodayAttendance();
-        this.getCurrentLocation();
-        this.loadRecentAttendance();
-        this.loadWeeklyCompliance();
+
+        this.loadTodayAttendance()
+            .then(() => this.getCurrentLocation())
+            .then(() => {
+                this.loadRecentAttendance();
+                this.loadWeeklyCompliance();
+                this.loadWeekSummary();
+                this.loadMonthCompliance();
+            })
+            .catch(error => {
+                console.error('Error in connectedCallback:', error);
+            });
     }
 
     disconnectedCallback() {
@@ -75,6 +95,18 @@ export default class SfaAttendance extends LightningElement {
         const m = Math.floor((diffSecs % 3600) / 60);
         const s = diffSecs % 60;
         this.currentDuration = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        this.todayLiveMinutes = Math.floor(diffSecs / 60);
+    }
+
+    // Format a minutes value into a friendly "Hh Mm" string
+    formatMinutes(mins) {
+        if (mins === null || mins === undefined || isNaN(mins)) return '—';
+        const total = Math.max(0, Math.round(mins));
+        const h = Math.floor(total / 60);
+        const m = total % 60;
+        if (h > 0 && m > 0) return `${h}h ${m}m`;
+        if (h > 0) return `${h}h`;
+        return `${m}m`;
     }
 
     initializeMap() {
@@ -85,17 +117,59 @@ export default class SfaAttendance extends LightningElement {
     }
 
     loadTodayAttendance() {
-        getTodayAttendance()
-            .then(result => {
-                if (result) {
-                    this.attendanceRecordId = result.Id;
-                    this.checkInTime = result.Check_In_Time__c ? new Date(result.Check_In_Time__c) : null;
-                    const status = result.Status__c;
-                    this.isCheckedIn = status === 'Checked In';
-                    this.attendanceStatus = status || 'Not Checked In';
-                }
-            })
-            .catch(error => console.error('Error loading today attendance:', error));
+        this.isLoading = true;
+        return new Promise((resolve) => {
+            getTodayAttendance()
+                .then(result => {
+                    try {
+                        if (result) {
+                            this.attendanceRecordId = result.Id;
+                            this.checkInTime = result.Check_In_Time__c ? new Date(result.Check_In_Time__c) : null;
+                            const status = result.Status__c || 'Not Checked In';
+                            this.isCheckedIn = status === 'Checked In';
+                            this.attendanceStatus = status;
+                            this.todayOnTime = result.On_Time__c;
+                            this.todayWorkedMinutes = (result.Work_Duration__c !== null && result.Work_Duration__c !== undefined)
+                                ? result.Work_Duration__c : null;
+                            this.todayCheckInDisplay = this.fmtDateTime(result.Check_In_Time__c);
+                            console.log('✓ Today attendance loaded:', {
+                                recordId: this.attendanceRecordId,
+                                status: this.attendanceStatus,
+                                isCheckedIn: this.isCheckedIn
+                            });
+                        } else {
+                            this.attendanceRecordId = null;
+                            this.isCheckedIn = false;
+                            this.attendanceStatus = 'Not Checked In';
+                            this.checkInTime = null;
+                            this.todayOnTime = null;
+                            this.todayWorkedMinutes = null;
+                            this.todayLiveMinutes = 0;
+                            this.todayCheckInDisplay = '';
+                            console.log('✓ No attendance record for today');
+                        }
+                    } catch (error) {
+                        console.error('Error processing attendance result:', error);
+                        this.resetAttendanceState();
+                    }
+                    resolve();
+                })
+                .catch(error => {
+                    console.error('Error fetching today attendance:', error);
+                    this.resetAttendanceState();
+                    resolve();
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                });
+        });
+    }
+
+    resetAttendanceState() {
+        this.attendanceRecordId = null;
+        this.isCheckedIn = false;
+        this.attendanceStatus = 'Not Checked In';
+        this.checkInTime = null;
     }
 
     toggleMap() {
@@ -103,7 +177,7 @@ export default class SfaAttendance extends LightningElement {
     }
 
     get mapToggleText() {
-        return this.showMap ? 'Hide Map ▲' : 'Show Map ▼';
+        return this.showMap ? 'Hide Map' : 'Show Map';
     }
 
     getCurrentLocation() {
@@ -150,38 +224,119 @@ export default class SfaAttendance extends LightningElement {
     }
 
     handleLocationError(error) {
-        const msgs = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Request timeout' };
-        this.gpsCoordinates = msgs[error.code] || 'Unknown error';
-        this.currentAddress = 'Failed to get location';
+        const msgs = {
+            1: 'Location permission denied. Please enable location access in browser settings.',
+            2: 'Unable to determine your position. Please check your GPS/location settings.',
+            3: 'Location request timed out. Please try again.',
+            4: 'Unknown location error. Please try again.'
+        };
+        this.gpsCoordinates = msgs[error.code] || msgs[4];
+        this.currentAddress = 'Location unavailable';
+        console.warn('Location error:', this.gpsCoordinates);
     }
 
     async handleCheckInOut() {
-        if (this.isSubmitting) return;
+        if (this.isSubmitting || this.isLoading) {
+            console.log('Button disabled: isSubmitting=' + this.isSubmitting + ', isLoading=' + this.isLoading);
+            return;
+        }
+
         this.isSubmitting = true;
         try {
-            await this.getCurrentLocation();
-            if (!this.isCheckedIn) {
-                const recordId = await handleCheckIn({ lat: this.currentLatitude, lng: this.currentLongitude, address: this.currentAddress });
-                this.attendanceRecordId = recordId;
-                this.isCheckedIn = true;
-                this.attendanceStatus = 'Checked In';
-                this.checkInTime = new Date();
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Checked in successfully', variant: 'success' }));
-            } else {
-                await handleCheckOut({ recordId: this.attendanceRecordId, lat: this.currentLatitude, lng: this.currentLongitude, address: this.currentAddress });
-                this.isCheckedIn = false;
-                this.attendanceStatus = 'Checked Out';
-                this.checkInTime = null;
-                this.currentDuration = '00:00:00';
-                this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'Checked out successfully', variant: 'success' }));
+            console.log('Starting check-in/out. Current state: isCheckedIn=' + this.isCheckedIn);
+
+            try {
+                await this.getCurrentLocation();
+                console.log('Location acquired:', this.currentAddress);
+            } catch (locError) {
+                console.error('Location error:', locError);
+                throw new Error('Unable to get your location. ' + this.gpsCoordinates);
             }
+
+            if (!this.isCheckedIn) {
+                console.log('Calling handleCheckIn...');
+                const result = await handleCheckIn({
+                    lat: this.currentLatitude,
+                    lng: this.currentLongitude,
+                    address: this.currentAddress
+                });
+
+                console.log('handleCheckIn result:', result);
+
+                if (result && result.recordId) {
+                    this.attendanceRecordId = result.recordId;
+                    const variant = result.alreadyCheckedIn ? 'info' : 'success';
+                    const title = result.alreadyCheckedIn ? 'Info' : 'Success';
+
+                    this.dispatchEvent(new ShowToastEvent({
+                        title: title,
+                        message: result.message || 'Check-in processed',
+                        variant: variant
+                    }));
+                    console.log('✓ Check-in completed successfully');
+                } else {
+                    throw new Error('Invalid response from check-in: missing recordId');
+                }
+            } else {
+                if (!this.attendanceRecordId) {
+                    throw new Error('No attendance record found. Please reload and try again.');
+                }
+
+                console.log('Calling handleCheckOut with recordId:', this.attendanceRecordId);
+                await handleCheckOut({
+                    recordId: this.attendanceRecordId,
+                    lat: this.currentLatitude,
+                    lng: this.currentLongitude,
+                    address: this.currentAddress
+                });
+
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Checked out successfully',
+                    variant: 'success'
+                }));
+                console.log('✓ Check-out completed successfully');
+            }
+
+            await this.loadTodayAttendance();
+            console.log('State reloaded after action');
+
             this.loadRecentAttendance();
             this.loadWeeklyCompliance();
+            this.loadWeekSummary();
+            this.loadMonthCompliance();
         } catch (error) {
-            console.error(error);
-            this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: 'Unable to capture location. Please try again.', variant: 'error' }));
+            console.error('Check-in/out error details:', error);
+            let errorMessage = 'Unable to complete action. Please try again.';
+            let errorTitle = 'Error';
+
+            if (error) {
+                if (error.body) {
+                    if (typeof error.body.message === 'string') {
+                        errorMessage = error.body.message;
+                    } else if (error.body.message && error.body.message.length > 0) {
+                        errorMessage = error.body.message[0];
+                    } else if (error.body.faultstring) {
+                        errorMessage = error.body.faultstring;
+                    }
+                } else if (error.message) {
+                    errorMessage = error.message;
+                } else if (typeof error === 'string') {
+                    errorMessage = error;
+                }
+            }
+
+            console.error('Final error message to display:', errorMessage);
+
+            this.dispatchEvent(new ShowToastEvent({
+                title: errorTitle,
+                message: errorMessage,
+                variant: 'error',
+                mode: 'sticky'
+            }));
         } finally {
             this.isSubmitting = false;
+            console.log('Check-in/out action completed');
         }
     }
 
@@ -204,15 +359,56 @@ export default class SfaAttendance extends LightningElement {
     loadWeeklyCompliance() {
         getLast7DayCompliance()
             .then(result => {
+                // Apex returns keys: dayLabel, status ('On Time'|'Late'|'Absent'), value, date
                 this.weeklyData = result.map((day, index) => ({
                     id: index + 1,
-                    label: day.label,
+                    label: day.dayLabel,
                     value: day.value,
-                    onTime: day.onTime,
-                    dotClass: day.value >= 90 ? 'compliance-dot on-time' : day.value >= 50 ? 'compliance-dot late' : 'compliance-dot absent'
+                    onTime: day.status === 'On Time',
+                    dotClass: day.status === 'On Time' ? 'compliance-dot on-time'
+                        : day.status === 'Late' ? 'compliance-dot late'
+                        : 'compliance-dot absent'
                 }));
             })
             .catch(error => console.error('Weekly compliance error', error));
+    }
+
+    // Aggregate worked minutes over the current rolling week (last 7 days incl. today)
+    loadWeekSummary() {
+        getAttendanceLast14Days()
+            .then(result => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const weekStart = new Date(today);
+                weekStart.setDate(weekStart.getDate() - 6);
+
+                let totalMinutes = 0;
+                let daysWithWork = 0;
+                (result || []).forEach(att => {
+                    if (!att.Attendance_Date__c) return;
+                    const attDate = new Date(att.Attendance_Date__c + 'T00:00:00');
+                    if (attDate < weekStart || attDate > today) return;
+                    const mins = att.Work_Duration__c;
+                    if (mins !== null && mins !== undefined && mins > 0) {
+                        totalMinutes += mins;
+                        daysWithWork += 1;
+                    }
+                });
+                this.weekTotalMinutes = totalMinutes;
+                this.weekDaysCount = daysWithWork;
+            })
+            .catch(error => console.error('Week summary error', error));
+    }
+
+    // Current-month present/on-time counts (reuses existing cacheable Apex)
+    loadMonthCompliance() {
+        getDashboardAttendanceCompliance()
+            .then(result => {
+                if (!result) return;
+                this.presentDays = result.presentDays || 0;
+                this.onTimeDays = result.onTimeDays || 0;
+            })
+            .catch(error => console.error('Month compliance error', error));
     }
 
     viewAllAttendance() {
@@ -244,6 +440,10 @@ export default class SfaAttendance extends LightningElement {
             checkOutLat: att.Check_Out_Latitude__c,
             checkOutLng: att.Check_Out_Longitude__c,
             duration: att.Work_Duration__c,
+            durationDisplay: this.formatMinutes(att.Work_Duration__c),
+            onTime: att.On_Time__c === true,
+            onTimeBadgeClass: att.On_Time__c === true ? 'ot-badge on-time' : 'ot-badge late',
+            onTimeLabel: att.On_Time__c === true ? 'On Time' : 'Late',
             status: att.Status__c,
             statusClass: att.Status__c === 'Checked In' ? 'status checked-in' : 'status checked-out'
         };
@@ -261,6 +461,32 @@ export default class SfaAttendance extends LightningElement {
     }
     get onTimeCount() { return this.weeklyData ? this.weeklyData.filter(d => d.value >= 90).length : 0; }
     get lateCount()   { return this.weeklyData ? this.weeklyData.filter(d => d.value < 90).length : 0; }
+
+    // ── Metric-strip getters ─────────────────────────────────────
+    get todayWorkedDisplay() {
+        if (this.isCheckedIn) return this.formatMinutes(this.todayLiveMinutes);
+        if (this.todayWorkedMinutes !== null && this.todayWorkedMinutes !== undefined) {
+            return this.formatMinutes(this.todayWorkedMinutes);
+        }
+        return '—';
+    }
+    get todaySubline() {
+        if (this.isCheckedIn) return `Since ${this.todayCheckInDisplay}`;
+        if (this.attendanceStatus === 'Checked Out') return `Checked in ${this.todayCheckInDisplay}`;
+        return 'Not checked in';
+    }
+    get weekTotalDisplay() { return this.formatMinutes(this.weekTotalMinutes); }
+    get weekAvgDisplay() {
+        if (!this.weekDaysCount) return 'No days worked';
+        const avg = this.weekTotalMinutes / this.weekDaysCount;
+        return `${this.formatMinutes(avg)} avg · ${this.weekDaysCount} day${this.weekDaysCount === 1 ? '' : 's'}`;
+    }
+    get onTimeDisplay() { return `${this.onTimeDays}/${this.presentDays}`; }
+    get statusSubline() {
+        if (this.todayOnTime === true) return 'On time today';
+        if (this.todayOnTime === false && this.attendanceStatus !== 'Not Checked In') return 'Late today';
+        return 'This month';
+    }
 
     handleEyeClick(event) {
         event.stopPropagation();
