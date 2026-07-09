@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Display_Visibility__c</fullName>
+    <label>Display Visibility</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Excellent</fullName>
+                <default>false</default>
+                <label>Excellent</label>
+            </value>
+            <value>
+                <fullName>Good</fullName>
+                <default>false</default>
+                <label>Good</label>
+            </value>
+            <value>
+                <fullName>Average</fullName>
+                <default>false</default>
+                <label>Average</label>
+            </value>
+            <value>
+                <fullName>Poor</fullName>
+                <default>false</default>
+                <label>Poor</label>
+            </value>
+            <value>
+                <fullName>Not Displayed</fullName>
+                <default>false</default>
+                <label>Not Displayed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

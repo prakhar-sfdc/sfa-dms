@@ -1,0 +1,120 @@
+<template>
+    <div class="dv-card">
+        <div class="dv-header">
+            <div class="dv-title">
+                <h3>Visits — {dayLabel}</h3>
+                <span class="dv-sub">{summaryLine}</span>
+            </div>
+            <button class="primary-btn" onclick={addVisit}>+ Add Visit</button>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="loading-state">Loading visits…</div>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:false={hasItems}>
+                <div class="empty-state">
+                    <div class="empty-icon">🗺</div>
+                    <p>No visits planned for this day.</p>
+                    <button class="primary-btn" onclick={addVisit}>Schedule a Visit</button>
+                </div>
+            </template>
+
+            <template if:true={hasItems}>
+                <div class="visit-list">
+                    <template for:each={viewItems} for:item="v">
+                        <div key={v.id} class={v.rowClass}>
+                            <!-- Row summary (click to expand) -->
+                            <div class="v-summary" data-id={v.id} onclick={toggleExpand}>
+                                <div class="v-seq">{v.seq}</div>
+                                <div class="v-main">
+                                    <div class="v-line1">
+                                        <span class="v-account">{v.accountName}</span>
+                                        <span class={v.priorityClass}>{v.priority}</span>
+                                        <span class={v.statusClass}>{v.status}</span>
+                                    </div>
+                                    <div class="v-line2">
+                                        <span class="v-meta">🕐 {v.plannedTimeD}</span>
+                                        <span class="v-meta">📍 {v.locationD}</span>
+                                        <span class="v-meta">{v.purposeD}</span>
+                                    </div>
+                                    <template if:true={v.showRoute}>
+                                        <div class="v-route">
+                                            <span class="route-chip">Distance {v.distanceDisplay}</span>
+                                            <span class="route-chip">Travel {v.travelDisplay}</span>
+                                            <span class="route-chip">On-site {v.durationDisplay}</span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="v-actions">
+                                    <button class="icon-btn" data-id={v.id} onclick={moveUp} title="Move up">↑</button>
+                                    <button class="icon-btn" data-id={v.id} onclick={moveDown} title="Move down">↓</button>
+                                    <button class="icon-btn danger" data-id={v.id} onclick={removeVisit} title="Remove">✕</button>
+                                    <span class={v.chevronClass}>⌄</span>
+                                </div>
+                            </div>
+
+                            <!-- Inline detail (accordion) -->
+                            <template if:true={v.expanded}>
+                                <div class="v-detail">
+                                    <div class="section-label">Visit Information</div>
+                                    <div class="detail-grid">
+                                        <div class="d-item"><span class="d-label">Status</span><span class="d-value">{v.status}</span></div>
+                                        <div class="d-item"><span class="d-label">Priority</span><span class="d-value">{v.priority}</span></div>
+                                        <div class="d-item"><span class="d-label">Purpose</span><span class="d-value">{v.purposeD}</span></div>
+                                        <div class="d-item"><span class="d-label">Planned Time</span><span class="d-value">{v.plannedTimeD}</span></div>
+                                        <div class="d-item d-wide"><span class="d-label">Location</span><span class="d-value">{v.locationD}</span></div>
+                                    </div>
+
+                                    <div class="section-label">Check-In</div>
+                                    <div class="detail-grid">
+                                        <div class="d-item"><span class="d-label">Time</span><span class="d-value">{v.checkInTimeD}</span></div>
+                                        <div class="d-item"><span class="d-label">GPS</span><span class="d-value">{v.checkInCoords}</span></div>
+                                        <div class="d-item d-wide"><span class="d-label">Address</span><span class="d-value">{v.checkInAddrD}</span></div>
+                                    </div>
+
+                                    <div class="section-label">Check-Out</div>
+                                    <div class="detail-grid">
+                                        <div class="d-item"><span class="d-label">Time</span><span class="d-value">{v.checkOutTimeD}</span></div>
+                                        <div class="d-item"><span class="d-label">GPS</span><span class="d-value">{v.checkOutCoords}</span></div>
+                                        <div class="d-item d-wide"><span class="d-label">Address</span><span class="d-value">{v.checkOutAddrD}</span></div>
+                                        <div class="d-item"><span class="d-label">Outcome</span><span class="d-value">{v.outcomeD}</span></div>
+                                    </div>
+
+                                    <div class="section-label">Route &amp; Duration</div>
+                                    <div class="route-summary">
+                                        <div class="rs-item"><span class="rs-num">{v.distanceDisplay}</span><span class="rs-lbl">Distance from prev</span></div>
+                                        <div class="rs-item"><span class="rs-num">{v.travelDisplay}</span><span class="rs-lbl">Travel time</span></div>
+                                        <div class="rs-item"><span class="rs-num">{v.durationDisplay}</span><span class="rs-lbl">On-site</span></div>
+                                    </div>
+
+                                    <div class="notes-block">
+                                        <div class="notes-head">
+                                            <span class="section-label no-mt">Notes &amp; Remarks</span>
+                                            <template if:false={v.isEditing}>
+                                                <button class="link-btn" data-id={v.id} onclick={startEdit}>✎ Edit</button>
+                                            </template>
+                                        </div>
+                                        <template if:false={v.isEditing}>
+                                            <div class="notes-view">{v.notesD}</div>
+                                        </template>
+                                        <template if:true={v.isEditing}>
+                                            <lightning-textarea class="notes-input" value={notesDraftValue}
+                                                onchange={handleNotesChange} placeholder="Add visit notes…"
+                                                variant="label-hidden" label="Notes"></lightning-textarea>
+                                            <div class="notes-actions">
+                                                <button class="secondary-btn sm" onclick={cancelEdit}>Cancel</button>
+                                                <button class="primary-btn sm" onclick={saveNotes}>Save Notes</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

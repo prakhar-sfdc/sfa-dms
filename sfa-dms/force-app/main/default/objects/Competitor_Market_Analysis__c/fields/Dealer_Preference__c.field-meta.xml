@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dealer_Preference__c</fullName>
+    <label>Dealer Preference</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Strongly</fullName>
+                <default>false</default>
+                <label>Strongly</label>
+            </value>
+            <value>
+                <fullName>Slightly Prefer Ours</fullName>
+                <default>false</default>
+                <label>Slightly Prefer Ours</label>
+            </value>
+            <value>
+                <fullName>Neutral</fullName>
+                <default>false</default>
+                <label>Neutral</label>
+            </value>
+            <value>
+                <fullName>Slightly</fullName>
+                <default>false</default>
+                <label>Slightly</label>
+            </value>
+            <value>
+                <fullName>Strongly Prefer Competitor</fullName>
+                <default>false</default>
+                <label>Strongly Prefer Competitor</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

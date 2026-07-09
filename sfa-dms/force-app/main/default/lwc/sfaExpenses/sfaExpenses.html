@@ -19,7 +19,7 @@
                 <div class="summary-icon">💰</div>
                 <div class="summary-content">
                     <h3>Total Expenses</h3>
-                    <div class="summary-value">₹{expenseSummary.totalAmount}</div>
+                    <div class="summary-value">{totalAmountDisplay}</div>
                     <div class="summary-trend">All time total</div>
                 </div>
             </div>
@@ -49,40 +49,48 @@
             </div>
         </div>
 
-        <!-- Budget Card -->
-        <div class="budget-card">
+        <!-- Budget spend meter (signature) -->
+        <div class="meter-card">
             <div class="card-header">
-                <h3>📊 Budget Compliance</h3>
+                <h3>Budget &amp; spend breakdown</h3>
                 <div class={budgetStatusClass}>{budget.status}</div>
             </div>
-            <div class="budget-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" style={budgetProgressWidth}></div>
-                </div>
-                <div class="progress-label">{budgetPercentageText}</div>
-            </div>
-            <div class="budget-details">
-                <div class="budget-item">
-                    <span class="budget-label">Used</span>
-                    <span class="budget-value">₹{budget.used}</span>
-                </div>
-                <div class="budget-item">
-                    <span class="budget-label">Total</span>
-                    <span class="budget-value">₹{budget.total}</span>
-                </div>
-                <div class="budget-item">
-                    <span class="budget-label">Remaining</span>
-                    <span class="budget-value">₹{budget.remaining}</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Expense Type Legend (hidden on mobile, shows legend only) -->
-        <div class="expense-type-legend">
-            <div class="legend-item"><div class="legend-dot travel-color"></div><span>Travel: ₹{travelAmount}</span></div>
-            <div class="legend-item"><div class="legend-dot food-color"></div><span>Food: ₹{foodAmount}</span></div>
-            <div class="legend-item"><div class="legend-dot stay-color"></div><span>Stay: ₹{stayAmount}</span></div>
-            <div class="legend-item"><div class="legend-dot misc-color"></div><span>Misc: ₹{miscAmount}</span></div>
+            <div class="meter-figures">
+                <div class="meter-figure">
+                    <span class="meter-figure-value">{budgetUsedDisplay}</span>
+                    <span class="meter-figure-label">Spent</span>
+                </div>
+                <span class="meter-sep">/</span>
+                <div class="meter-figure">
+                    <span class="meter-figure-value muted">{budgetTotalDisplay}</span>
+                    <span class="meter-figure-label">Budget</span>
+                </div>
+                <div class="meter-figure meter-figure--right">
+                    <span class="meter-figure-value">{budgetRemainingDisplay}</span>
+                    <span class="meter-figure-label">Remaining</span>
+                </div>
+            </div>
+
+            <div class="meter-track">
+                <template for:each={spendSegments} for:item="seg">
+                    <div key={seg.key} class="meter-seg" style={seg.style} title={seg.title}></div>
+                </template>
+                <div class="meter-seg meter-seg--empty" style={emptySpendStyle}></div>
+            </div>
+            <div class="meter-caption">{budgetPercentageText}</div>
+
+            <template if:true={hasSpend}>
+                <div class="meter-legend">
+                    <template for:each={spendChips} for:item="chip">
+                        <div key={chip.key} class="meter-chip">
+                            <span class="meter-dot" style={chip.dotStyle}></span>
+                            <span class="meter-chip-label">{chip.label}</span>
+                            <span class="meter-chip-amt">{chip.amountDisplay}</span>
+                        </div>
+                    </template>
+                </div>
+            </template>
         </div>
 
         <!-- Recent Expenses Table -->
@@ -104,12 +112,21 @@
                     <template for:each={recentExpensesList} for:item="expense">
                         <div key={expense.id} class="table-row">
                             <div class="table-cell">{expense.formattedDate}</div>
-                            <div class="table-cell"><span class={expense.typeBadgeClass}>{expense.type}</span></div>
+                            <div class="table-cell type-cell">
+                                <span class="type-dot" style={expense.typeDotStyle}></span>
+                                <span class="type-name">{expense.type}</span>
+                            </div>
                             <div class="table-cell">{expense.description}</div>
-                            <div class="table-cell">₹{expense.amount}</div>
+                            <div class="table-cell amount-cell">{expense.amountDisplay}</div>
                             <div class="table-cell"><span class={expense.statusClass}>{expense.status}</span></div>
                             <div class="table-cell">
-                                <button class="action-btn-sm" onclick={handleViewExpenseDetails} data-id={expense.id}>View</button>
+                                <button class="row-view-btn" onclick={handleViewExpenseDetails} data-id={expense.id} title="View details">
+                                    <svg viewBox="0 0 24 24" class="row-view-icon" aria-hidden="true">
+                                        <path d="M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Z" fill="none" stroke="currentColor" stroke-width="1.7"></path>
+                                        <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                                    </svg>
+                                    <span>View</span>
+                                </button>
                             </div>
                         </div>
                     </template>
@@ -126,12 +143,18 @@
                         </div>
                         <div class="expense-card-mid">
                             <span class="exp-desc">{expense.description}</span>
-                            <span class="exp-amount">₹{expense.amount}</span>
+                            <span class="exp-amount">{expense.amountDisplay}</span>
                         </div>
                         <div class="expense-card-bot">
                             <span class="exp-date">{expense.formattedDate}</span>
-                            <button class="action-btn-sm" onclick={handleViewExpenseDetails} data-id={expense.id}>View Details</button>
                         </div>
+                        <button class="card-view-btn" onclick={handleViewExpenseDetails} data-id={expense.id}>
+                            <svg viewBox="0 0 24 24" class="row-view-icon" aria-hidden="true">
+                                <path d="M12 5c-5 0-8.5 4.5-9.5 7 1 2.5 4.5 7 9.5 7s8.5-4.5 9.5-7c-1-2.5-4.5-7-9.5-7Z" fill="none" stroke="currentColor" stroke-width="1.7"></path>
+                                <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                            </svg>
+                            <span>View details</span>
+                        </button>
                     </div>
                 </template>
             </div>
@@ -143,48 +166,250 @@
         <div class="modal-overlay" onclick={closeExpenseSubmitModal}>
             <div class="expense-modal" onclick={handleModalClick}>
                 <div class="modal-header">
-                    <h2>💰 Submit Expense</h2>
+                    <h2>💰 New Reimbursement</h2>
                     <button class="modal-close" onclick={closeExpenseSubmitModal}>×</button>
                 </div>
                 <div class="modal-body">
-                    <lightning-record-edit-form object-api-name="Expense__c"
-                        onsuccess={handleExpenseSubmitSuccess} onerror={handleExpenseSubmitError}>
-                        <lightning-messages></lightning-messages>
+
+                    <!-- Source mode toggle -->
+                    <div class="field-block">
+                        <label class="field-label">Entry Mode</label>
+                        <div class="mode-toggle">
+                            <button class={sourceManualClass} onclick={setSourceManual}>✏️ Manual</button>
+                            <button class={sourceAutoClass} onclick={setSourceAuto}>📍 Auto (GPS)</button>
+                        </div>
+                        <p class="field-hint">Auto pulls today’s tracked distance from your Journey Plan.</p>
+                    </div>
+
+                    <!-- Category chips -->
+                    <div class="field-block">
+                        <label class="field-label">Category</label>
+                        <div class="category-grid">
+                            <template for:each={categoryOptions} for:item="cat">
+                                <button key={cat.value} class={cat.cssClass} data-value={cat.value} onclick={selectCategory}>
+                                    <span class="chip-icon">{cat.icon}</span>
+                                    <span class="chip-label">{cat.label}</span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Mileage block -->
+                    <template if:true={isMileage}>
                         <div class="form-grid">
-                            <div><lightning-input-field field-name="Expense_Date__c"></lightning-input-field></div>
-                            <div><lightning-input-field field-name="Expense_Type__c"></lightning-input-field></div>
-                            <div><lightning-input-field field-name="Amount__c"></lightning-input-field></div>
-                            <div><lightning-input-field field-name="Expense_Source__c"></lightning-input-field></div>
-                            <div><lightning-input-field field-name="Visit__c"></lightning-input-field></div>
-                            <div><lightning-input-field field-name="City__c"></lightning-input-field></div>
-                            <div class="full-col"><lightning-input-field field-name="Description__c"></lightning-input-field></div>
+                            <div>
+                                <label class="field-label">Vehicle Type</label>
+                                <lightning-combobox variant="label-hidden" placeholder="Select vehicle"
+                                    value={form.vehicleType} options={vehicleOptions}
+                                    onchange={handleVehicleChange}></lightning-combobox>
+                            </div>
+                            <div>
+                                <label class="field-label">Kilometers Driven</label>
+                                <lightning-input type="number" variant="label-hidden" data-field="distance"
+                                    value={form.distance} onchange={handleFieldChange} min="0" step="0.1"
+                                    placeholder="0"></lightning-input>
+                            </div>
+                            <div>
+                                <label class="field-label">From</label>
+                                <lightning-input type="text" variant="label-hidden" data-field="fromLocation"
+                                    value={form.fromLocation} onchange={handleFieldChange} placeholder="Start point"></lightning-input>
+                            </div>
+                            <div>
+                                <label class="field-label">To</label>
+                                <lightning-input type="text" variant="label-hidden" data-field="toLocation"
+                                    value={form.toLocation} onchange={handleFieldChange} placeholder="Destination"></lightning-input>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button class="secondary-btn" type="button" onclick={closeExpenseSubmitModal}>Cancel</button>
-                            <lightning-button type="submit" label="Submit Expense" variant="brand"></lightning-button>
+                        <div class="calc-row">
+                            <span class="calc-formula">{mileageBreakdown}</span>
+                            <span class="calc-amount">{amountDisplay}</span>
                         </div>
-                    </lightning-record-edit-form>
+                    </template>
+
+                    <!-- Daily Allowance block -->
+                    <template if:true={isDailyAllowance}>
+                        <div class="form-grid">
+                            <div>
+                                <label class="field-label">Number of Days</label>
+                                <lightning-input type="number" variant="label-hidden" data-field="days"
+                                    value={form.days} onchange={handleFieldChange} min="1" step="1"></lightning-input>
+                            </div>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-formula">{dailyAllowanceBreakdown}</span>
+                            <span class="calc-amount">{amountDisplay}</span>
+                        </div>
+                    </template>
+
+                    <!-- Manual amount block -->
+                    <template if:true={isAmountManual}>
+                        <div class="form-grid">
+                            <div>
+                                <label class="field-label">Amount (₹)</label>
+                                <lightning-input type="number" variant="label-hidden" data-field="amount"
+                                    value={form.amount} onchange={handleFieldChange} min="0" step="1"
+                                    placeholder="0"></lightning-input>
+                            </div>
+                        </div>
+                        <template if:true={dailyCapWarning}>
+                            <p class="cap-warning">⚠️ {dailyCapWarning}</p>
+                        </template>
+                    </template>
+
+                    <!-- Common fields -->
+                    <div class="form-grid">
+                        <div>
+                            <label class="field-label">Date</label>
+                            <lightning-input type="date" variant="label-hidden" data-field="expenseDate"
+                                value={form.expenseDate} onchange={handleFieldChange}></lightning-input>
+                        </div>
+                        <div>
+                            <label class="field-label">City</label>
+                            <lightning-input type="text" variant="label-hidden" data-field="city"
+                                value={form.city} onchange={handleFieldChange} placeholder="City"></lightning-input>
+                        </div>
+                        <div class="full-col">
+                            <label class="field-label">Description</label>
+                            <lightning-input type="text" variant="label-hidden" data-field="description"
+                                value={form.description} onchange={handleFieldChange}
+                                placeholder="What was this for?"></lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Receipts -->
+                    <div class="field-block">
+                        <label class="field-label">
+                            Receipts
+                            <template if:true={requiresReceipt}><span class="req-star">*</span></template>
+                        </label>
+                        <input type="file" class="receipt-input" accept="image/*"
+                            multiple onchange={handleReceiptChange} />
+                        <button class="receipt-add-btn" onclick={triggerReceiptPicker}>📷 Add Receipt</button>
+                        <span class="receipt-count">{receiptCountLabel}</span>
+                        <template if:true={receiptRequiredHint}>
+                            <p class="field-hint receipt-hint">A receipt is required to submit this category.</p>
+                        </template>
+                        <div class="receipt-grid">
+                            <template for:each={receiptFiles} for:item="rf">
+                                <div key={rf.key} class="receipt-thumb">
+                                    <template if:true={rf.isImage}>
+                                        <img src={rf.dataUrl} alt={rf.name} />
+                                    </template>
+                                    <template if:false={rf.isImage}>
+                                        <span class="receipt-file">📄</span>
+                                    </template>
+                                    <button class="receipt-remove" data-key={rf.key} onclick={removeReceipt}>×</button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Budget indicator -->
+                    <div class="budget-inline">
+                        <span>Remaining budget: <strong>{remainingBudgetDisplay}</strong></span>
+                        <template if:true={overBudget}>
+                            <span class="over-budget-flag">Over budget</span>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick={closeExpenseSubmitModal} disabled={isSaving}>Cancel</button>
+                    <button class="secondary-btn" onclick={handleSaveDraft} disabled={isSaving}>Save Draft</button>
+                    <button class="primary-btn" onclick={handleSubmitForm} disabled={submitDisabled}>
+                        <template if:true={isSaving}>Saving…</template>
+                        <template if:false={isSaving}>Submit</template>
+                    </button>
                 </div>
             </div>
         </div>
     </template>
 
-    <!-- Expense Details Modal -->
+    <!-- Expense Detail Sheet -->
     <template if:true={showExpenseModal}>
         <div class="modal-overlay" onclick={closeExpenseModal}>
-            <div class="expense-modal expense-modal--sm" onclick={handleModalClick}>
+            <div class="expense-modal expense-modal--sheet" onclick={handleModalClick}>
                 <div class="modal-header">
-                    <h2>📋 Expense Details</h2>
+                    <h2>Expense detail</h2>
                     <button class="modal-close" onclick={closeExpenseModal}>×</button>
                 </div>
                 <div class="modal-body">
-                    <div class="detail-list">
-                        <div class="detail-item"><span class="detail-label">Date</span><span class="detail-value">{selectedExpense.formattedDate}</span></div>
-                        <div class="detail-item"><span class="detail-label">Type</span><span class="detail-value">{selectedExpense.type}</span></div>
-                        <div class="detail-item"><span class="detail-label">Amount</span><span class="detail-value">₹{selectedExpense.amount}</span></div>
-                        <div class="detail-item"><span class="detail-label">Status</span><span class={selectedExpense.statusClass}>{selectedExpense.status}</span></div>
-                        <div class="detail-item"><span class="detail-label">Description</span><span class="detail-value">{selectedExpense.description}</span></div>
+
+                    <!-- Hero: amount + pills -->
+                    <div class="sheet-hero">
+                        <div class="sheet-amount">{selectedExpense.amountDisplay}</div>
+                        <div class="sheet-pills">
+                            <span class={selectedExpense.statusClass}>{selectedExpense.status}</span>
+                            <span class="sheet-type"><span class="type-dot" style={selectedExpense.typeDotStyle}></span>{selectedExpense.type}</span>
+                            <span class={selectedExpense.sourceBadgeClass}>{selectedExpense.source}</span>
+                        </div>
                     </div>
+
+                    <!-- Key facts -->
+                    <div class="sheet-facts">
+                        <div class="sheet-fact"><span class="sheet-fact-label">Date</span><span class="sheet-fact-value">{selectedExpense.formattedDate}</span></div>
+                        <div class="sheet-fact"><span class="sheet-fact-label">City</span><span class="sheet-fact-value">{selectedExpense.city}</span></div>
+                        <div class="sheet-fact"><span class="sheet-fact-label">Submitted</span><span class="sheet-fact-value">{selectedExpense.submittedOn}</span></div>
+                        <div class="sheet-fact"><span class="sheet-fact-label">Approved</span><span class="sheet-fact-value">{selectedExpense.approvedOn}</span></div>
+                    </div>
+
+                    <!-- Trip section (mileage only) -->
+                    <template if:true={selectedExpense.isMileage}>
+                        <div class="sheet-section">
+                            <div class="sheet-section-title">Trip</div>
+                            <div class="trip-route">
+                                <span class="trip-loc">{selectedExpense.fromLocation}</span>
+                                <span class="trip-arrow">→</span>
+                                <span class="trip-loc">{selectedExpense.toLocation}</span>
+                            </div>
+                            <div class="sheet-facts">
+                                <div class="sheet-fact"><span class="sheet-fact-label">Distance</span><span class="sheet-fact-value">{selectedExpense.distance} km</span></div>
+                                <div class="sheet-fact"><span class="sheet-fact-label">Vehicle</span><span class="sheet-fact-value">{selectedExpense.vehicleType}</span></div>
+                                <div class="sheet-fact sheet-fact--wide"><span class="sheet-fact-label">Rate</span><span class="sheet-fact-value">{selectedExpense.mileageBreakdown}</span></div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Description -->
+                    <div class="sheet-section">
+                        <div class="sheet-section-title">Description</div>
+                        <p class="sheet-desc">{selectedExpense.description}</p>
+                    </div>
+
+                    <!-- Receipts -->
+                    <div class="sheet-section">
+                        <div class="sheet-section-title">Receipts</div>
+                        <template if:true={receiptsLoading}>
+                            <p class="sheet-muted">Loading receipts…</p>
+                        </template>
+                        <template if:false={receiptsLoading}>
+                            <template if:true={detailHasReceipts}>
+                                <div class="sheet-receipts">
+                                    <template for:each={selectedReceipts} for:item="rc">
+                                        <a key={rc.key} href={rc.url} target="_blank" class="sheet-receipt" title={rc.title}>
+                                            <template if:true={rc.isImage}>
+                                                <img src={rc.url} alt={rc.title} />
+                                            </template>
+                                            <template if:false={rc.isImage}>
+                                                <span class="sheet-receipt-file">📄<span>{rc.fileType}</span></span>
+                                            </template>
+                                        </a>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={detailHasReceipts}>
+                                <p class="sheet-muted">No receipts attached.</p>
+                            </template>
+                        </template>
+                    </div>
+
+                    <!-- Rejection note -->
+                    <template if:true={selectedExpense.isRejected}>
+                        <div class="sheet-reject">
+                            <span class="sheet-reject-title">Rejected</span>
+                            <span class="sheet-reject-reason">{selectedExpense.rejectionReason}</span>
+                        </div>
+                    </template>
                 </div>
                 <div class="modal-footer">
                     <button class="secondary-btn" onclick={closeExpenseModal}>Close</button>
