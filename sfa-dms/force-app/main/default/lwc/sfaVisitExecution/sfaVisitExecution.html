@@ -134,62 +134,114 @@
             </div>
         </template>
 
-        <!-- ── Detail modal (tabbed visit-execution view) ─────── -->
+        <!-- ── Detail: visit-execution workspace ──────────────── -->
         <template if:true={showDetail}>
             <div class="modal-overlay" onclick={closeDetail}>
-                <div class="modal-box modal-wide" onclick={stopProp}>
-                    <div class="modal-header">
-                        <div>
-                            <h2>{detail.accountName}</h2>
-                            <span class={detail.statusPill}>{detail.status}</span>
+                <div class="modal-box modal-wide vd" onclick={stopProp}>
+                    <!-- Sticky header -->
+                    <div class="vd-header">
+                        <div class="vd-id">
+                            <div class="vd-avatar">{detail.accountInitial}</div>
+                            <div class="vd-idtext">
+                                <h2>{detail.accountName}</h2>
+                                <div class="vd-meta">
+                                    <span class={detail.statusPill}>{detail.status}</span>
+                                    <span class={detail.priorityPill}>{detail.priorityDisplay}</span>
+                                    <span class="vd-meta-item">{detail.purposeDisplay}</span>
+                                </div>
+                            </div>
                         </div>
                         <button class="modal-close" onclick={closeDetail}>×</button>
                     </div>
 
+                    <!-- At-a-glance strip -->
+                    <div class="vd-glance">
+                        <div class="glance-item"><span class="glance-num">{detail.durationDisplay}</span><span class="glance-lbl">On-site</span></div>
+                        <div class="glance-item"><span class="glance-num">{detail.distanceDisplay}</span><span class="glance-lbl">Distance</span></div>
+                        <div class="glance-item"><span class="glance-num">{detail.travelDisplay}</span><span class="glance-lbl">Travel</span></div>
+                        <div class="glance-item"><span class="glance-num">{detail.plannedTimeDisplay}</span><span class="glance-lbl">Planned</span></div>
+                    </div>
+
                     <div class="tab-bar">
-                        <button class={infoTabClass} onclick={showInfo}>📍 Visit Information</button>
-                        <button class={analysisTabClass} onclick={showAnalysis}>📊 Market Analysis ({analysisCount})</button>
+                        <button class={infoTabClass} onclick={showInfo}>Overview</button>
+                        <button class={analysisTabClass} onclick={showAnalysis}>Market Analysis ({analysisCount})</button>
                     </div>
 
                     <div class="modal-body">
-                        <!-- ============ INFO TAB ============ -->
+                        <!-- ============ OVERVIEW TAB ============ -->
                         <template if:true={isInfoTab}>
-                            <div class="section-title">Visit</div>
-                            <div class="detail-grid">
-                                <div class="d-item"><span class="d-label">Account</span><span class="d-value">{detail.accountName}</span></div>
-                                <div class="d-item"><span class="d-label">Status</span><span class="d-value">{detail.status}</span></div>
-                                <div class="d-item"><span class="d-label">Purpose</span><span class="d-value">{detail.purposeDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Priority</span><span class="d-value">{detail.priorityDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Planned Time</span><span class="d-value">{detail.plannedTimeDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Location</span><span class="d-value">{detail.locationDisplay}</span></div>
+                            <!-- Visit journey timeline -->
+                            <div class="timeline">
+                                <div class="tl-node">
+                                    <div class={detail.ciDotClass}></div>
+                                    <div class="tl-body">
+                                        <div class="tl-head"><span class="tl-title">Check-In</span><span class="tl-time">{detail.checkInTimeDisplay}</span></div>
+                                        <div class="tl-detail">
+                                            <span class="tl-line">📍 {detail.checkInAddressDisplay}</span>
+                                            <span class="tl-gps">{detail.checkInCoords}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tl-node">
+                                    <div class={detail.onsiteDotClass}></div>
+                                    <div class="tl-body">
+                                        <div class="tl-head"><span class="tl-title">On-site</span><span class="tl-time">{detail.durationDisplay}</span></div>
+                                        <div class="tl-chips">
+                                            <span class="route-chip">Distance {detail.distanceDisplay}</span>
+                                            <span class="route-chip">Travel {detail.travelDisplay}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tl-node last">
+                                    <div class={detail.coDotClass}></div>
+                                    <div class="tl-body">
+                                        <div class="tl-head"><span class="tl-title">Check-Out</span><span class="tl-time">{detail.checkOutTimeDisplay}</span></div>
+                                        <div class="tl-detail">
+                                            <span class="tl-line">📍 {detail.checkOutAddressDisplay}</span>
+                                            <span class="tl-gps">{detail.checkOutCoords}</span>
+                                            <template if:true={detail.hasOutcome}>
+                                                <span class="tl-outcome">Outcome: {detail.outcomeDisplay}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="section-title">Check-In</div>
-                            <div class="detail-grid">
-                                <div class="d-item"><span class="d-label">Check-In Time</span><span class="d-value">{detail.checkInTimeDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Check-In GPS</span><span class="d-value">{detail.checkInCoords}</span></div>
-                                <div class="d-item d-wide"><span class="d-label">Check-In Address</span><span class="d-value">{detail.checkInAddressDisplay}</span></div>
-                            </div>
+                            <!-- Account details (admin-configurable via Account field set) -->
+                            <template if:true={hasAccountFields}>
+                                <div class="section-title">Account</div>
+                                <lightning-record-view-form record-id={detail.accountId} object-api-name="Account" density="compact">
+                                    <div class="acct-grid">
+                                        <template for:each={accountFields} for:item="f">
+                                            <lightning-output-field key={f.key} field-name={f.name} class="acct-field"></lightning-output-field>
+                                        </template>
+                                    </div>
+                                </lightning-record-view-form>
+                            </template>
 
-                            <div class="section-title">Check-Out</div>
-                            <div class="detail-grid">
-                                <div class="d-item"><span class="d-label">Check-Out Time</span><span class="d-value">{detail.checkOutTimeDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Check-Out GPS</span><span class="d-value">{detail.checkOutCoords}</span></div>
-                                <div class="d-item d-wide"><span class="d-label">Check-Out Address</span><span class="d-value">{detail.checkOutAddressDisplay}</span></div>
-                                <div class="d-item"><span class="d-label">Outcome</span><span class="d-value">{detail.outcomeDisplay}</span></div>
-                            </div>
-
-                            <div class="section-title">Route &amp; Duration</div>
-                            <div class="route-summary">
-                                <div class="rs-item"><span class="rs-num">{detail.distanceDisplay}</span><span class="rs-lbl">Distance from prev</span></div>
-                                <div class="rs-item"><span class="rs-num">{detail.travelDisplay}</span><span class="rs-lbl">Travel time</span></div>
-                                <div class="rs-item"><span class="rs-num">{detail.durationDisplay}</span><span class="rs-lbl">Total on-site</span></div>
-                            </div>
-
-                            <div class="section-title">Remarks &amp; Notes</div>
-                            <div class="notes-box">
-                                <template if:true={detail.notesDisplay}>{detail.notesDisplay}</template>
-                                <template if:false={detail.notesDisplay}><span class="muted">No notes recorded.</span></template>
+                            <!-- Editable notes -->
+                            <div class="notes-block">
+                                <div class="notes-head">
+                                    <span class="section-title no-mt">Notes &amp; Remarks</span>
+                                    <template if:false={editingNotes}>
+                                        <button class="link-btn" onclick={startEditNotes}>✎ Edit</button>
+                                    </template>
+                                </div>
+                                <template if:false={editingNotes}>
+                                    <div class="notes-box">
+                                        <template if:true={detail.notesDisplay}>{detail.notesDisplay}</template>
+                                        <template if:false={detail.notesDisplay}><span class="muted">No notes yet. Add what happened on this visit.</span></template>
+                                    </div>
+                                </template>
+                                <template if:true={editingNotes}>
+                                    <lightning-textarea class="notes-input" value={notesDraft}
+                                        onchange={handleDetailNotesChange} variant="label-hidden" label="Notes"
+                                        placeholder="What happened on this visit?"></lightning-textarea>
+                                    <div class="notes-actions">
+                                        <button class="secondary-btn sm" onclick={cancelEditNotes}>Cancel</button>
+                                        <button class="primary-btn sm" onclick={saveDetailNotes}>Save Notes</button>
+                                    </div>
+                                </template>
                             </div>
                         </template>
 
@@ -258,22 +310,28 @@
                                 <template for:each={analyses} for:item="a">
                                     <div key={a.id} class="analysis-card">
                                         <div class="ac-head">
-                                            <span class="ac-name">{a.competitorName}</span>
+                                            <div>
+                                                <span class="ac-name">{a.competitorName}</span>
+                                                <div class="ac-sub">{a.productLine}</div>
+                                            </div>
                                             <span class="ac-date">{a.analysisDate}</span>
                                         </div>
-                                        <div class="ac-grid">
-                                            <div class="ac-item"><span class="ac-lbl">Competitor Product</span><span class="ac-val">{a.competitorProduct}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Our Product</span><span class="ac-val">{a.ourProduct}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Comp. Price</span><span class="ac-val">{a.competitorPriceD}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Our Price</span><span class="ac-val">{a.ourPriceD}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Price Diff</span><span class="ac-val">{a.priceDiffD}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Shelf Share</span><span class="ac-val">{a.shelfShareD}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Our / Comp Stock</span><span class="ac-val">{a.stockD}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Visibility</span><span class="ac-val">{a.displayVisibility}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Dealer Pref.</span><span class="ac-val">{a.dealerPreference}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Demand Trend</span><span class="ac-val">{a.demandTrend}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Price Sensitivity</span><span class="ac-val">{a.priceSensitivity}</span></div>
-                                            <div class="ac-item"><span class="ac-lbl">Promo Active</span><span class="ac-val">{a.promoActive}</span></div>
+                                        <!-- You vs Competitor comparison -->
+                                        <div class="cmp">
+                                            <div class="cmp-row cmp-head"><span class="cmp-lbl"></span><span>Ours</span><span>Competitor</span></div>
+                                            <div class="cmp-row"><span class="cmp-lbl">Price</span><span class="cmp-ours">{a.ourPriceD}</span><span class="cmp-comp">{a.competitorPriceD}</span></div>
+                                            <div class="cmp-row"><span class="cmp-lbl">Stock</span><span class="cmp-ours">{a.ourStockD}</span><span class="cmp-comp">{a.compStockD}</span></div>
+                                        </div>
+                                        <div class="ac-stats">
+                                            <div class="ac-stat"><span class="ac-stat-num">{a.shelfShareD}</span><span class="ac-stat-lbl">Shelf share</span></div>
+                                            <div class="ac-stat"><span class="ac-stat-num">{a.priceDiffD}</span><span class="ac-stat-lbl">Price diff</span></div>
+                                        </div>
+                                        <div class="ac-chips">
+                                            <span class="mini-chip"><span class="mc-lbl">Visibility</span> {a.displayVisibility}</span>
+                                            <span class="mini-chip"><span class="mc-lbl">Dealer</span> {a.dealerPreference}</span>
+                                            <span class="mini-chip"><span class="mc-lbl">Demand</span> {a.demandTrend}</span>
+                                            <span class="mini-chip"><span class="mc-lbl">Sensitivity</span> {a.priceSensitivity}</span>
+                                            <span class="mini-chip"><span class="mc-lbl">Promo</span> {a.promoActive}</span>
                                         </div>
                                     </div>
                                 </template>
@@ -283,6 +341,9 @@
 
                     <div class="modal-footer">
                         <button class="secondary-btn" onclick={closeDetail}>Close</button>
+                        <template if:true={canCheckOutFromDetail}>
+                            <button class="primary-btn" onclick={checkOutFromDetail}>■ Check Out</button>
+                        </template>
                     </div>
                 </div>
             </div>

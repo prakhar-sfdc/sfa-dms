@@ -6,6 +6,8 @@ import checkOutItem from '@salesforce/apex/JourneyPlanController.checkOutItem';
 import getItemDetail from '@salesforce/apex/JourneyPlanController.getItemDetail';
 import getItemAnalyses from '@salesforce/apex/JourneyPlanController.getItemAnalyses';
 import saveMarketAnalysis from '@salesforce/apex/JourneyPlanController.saveMarketAnalysis';
+import updateVisitNotes from '@salesforce/apex/JourneyPlanController.updateVisitNotes';
+import getVisitAccountFields from '@salesforce/apex/JourneyPlanController.getVisitAccountFields';
 
 const OUTCOMES = ['Successful','Partially Successful','Postponed','Cancelled','No Show'];
 const VISIBILITY = ['Excellent','Good','Average','Poor','Not Displayed'];
@@ -29,6 +31,9 @@ export default class SfaVisitExecution extends LightningElement {
     @track detail;
     @track detailTab = 'info';
     @track analyses = [];
+    @track editingNotes = false;
+    @track notesDraft = '';
+    @track accountFields = [];
 
     // Analysis form
     @track showAnalysisForm = false;
@@ -52,6 +57,17 @@ export default class SfaVisitExecution extends LightningElement {
 
     connectedCallback() {
         this.loadDay();
+        this.loadAccountFields();
+    }
+
+    // Admin-configurable Account fields (Account "Visit_Account_Display" field set)
+    loadAccountFields() {
+        getVisitAccountFields()
+            .then(res => { this.accountFields = (res || []).map((name, i) => ({ key: `af${i}`, name })); })
+            .catch(err => this.toastError('Account fields', err));
+    }
+    get hasAccountFields() {
+        return this.detail && this.detail.accountId && this.accountFields.length > 0;
     }
 
     // ── Date ──────────────────────────────────────────────────
@@ -175,6 +191,7 @@ export default class SfaVisitExecution extends LightningElement {
         const id = event.currentTarget.dataset.id;
         this.detailTab = 'info';
         this.showAnalysisForm = false;
+        this.editingNotes = false;
         getItemDetail({ itemId: id })
             .then(res => {
                 this.detail = this.decorateDetail(res);
@@ -184,24 +201,35 @@ export default class SfaVisitExecution extends LightningElement {
             .catch(err => this.toastError('Detail', err));
     }
     decorateDetail(res) {
+        const checkedIn = !!res.checkInTime;
+        const completed = res.status === 'Completed';
+        const inProgress = res.status === 'In Progress';
         return {
             ...res,
+            accountInitial: (res.accountName || '?').trim().charAt(0).toUpperCase(),
             statusPill: `pill status-${(res.status||'').toLowerCase().replace(/\s+/g,'-')}`,
             checkInCoords: (res.checkInLat != null && res.checkInLng != null) ? `${res.checkInLat}, ${res.checkInLng}` : '—',
             checkOutCoords: (res.checkOutLat != null && res.checkOutLng != null) ? `${res.checkOutLat}, ${res.checkOutLng}` : '—',
-            checkInTimeDisplay: res.checkInTime || '—',
-            checkOutTimeDisplay: res.checkOutTime || '—',
+            checkInTimeDisplay: res.checkInTime || 'Not checked in',
+            checkOutTimeDisplay: res.checkOutTime || (inProgress ? 'On site' : 'Not checked out'),
             checkInAddressDisplay: res.checkInAddress || '—',
             checkOutAddressDisplay: res.checkOutAddress || '—',
             plannedTimeDisplay: res.plannedTime || '—',
             purposeDisplay: res.purpose || '—',
-            priorityDisplay: res.priority || '—',
+            priorityDisplay: res.priority || 'Medium',
+            priorityPill: `pill priority-${(res.priority || 'Medium').toLowerCase()}`,
             outcomeDisplay: res.outcome || '—',
             locationDisplay: res.location || '—',
             distanceDisplay: (res.distanceFromPrev != null) ? `${res.distanceFromPrev} km` : '—',
             travelDisplay: res.travelFromPrev ? this.fmtMins(res.travelFromPrev) : '—',
-            durationDisplay: res.actualDuration ? this.fmtMins(res.actualDuration) : '—',
-            notesDisplay: res.notes || ''
+            durationDisplay: res.actualDuration ? this.fmtMins(res.actualDuration) : (inProgress ? 'In progress' : '—'),
+            notesDisplay: res.notes || '',
+            // timeline node states
+            checkedIn, completed, inProgress,
+            ciDotClass: checkedIn ? 'tl-dot done' : 'tl-dot',
+            onsiteDotClass: completed ? 'tl-dot done' : (checkedIn ? 'tl-dot active' : 'tl-dot'),
+            coDotClass: completed ? 'tl-dot done' : 'tl-dot pending',
+            hasOutcome: !!res.outcome
         };
     }
     loadAnalyses(itemId) {
@@ -216,11 +244,43 @@ export default class SfaVisitExecution extends LightningElement {
             ourPriceD: a.ourPrice != null ? `₹${a.ourPrice}` : '—',
             priceDiffD: a.priceDifference != null ? `₹${a.priceDifference}` : '—',
             shelfShareD: a.shelfShare != null ? `${a.shelfShare}%` : '—',
-            stockD: `${a.ourStock == null ? 0 : a.ourStock} / ${a.competitorStock == null ? 0 : a.competitorStock}`
+            ourStockD: a.ourStock == null ? '—' : `${a.ourStock}`,
+            compStockD: a.competitorStock == null ? '—' : `${a.competitorStock}`,
+            productLine: `${a.ourProduct || 'Ours'} vs ${a.competitorProduct || a.competitorName}`
         };
     }
-    closeDetail() { this.showDetail = false; }
+    closeDetail() { this.showDetail = false; this.editingNotes = false; }
     stopProp(e) { e.stopPropagation(); }
+
+    // ── Notes (editable in the detail modal) ──────────────────
+    startEditNotes() {
+        this.notesDraft = (this.detail && this.detail.notes) || '';
+        this.editingNotes = true;
+    }
+    handleDetailNotesChange(e) { this.notesDraft = e.detail ? e.detail.value : e.target.value; }
+    cancelEditNotes() { this.editingNotes = false; }
+    saveDetailNotes() {
+        const id = this.detail.id;
+        const notes = this.notesDraft;
+        updateVisitNotes({ itemId: id, notes })
+            .then(() => {
+                this.detail = { ...this.detail, notes, notesDisplay: notes };
+                this.editingNotes = false;
+                this.toast('Saved', 'Visit notes updated', 'success');
+            })
+            .catch(err => this.toastError('Save notes', err));
+    }
+
+    // ── Contextual check-out from the detail modal ────────────
+    get canCheckOutFromDetail() { return this.detail && this.detail.status === 'In Progress'; }
+    checkOutFromDetail() {
+        this.checkoutItemId = this.detail.id;
+        this.checkoutAccount = this.detail.accountName || '';
+        this.outcome = 'Successful';
+        this.notes = '';
+        this.showDetail = false;
+        this.showCheckout = true;
+    }
 
     // Tabs
     get isInfoTab() { return this.detailTab === 'info'; }

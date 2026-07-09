@@ -84,6 +84,16 @@ private class JourneyPlanControllerTest {
     }
 
     @isTest
+    static void testVisitAccountFields() {
+        Test.startTest();
+        List<String> fields = JourneyPlanController.getVisitAccountFields();
+        Test.stopTest();
+        System.assertNotEquals(null, fields, 'returns a list');
+        // Field set is deployed with Name as a member
+        System.assert(fields.contains('Name'), 'Name is in the Visit_Account_Display field set');
+    }
+
+    @isTest
     static void testUpdateVisitNotes() {
         String today = String.valueOf(Date.today());
         String i1 = JourneyPlanController.addVisit(acctId('Acme Distributors'), today, '09:30', 'Product Demo', 'High');

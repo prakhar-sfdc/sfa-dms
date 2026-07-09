@@ -494,6 +494,20 @@ public with sharing class JourneyPlanController {
         update new Journey_Plan_Item__c(Id = itemId, Visit_Notes__c = notes);
     }
 
+    // Admin-configurable list of Account fields to show in the visit detail.
+    // Driven by the Account "Visit_Account_Display" field set (Setup → Object Manager →
+    // Account → Field Sets). Read dynamically so renaming/removing the set never breaks the app.
+    @AuraEnabled(cacheable=true)
+    public static List<String> getVisitAccountFields() {
+        List<String> fields = new List<String>();
+        Schema.FieldSet fs = Schema.SObjectType.Account.fieldSets.getMap().get('Visit_Account_Display');
+        if (fs == null) return fields;
+        for (Schema.FieldSetMember m : fs.getFields()) {
+            fields.add(m.getFieldPath());
+        }
+        return fields;
+    }
+
     // =========================================================================
     // READ — SINGLE ITEM DETAIL
     // =========================================================================
